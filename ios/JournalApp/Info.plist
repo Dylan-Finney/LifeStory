@@ -20,6 +20,20 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>1</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>lifestory</string>
+			</array>
+		</dict>
+		<dict/>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
@@ -35,8 +49,31 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Collects events from the User's day in order to generate a diary entry based on this data </string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Collects events from the User's day in order to generate a diary entry based on this data </string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>The user provides permission for the application to collect significant location changes to generate a diary entry which documents their travels3</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>The user provides permission for the application to collect significant location changes to generate a diary entry which documents their travels</string>
+	<key>NSLocationUsageDescription</key>
+	<string>Me needs it</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string>The user provides permission for the application to collect significant location changes to generate a diary entry which documents their travels2</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Allows the user to select an image from their photo library to "tag"/embed into their desired journal entry</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Inter-Regular.ttf</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>location</string>
+		<string>processing</string>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

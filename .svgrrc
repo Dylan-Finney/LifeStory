@@ -1,0 +1,9 @@
+{
+  "replaceAttrValues": {
+    "#000": "{props.fill || props.stroke}",
+    "#001": "{props.primaryColor}",
+    "#f00": "{props.fillSecondary}",
+    "#f01": "{props.strokeWidth}",
+    "stroke-width-value": "{props.strokeWidth}"
+  }
+}
