@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>JournalApp</string>
+	<string>Life Story</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -50,19 +50,19 @@
 		</dict>
 	</dict>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Collects events from the User's day in order to generate a diary entry based on this data </string>
+	<string>Collects events from the User&apos;s day in order to generate a diary entry based on this data </string>
 	<key>NSCalendarsUsageDescription</key>
-	<string>Collects events from the User's day in order to generate a diary entry based on this data </string>
+	<string>Life Story uses your calendar data to generate a diary entry featuring events from your day.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>The user provides permission for the application to collect significant location changes to generate a diary entry which documents their travels3</string>
+	<string>Life Story uses your location data as part of generating a entry. To allow constant location tracking, please select Always Allow. If you select Only While Using, location data will be limited.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>The user provides permission for the application to collect significant location changes to generate a diary entry which documents their travels</string>
 	<key>NSLocationUsageDescription</key>
-	<string>Me needs it</string>
+	<string>Test</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>The user provides permission for the application to collect significant location changes to generate a diary entry which documents their travels2</string>
+	<string>Life Story uses your location data as part of generating a entry. Location data is stored locally. Any Location Data before allowing permission cannot be accessed. Please select Allow While Using App for best experience.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Allows the user to select an image from their photo library to "tag"/embed into their desired journal entry</string>
+	<string>Life Story uses your calendar data to generate a diary entry featuring photos captured and downloaded during your day. Please select Acess to All for best experience.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Inter-Regular.ttf</string>
@@ -86,6 +86,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+	<true/>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 </dict>

@@ -9,6 +9,7 @@ import Foundation
 import CoreLocation
 import EventKit
 import Photos
+import Dispatch
 @objc(Location)
 class Location: RCTEventEmitter, CLLocationManagerDelegate {
   var locationManager: CLLocationManager = CLLocationManager()
@@ -23,6 +24,10 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
   var startDate: Date!
   var endDate: Date!
   var allPhotos : PHFetchResult<PHAsset>? = nil
+  let semaphore = DispatchSemaphore(value: 1)
+  let photoThread = DispatchSemaphore(value: 1)
+  var calendarDenied = false
+
   // var documentsURLHey: URL = nil
 //  let documentsURL: URL = FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
 
@@ -62,18 +67,34 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
   func fetchEventsFromCalendar() -> Void {
           let status = EKEventStore.authorizationStatus(for: EKEntityType.event)
           switch status {
-          case .notDetermined: requestAccessToCalendar("Calendar")
+          case .notDetermined: semaphore.wait(); requestAccessToCalendar("Calendar")
           case .authorized: fetchEventsFromCalendar("Calendar")
-          case .denied: print("Access denied")
+          case .denied: calendarDenied = true
           default: break
           }
+      semaphore.wait();
       }
   @objc
+//  func requestAccessToCalendar(_ calendarTitle: String) {
+//          eventStore.requestAccess(to: EKEntityType.event) { (_, _) in
+//            self.fetchEventsFromCalendar()
+//          }
+//      }
+  
   func requestAccessToCalendar(_ calendarTitle: String) {
-          eventStore.requestAccess(to: EKEntityType.event) { (_, _) in
-            print("Access denied")
-          }
+    eventStore.requestAccess(to: EKEntityType.event) { (accessGranted, error) in
+      //            self.getCalendarPermissions()
+      if accessGranted == true {
+        self.fetchEventsFromCalendar(calendarTitle)
+      } else {
+        self.calendarDenied = true
+
       }
+      self.semaphore.signal()
+
+    }
+  }
+
   
   @objc
   func fetchEventsFromCalendar(_ calendarTitle: String) -> Void {
@@ -106,6 +127,30 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
           // Print the event titles so check if everything works correctly
           print(titles)
       }
+  @objc func sendDataToNative(_ data: Int, data2: Int, withResolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+    calendarDenied = false
+    let date = NSDate(timeIntervalSince1970: TimeInterval(data))
+    startDate = date as Date
+    let date2 = NSDate(timeIntervalSince1970: TimeInterval(data2))
+    endDate = date2 as Date
+    
+    let status = EKEventStore.authorizationStatus(for: EKEntityType.event)
+    switch status {
+//    case .notDetermined: semaphore.wait(); requestAccessToCalendar("Calendar")
+//    case .authorized: fetchEventsFromCalendar("Calendar")
+//    case .denied: reject("E_COUNT2", "DENIED", NSError(domain:"", code:101, userInfo:nil))
+    default: break
+    }
+    fetchEventsFromCalendar()
+    if calendarDenied == true {
+      reject("E_COUNT2", "DENIED", NSError(domain:"", code:101, userInfo:nil))
+
+    } else {
+      resolve(dateEvents)
+    }
+//    semaphore.wait();
+
+      }
 
   @objc func enablePermissions(
     _ resolve: RCTPromiseResolveBlock,
@@ -117,8 +162,8 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
     locationManager.desiredAccuracy = kCLLocationAccuracyBest
     locationManager.distanceFilter = kCLDistanceFilterNone
     locationManager.allowsBackgroundLocationUpdates = true
-    // locationManager.startMonitoringVisits()
-    locationManager.startUpdatingLocation()
+     locationManager.startMonitoringVisits()
+//    locationManager.startUpdatingLocation()
     resolve(true)
 
   }
@@ -169,20 +214,10 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
     
 //   }
   
-  @objc func sendDataToNative(_ data: Int, data2: Int, withResolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
-    let date = NSDate(timeIntervalSince1970: TimeInterval(data))
-    startDate = date as Date
-    let date2 = NSDate(timeIntervalSince1970: TimeInterval(data2))
-    endDate = date2 as Date
-    fetchEventsFromCalendar()
-    let status = EKEventStore.authorizationStatus(for: EKEntityType.event)
-    switch status {
-    case .notDetermined: reject("E_COUNT", "notDetermined", NSError())
-    case .authorized: resolve(dateEvents)
-    case .denied: reject("E_COUNT2", "DENIED", NSError(domain:"", code:100, userInfo:nil)
-)
-    default: break
-    }
+  
+//    reject("E_COUNT2", "DENIED", NSError(domain:"", code:100, userInfo:nil))
+
+    
 
 //     let formatter2 = DateFormatter()
 //    formatter2.dateFormat = "YY/MM/dd"
@@ -191,6 +226,40 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
 //    resolve(titles)
 //      reject("THIS IS A REJECT TEST")
 //    sendEvent(withName: "onCalendar", body: ["count": 1])
+
+  
+//  let semaphore = DispatchSemaphore(value: 1)
+
+  func requestAccessToCalendar2(_ calendarTitle: String) {
+    eventStore.requestAccess(to: EKEntityType.event) { (accessGranted, error) in
+      //            self.getCalendarPermissions()
+      if accessGranted == true {
+        self.permissionCalendar = 4
+
+      } else {
+        self.permissionCalendar = 5
+
+      }
+      self.semaphore.signal()
+
+    }
+  }
+  
+  var permissionCalendar = 0
+  @objc func enableCalendarPermissions( _ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+    self.getCalendarPermissions()
+      resolve(permissionCalendar)
+
+  }
+  
+  func getCalendarPermissions() {
+        let status = EKEventStore.authorizationStatus(for: EKEntityType.event)
+    switch status {
+    case .notDetermined: semaphore.wait(); self.requestAccessToCalendar2("Calendar")
+    case .authorized: permissionCalendar = 2
+    case .denied: permissionCalendar = 3
+    default: break    }
+    semaphore.wait();
 
   }
   
@@ -251,35 +320,130 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
     })
 
   }
+  var response = ""
+
+  var photoAccess = false
+
+  @available(iOS 14, *)
+  func test() -> Void {
+     let status2 = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+     switch status2 {
+        case .notDetermined: test2(); response = "nD"
+            // The user hasn't determined this app's access.
+        case .restricted: photoAccess = false
+            // The system restricted this app's access.
+        case .denied: photoAccess = false
+            // The user explicitly denied this app's access.
+        case .authorized: photoAccess = true
+            // The user authorized this app to access Photos data.
+        case .limited: photoAccess = true; test2();
+            // The user authorized this app for limited Photos access.
+        @unknown default: print("test")
+        }
+    photoThread.wait()
+  }
+
+  @available(iOS 14, *)
+  func test2() {
+    photoThread.wait()
+    PHPhotoLibrary.requestAuthorization(for: .readWrite) { photoStatus in
+        switch photoStatus {
+        case .notDetermined: self.photoAccess = false
+            // The user hasn't determined this app's access.
+        case .restricted: self.photoAccess = false
+            // The system restricted this app's access.
+        case .denied: self.photoAccess = false
+            // The user explicitly denied this app's access.
+        case .authorized: self.photoAccess = true
+            // The user authorized this app to access Photos data.
+        case .limited: self.photoAccess = true
+            // The user authorized this app for limited Photos access.
+        @unknown default: print("test")
+        }
+      // photoThread.signal()
+      self.photoThread.signal()
+    }
+  }
   
   @available(iOS 14, *)
   @objc func getPhotosFromNative(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
-    PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
-        switch status {
-        case .notDetermined:
-          print("test")
-        case .restricted:
-          print("test")
-        case .denied:
-          print("test")
-        case .authorized:
-          print("test")
-        case .limited:
-          print("test")
-        @unknown default:
-          print("test")
-        }
-    }
-    allPhotos = nil
+  
+
+    // let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    do {
+      photoAccess = false
+// photoThread.activate()
+// photoThread.wait()
+  test()
+  if photoAccess == true {
     fetchPhotos()
-    let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
-    switch status {
-    case .notDetermined: reject("E_COUNT", "notDetermined", NSError())
-    case .authorized: resolve(testIdentifiers)
-    case .denied: reject("E_COUNT2", "DENIED", NSError(domain:"", code:100, userInfo:nil)
-)
-    default: break
+    // resolve(testIdentifiers)
+    resolve(testIdentifiers)
+
+  } else {
+    reject("E_COUNT2", "DENIED", NSError(domain:"", code:100, userInfo:nil))
+  }
+
+    } catch {
+      reject("E_COUNT2", "DENIED", NSError(domain:"", code:105, userInfo:nil))
     }
+    
+  //   switch status {
+  //   case .notDetermined: photoThread.wait(); PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+  //     switch status {
+  //     case .restricted:
+  //       print("test")
+  //     case .denied:
+  //       accessDenied = true;
+  //     case .authorized:
+  //       print("test")
+  //     case .limited:
+  //       print("test")
+  //     default:
+  //       print("test")
+  //     }
+  //     photoThread.signal()
+  // }
+  //   case .authorized: accessDenied = false
+  //   case .denied: accessDenied = true
+  //   default: break
+  //   }
+    // photoThread.wait();
+
+//    PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+//        switch status {
+//        case .notDetermined:
+//          print("test")
+//        case .restricted:
+//          print("test")
+//        case .denied:
+//          print("test")
+//        case .authorized:
+//          print("test")
+//        case .limited:
+//          print("test")
+//        @unknown default:
+//          print("test")
+//        }
+//    }
+//    if accessDenied == false {
+      // allPhotos = nil
+      // fetchPhotos()
+      // resolve(testIdentifiers)
+      // resolve(true)
+//    } else {
+//      // reject("E_COUNT2", "DENIED", NSError(domain:"", code:100, userInfo:nil))
+//      resolve("HAHAHAHAHA")
+//    }
+    
+    //    let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+//    switch status {
+////    case .notDetermined: reject("E_COUNT", "notDetermined", NSError())
+//    case .authorized: resolve(testIdentifiers)
+//    case .denied: reject("E_COUNT2", "DENIED", NSError(domain:"", code:100, userInfo:nil)
+//)
+//    default: break
+//    }
 //    resolve(true)
 //    let fetchOptions = PHFetchOptions()
 //    let dateOne = NSDate()
@@ -299,15 +463,24 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
     // guard let location = locations.last else { return }
     // // backgroundlocations.append(locations.last)
     // logsArr.append("newElement: String2")
-    let clLocation = CLLocation(latitude: visit.coordinate.latitude, longitude: visit.coordinate.longitude) 
+    let clLocation = CLLocation(latitude: visit.coordinate.latitude, longitude: visit.coordinate.longitude)
     geoCoder.reverseGeocodeLocation(clLocation) { placemarks, _ in
       if let place = placemarks?.first {
         let description = "\(place)"
-        self.newVisitReceived(visit, description: description)
+        self.sendEvent(withName: "locationChange", body: ["lat": clLocation.coordinate.latitude as Any, "lon": clLocation.coordinate.longitude as Any, "description": description] as [String : Any])
+
       }
     }
 
-    sendEvent(withName: "onIncrement", body: ["count": "visit"])
+//    let clLocation = CLLocation(latitude: visit.coordinate.latitude, longitude: visit.coordinate.longitude)
+//    geoCoder.reverseGeocodeLocation(clLocation) { placemarks, _ in
+//      if let place = placemarks?.first {
+//        let description = "\(place)"
+//        self.newVisitReceived(visit, description: description)
+//      }
+//    }
+//
+//    sendEvent(withName: "onIncrement", body: ["count": "visit"])
 
   }
 

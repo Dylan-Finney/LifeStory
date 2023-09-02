@@ -57,12 +57,7 @@ import AppContext from './Context';
 import Location from './NativeFuncs';
 import Geolocation from '@react-native-community/geolocation';
 import useDatabaseHooks from './useDatabaseHooks';
-
-const {Configuration, OpenAIApi} = require('openai');
-const configuration = new Configuration({
-  apiKey: 'API_KEY_ENV',
-});
-const openai = new OpenAIApi(configuration);
+import SettingsView from './SettingsView';
 
 function getDifferenceUnit(diff) {
   const minute = 60 * 1000;
@@ -84,7 +79,7 @@ function getDifferenceUnit(diff) {
   }
 }
 const {
-  createTable,
+  createVisitsTable,
   insertData,
   retrieveData,
   calculateAverage,
@@ -227,16 +222,6 @@ export default App = () => {
         time: 1689857646,
       },
     ],
-    events: [
-      // {
-      //   id: 0,
-      //   stringIndex: 0,
-      //   type: "",
-      //   data: ""
-      // },
-      // {
-      // }
-    ],
     votes: [
       {
         startIndex: 0,
@@ -261,20 +246,6 @@ export default App = () => {
         source: 'manual',
       },
     },
-    entryArr: [
-      {
-        ref: '',
-        source: '',
-        entry:
-          'Today was a busy and productive day for me! In the morning, I had a team meeting to discuss exciting projects and milestones.',
-      },
-      {
-        ref: '',
-        source: '',
-        entry:
-          'Then, I met a client for lunch at this cool restaurant, Baba Mal where we talked about potential collaborations.',
-      },
-    ],
     events: [
       {
         type: 'location',
@@ -312,31 +283,32 @@ export default App = () => {
   moment.locale('en-gb');
   const [entry, setEntry] = useState(null);
   const [entries, setEntries] = useState(
-    [
-      baseEntry,
-      {
-        ...baseEntry,
-        time: 1690285514000,
-      },
-      {
-        ...baseEntry,
-        time: 1690372313000,
-      },
-      {
-        ...baseEntry,
-        time: 1690113113000,
-      },
-      {
-        ...baseEntry,
-        time: 1690026713000,
-      },
-      {
-        ...baseEntry,
-        time: 1689940313000,
-      },
-    ]
-      .sort((a, b) => a.time - b.time)
-      .sort((a, b) => moment(b.time).week() - moment(a.time).week()),
+    [],
+    // [
+    //   baseEntry,
+    //   {
+    //     ...baseEntry,
+    //     time: 1690285514000,
+    //   },
+    //   {
+    //     ...baseEntry,
+    //     time: 1690372313000,
+    //   },
+    //   {
+    //     ...baseEntry,
+    //     time: 1690113113000,
+    //   },
+    //   {
+    //     ...baseEntry,
+    //     time: 1690026713000,
+    //   },
+    //   {
+    //     ...baseEntry,
+    //     time: 1689940313000,
+    //   },
+    // ]
+    //   .sort((a, b) => a.time - b.time)
+    //   .sort((a, b) => moment(b.time).week() - moment(a.time).week()),
   );
   const [highlightedText, setHighlightedText] = useState('');
   const [tempTitle, setTempTitle] = useState('');
@@ -418,6 +390,46 @@ export default App = () => {
     }
   }, [recentEvent]);
 
+  useEffect(() => {
+    retrieveData('Entries', localEntries => {
+      console.log('LOADING ENTRIES DATA');
+      console.log({localEntries});
+      console.log({test: JSON.parse('["tags"]')});
+      try {
+        var updatedEntries = localEntries.map(localEntry => {
+          return {
+            ...localEntry,
+            tags: localEntry.tags === '' ? [] : JSON.parse(localEntry.tags),
+            time: parseInt(localEntry.time),
+            emotion: parseInt(localEntry.emotion),
+            emotions:
+              localEntry.emotions === '' ? [] : JSON.parse(localEntry.emotions),
+            votes: localEntry.votes === '' ? [] : JSON.parse(localEntry.votes),
+            title: localEntry.title,
+            origins: {
+              entry: {
+                time: parseInt(localEntry.bodyModifiedAt),
+                source: localEntry.bodyModifiedSource,
+              },
+              title: {
+                time: parseInt(localEntry.titleModifiedAt),
+                source: localEntry.titleModifiedSource,
+              },
+            },
+            events:
+              localEntry.events === '' ? [] : JSON.parse(localEntry.events),
+            entry: localEntry.body,
+            generated: parseInt(localEntry.generated) === 0 ? false : true,
+          };
+        });
+        console.log({updatedEntries});
+        setEntries(updatedEntries);
+      } catch (e) {
+        console.error(e);
+      }
+    });
+  }, []);
+
   // useEffect(() => {
   //   startTimer();
   //   return () => {
@@ -449,11 +461,13 @@ export default App = () => {
   //   moment(Date.now()).startOf('day').unix(),
   //   moment(Date.now()).endOf('day').unix(),
   // );
+
   NativeModules.Location.enablePermissions()
     .then(res => {
       CounterEvents.removeAllListeners('locationChange');
       CounterEvents.addListener('locationChange', res => {
         console.log('locationChange event', res);
+        createVisitsTable();
         insertData(res.date || Date.now(), res.lat, res.lon, res.description);
         retrieveData('Visits', steps => {
           console.log({steps});
@@ -540,6 +554,15 @@ export default App = () => {
           name="Entry"
           component={EntryView}
           options={{headerShown: true, title: ''}}
+        />
+        <RootStack.Screen
+          name="Settings"
+          options={{headerShown: true, title: ''}}
+          children={params => (
+            <AppContext.Provider value={contextValues}>
+              <SettingsView {...params} />
+            </AppContext.Provider>
+          )}
         />
       </RootStack.Navigator>
     </NavigationContainer>

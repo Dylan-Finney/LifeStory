@@ -35,10 +35,26 @@ const useDatabaseHooks = () => {
 
   // useEffect(() => {
   //   // deleteTable('Visits');
-  //   createTable();
+  //   createVisitsTable();
   // }, []);
 
-  const createTable = () => {
+  const createEntryTable = () => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS Entries (id INTEGER PRIMARY KEY AUTOINCREMENT, tags TEXT, title TEXT, time DATE, emotion INTEGER, emotions TEXT, votes TEXT, bodyModifiedAt DATE, bodyModifiedSource TEXT, titleModifiedAt DATE, titleModifiedSource TEXT, events TEXT, body TEXT, generated INTEGER);`,
+      );
+    });
+  };
+
+  const createSettingsTable = () => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS Settings (id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT);`,
+      );
+    });
+  };
+
+  const createVisitsTable = () => {
     db.transaction(tx => {
       tx.executeSql(
         `CREATE TABLE IF NOT EXISTS Visits (id INTEGER PRIMARY KEY AUTOINCREMENT, date DATE, lat DECIMAL, lon DEMICAL, description TEXT);`,
@@ -56,6 +72,108 @@ const useDatabaseHooks = () => {
         },
         (_, error) => {
           console.log('Error inserting data:', error);
+        },
+      );
+    });
+  };
+
+  const saveEntryData = (
+    tags,
+    title,
+    time,
+    emotion,
+    emotions,
+    votes,
+    bodyModifiedAt,
+    bodyModifiedSource,
+    titleModifiedAt,
+    titleModifiedSource,
+    events,
+    body,
+    generated,
+  ) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `INSERT INTO Entries (tags, title, time, emotion, emotions, votes, bodyModifiedAt, bodyModifiedSource, titleModifiedAt, titleModifiedSource, events, body, generated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          tags,
+          title,
+          time,
+          emotion,
+          emotions,
+          votes,
+          bodyModifiedAt,
+          bodyModifiedSource,
+          titleModifiedAt,
+          titleModifiedSource,
+          events,
+          body,
+          generated,
+        ],
+        (_, result) => {
+          console.log('Entry created successfully', result);
+        },
+        (_, error) => {
+          console.log('Error creating entry:', error);
+        },
+      );
+    });
+  };
+
+  const saveSettingsData = data => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `INSERT INTO Settings (data) VALUES (?)`,
+        [data],
+        (_, result) => {
+          console.log('Entry created successfully', result);
+        },
+        (_, error) => {
+          console.log('Error creating entry:', error);
+        },
+      );
+    });
+  };
+
+  const updateEntryData = (
+    tags,
+    title,
+    time,
+    emotion,
+    emotions,
+    votes,
+    bodyModifiedAt,
+    bodyModifiedSource,
+    titleModifiedAt,
+    titleModifiedSource,
+    events,
+    body,
+    id,
+  ) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `UPDATE Entries SET tags = ?, title = ?, time = ?, emotion = ?, emotions = ?, votes = ?, bodyModifiedAt = ?, bodyModifiedSource = ?, titleModifiedAt = ?, titleModifiedSource = ?, events = ?, body = ? WHERE id = ?`,
+        // `UPDATE Entries SET title = ? WHERE id = ?`,
+        [
+          tags,
+          title,
+          time,
+          emotion,
+          emotions,
+          votes,
+          bodyModifiedAt,
+          bodyModifiedSource,
+          titleModifiedAt,
+          titleModifiedSource,
+          events,
+          body,
+          id,
+        ],
+        (_, result) => {
+          console.log('Data updated successfully', result);
+        },
+        (_, error) => {
+          console.log('Error updating data:', error);
         },
       );
     });
@@ -98,30 +216,55 @@ const useDatabaseHooks = () => {
       );
     });
   };
-  const calculateAverage = (
-    tableName,
-    columnName,
-    startDate,
-    endDate,
-    callback,
-  ) => {
+
+  const retrieveEntriesData = (startDate, endDate, callback) => {
+    // var startOfDay = new Date(
+    //   startDate.getFullYear(),
+    //   startDate.getMonth(),
+    //   startDate.getDate(),
+    // );
+    // var endOfDay = new Date(
+    //   endDate.getFullYear(),
+    //   endDate.getMonth(),
+    //   endDate.getDate() - 1,
+    // );
     db.transaction(tx => {
-      tx.executeSql(
-        `SELECT AVG(${columnName}) as average FROM ${tableName} WHERE date BETWEEN ? AND ?`,
-        [startDate.getTime(), endDate.getTime()],
-        (tx, results) => {
-          callback(results.rows.item(0).average);
-        },
-      );
+      tx.executeSql(`SELECT * FROM Entries`, [], (tx, results) => {
+        let data = [];
+        for (let i = 0; i < results.rows.length; i++) {
+          data.push(results.rows.item(i));
+        }
+        callback(data);
+      });
     });
   };
+  // const calculateAverage = (
+  //   tableName,
+  //   columnName,
+  //   startDate,
+  //   endDate,
+  //   callback,
+  // ) => {
+  //   db.transaction(tx => {
+  //     tx.executeSql(
+  //       `SELECT AVG(${columnName}) as average FROM ${tableName} WHERE date BETWEEN ? AND ?`,
+  //       [startDate.getTime(), endDate.getTime()],
+  //       (tx, results) => {
+  //         callback(results.rows.item(0).average);
+  //       },
+  //     );
+  //   });
+  // };
 
   return {
-    createTable,
+    createVisitsTable,
     deleteTable,
     insertData,
     retrieveData,
-    calculateAverage,
+    // calculateAverage,
+    createEntryTable,
+    saveEntryData,
+    updateEntryData,
     retrieveSpecificData,
   };
 };

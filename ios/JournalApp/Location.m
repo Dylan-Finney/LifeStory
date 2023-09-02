@@ -16,4 +16,8 @@ RCT_EXTERN_METHOD(
                   getPhotosFromNative:(RCTPromiseResolveBlock)resolve
                   rejecter: (RCTPromiseRejectBlock)reject
                   )
+RCT_EXTERN_METHOD(
+                  enableCalendarPermissions:(RCTPromiseResolveBlock)resolve
+                  rejecter: (RCTPromiseRejectBlock)reject
+                  )
 @end

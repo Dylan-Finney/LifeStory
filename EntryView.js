@@ -50,11 +50,13 @@ import {CustomInput} from './NativeJournal';
 import moment from 'moment';
 import AppContext from './Context';
 import {ImageAsset} from './NativeImage';
+import Config from 'react-native-config';
+
 const diff = require('diff');
 // import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 const {Configuration, OpenAIApi} = require('openai');
 const configuration = new Configuration({
-  apiKey: 'API_KEY_ENV',
+  apiKey: Config.OPENAI_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
@@ -82,7 +84,7 @@ export default App = ({route, navigation}) => {
   const {baseEntry} = route.params;
 
   const isDarkMode = useColorScheme() === 'dark';
-  const [modalVisible, setModalVisible] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
   const [modalScreen, setModalScreen] = useState(5);
   // const {entries, setEntries} = useContext(AppContext);
   const [writingSettings, setWritingSettings] = useState({
@@ -273,6 +275,8 @@ export default App = ({route, navigation}) => {
     title: 0,
     highlight: 0,
   });
+  const [tempVotes, setTempVotes] = useState([]);
+  const [tempEmotions, setTempEmotions] = useState({});
   const baseLoading = {attribute: '', action: '', stage: 0};
   const [loading, setLoading] = useState(baseLoading);
 
@@ -342,6 +346,7 @@ export default App = ({route, navigation}) => {
       //end = start + length - 1
       // console.log(len);
       switch (recentEvent.action) {
+        //Vote
         case 1.1:
         case 1.2:
         case 1.3:
@@ -375,13 +380,16 @@ export default App = ({route, navigation}) => {
               },
             ],
           });
+          setTempVotes(entry.votes);
           EmotionScrollViewRef.current?.scrollToEnd({animated: true});
           break;
+        //AI Rewrite
         case 2:
           setModalVisible(true);
           setModalScreen(1);
           setHighlightedText({str: recentEvent.str, position: len});
           break;
+        //Emotion
         case 3.1:
         case 3.2:
         case 3.3:
@@ -406,8 +414,10 @@ export default App = ({route, navigation}) => {
               },
             ],
           });
+          setTempEmotions({emotions: entry.emotions, emotion: entry.emotion});
           EmotionScrollViewRef.current?.scrollToEnd({animated: true});
           break;
+        //Tag
         case 4:
           setModalVisible(true);
           setModalScreen(2);
@@ -507,12 +517,12 @@ export default App = ({route, navigation}) => {
                                   source: 'auto',
                                   time: Date.now(),
                                 }
-                              : tempOrigins.entry,
+                              : entry.origins.entry,
                           title:
                             tempTitle !== entry.title
                               ? {
                                   source: 'auto',
-                                  time: tempOrigins.title,
+                                  time: Date.now(),
                                 }
                               : entry.origins.title,
                         },
@@ -1013,7 +1023,7 @@ export default App = ({route, navigation}) => {
                                 {
                                   role: 'system',
                                   content:
-                                    'Your job is to rewrite the contents of a diary entry to adhere to the provided emotion and tone. The diary entry should be based on the current contents of the diary entry. Respond with just the diary entry contents, e.g. Today was a good day.',
+                                    'Your job is to rewrite the contents of a diary entry to adhere to the provided emotion and tone. The diary entry should be based on the current contents of the diary entry. Keep it short. Respond with just the diary entry contents, e.g. Today was a good day.',
                                 },
                                 {
                                   role: 'user',
@@ -1041,6 +1051,8 @@ export default App = ({route, navigation}) => {
                                 messages,
                                 completion:
                                   completion.data.choices[0].message.content,
+                                origins: Date.now(),
+                                currentDate,
                               });
                               setTempEntry(
                                 completion.data.choices[0].message.content,
@@ -1551,44 +1563,11 @@ export default App = ({route, navigation}) => {
                 </View>
                 <TouchableOpacity
                   onPress={() => {
-                    if (recentEvent) {
-                      setEntry({
-                        ...entry,
-                        entry:
-                          entry.entry.substring(
-                            0,
-                            highlightedText.position[0],
-                          ) +
-                          highlightedText.str +
-                          entry.entry.substring(
-                            highlightedText.position[1] + 1,
-                          ),
-                      });
-                      setModalVisible(false);
-                    } else {
-                      setEntry({
-                        ...entry,
-                        entry: tempEntry,
-                        title: tempTitle,
-                        origins: {
-                          entry:
-                            tempEntry !== entry.entry
-                              ? {
-                                  source: 'auto',
-                                  time: Date.now(),
-                                }
-                              : tempOrigins.entry,
-                          title:
-                            tempTitle !== entry.title
-                              ? {
-                                  source: 'auto',
-                                  time: tempOrigins.title,
-                                }
-                              : entry.origins.title,
-                        },
-                      });
-                      setModalVisible(false);
-                    }
+                    setEntry({
+                      ...entry,
+                      votes: tempVotes,
+                    });
+                    setModalVisible(false);
                   }}
                   style={{
                     flexGrow: 1,
@@ -1611,11 +1590,11 @@ export default App = ({route, navigation}) => {
               </View>
               <ScrollView
                 ref={EmotionScrollViewRef}
-                onLayout={() => {
-                  if (recentEvent) {
-                    EmotionScrollViewRef.current?.scrollToEnd({animated: true});
-                  }
-                }}
+                // onLayout={() => {
+                //   if (recentEvent) {
+                //     EmotionScrollViewRef.current?.scrollToEnd({animated: true});
+                //   }
+                // }}
                 style={{height: '90%'}}
                 contentContainerStyle={{
                   display: 'flex',
@@ -1624,7 +1603,7 @@ export default App = ({route, navigation}) => {
                   padding: 20,
                 }}>
                 <View>
-                  {entry.votes
+                  {tempVotes
                     .sort((a, b) => a.time - b.time)
                     .map((extract, extractIndex) => {
                       return (
@@ -1643,7 +1622,7 @@ export default App = ({route, navigation}) => {
                         )} */}
                           {extractIndex === 0 ||
                           new Date(
-                            entry.votes.sort((a, b) => a.time - b.time)[
+                            tempVotes.sort((a, b) => a.time - b.time)[
                               extractIndex - 1
                             ].time,
                           ).getHours() !== new Date(extract.time).getHours() ? (
@@ -1730,7 +1709,7 @@ export default App = ({route, navigation}) => {
                                   }}>
                                   <TouchableOpacity
                                     onPress={() => {
-                                      var copyArray = entry.votes;
+                                      var copyArray = [...tempVotes];
                                       var index = copyArray.findIndex(
                                         extractCopy =>
                                           JSON.stringify(extractCopy) ===
@@ -1738,12 +1717,10 @@ export default App = ({route, navigation}) => {
                                       );
                                       copyArray.splice(index, 1, {
                                         ...extract,
-                                        vote: 1,
+                                        vote:
+                                          copyArray[index].vote === 1 ? 0 : 1,
                                       });
-                                      setEntry({
-                                        ...entry,
-                                        emotions: copyArray,
-                                      });
+                                      setTempVotes(copyArray);
                                     }}>
                                     <View
                                       style={{
@@ -1770,20 +1747,20 @@ export default App = ({route, navigation}) => {
                                   </TouchableOpacity>
                                   <TouchableOpacity
                                     onPress={() => {
-                                      var copyArray = entry.votes;
+                                      var copyArray = [...tempVotes];
                                       var index = copyArray.findIndex(
                                         extractCopy =>
                                           JSON.stringify(extractCopy) ===
                                           JSON.stringify(extract),
                                       );
+                                      console.log({copyArray, extract, index});
                                       copyArray.splice(index, 1, {
                                         ...extract,
-                                        vote: -1,
+                                        vote:
+                                          copyArray[index].vote === -1 ? 0 : -1,
                                       });
-                                      setEntry({
-                                        ...entry,
-                                        emotions: copyArray,
-                                      });
+                                      console.log({copyArray, index});
+                                      setTempVotes(copyArray);
                                     }}>
                                     <View
                                       style={{
@@ -1974,7 +1951,7 @@ export default App = ({route, navigation}) => {
                         <TouchableOpacity
                           key={i}
                           onPress={() => {
-                            setEntry({...entry, emotion: i});
+                            setTempEmotions({...tempEmotions, emotion: i});
                           }}>
                           <View
                             style={{
@@ -1984,13 +1961,17 @@ export default App = ({route, navigation}) => {
                               padding: 3,
                               gap: 2,
                               backgroundColor:
-                                entry.emotion === i ? '#F0F9FF' : '#EAECF0',
+                                tempEmotions.emotion === i
+                                  ? '#F0F9FF'
+                                  : '#EAECF0',
                               borderColor:
-                                entry.emotion === i ? '#0BA5EC' : '#EAECF0',
+                                tempEmotions.emotion === i
+                                  ? '#0BA5EC'
+                                  : '#EAECF0',
                               borderWidth: 1,
                               borderRadius: 5,
                             }}>
-                            {emotion.icon(entry.emotion === i)}
+                            {emotion.icon(tempEmotions.emotion === i)}
                             <Text
                               key={i}
                               style={{
@@ -2055,7 +2036,7 @@ export default App = ({route, navigation}) => {
                       <Text>Emotions added to individual journal items.</Text>
                     </View>
                   </View>
-                  {entry.emotions
+                  {tempEmotions.emotions
                     .sort((a, b) => a.time - b.time)
                     .map((extract, extractIndex) => {
                       return (
@@ -2074,9 +2055,9 @@ export default App = ({route, navigation}) => {
                         )} */}
                           {extractIndex === 0 ||
                           new Date(
-                            entry.emotions.sort((a, b) => a.time - b.time)[
-                              extractIndex - 1
-                            ].time,
+                            tempEmotions.emotions.sort(
+                              (a, b) => a.time - b.time,
+                            )[extractIndex - 1].time,
                           ).getHours() !== new Date(extract.time).getHours() ? (
                             <View
                               style={{
@@ -2142,6 +2123,8 @@ export default App = ({route, navigation}) => {
                                   alignItems: 'center',
                                   justifyContent: 'space-between',
                                   width: '100%',
+                                  height: 35,
+                                  padding: 10,
                                 }}>
                                 <View
                                   style={{
@@ -2202,7 +2185,9 @@ export default App = ({route, navigation}) => {
                                   <TouchableOpacity
                                     key={i}
                                     onPress={() => {
-                                      var copyArray = entry.emotions;
+                                      var copyArray = [
+                                        ...tempEmotions.emotions,
+                                      ];
                                       var index = copyArray.findIndex(
                                         extractCopy =>
                                           JSON.stringify(extractCopy) ===
@@ -2210,10 +2195,13 @@ export default App = ({route, navigation}) => {
                                       );
                                       copyArray.splice(index, 1, {
                                         ...extract,
-                                        emotion: i,
+                                        emotion:
+                                          copyArray[index].emotion === i
+                                            ? -1
+                                            : i,
                                       });
-                                      setEntry({
-                                        ...entry,
+                                      setTempEmotions({
+                                        ...tempEmotions,
                                         emotions: copyArray,
                                       });
                                     }}>
@@ -2265,59 +2253,19 @@ export default App = ({route, navigation}) => {
                     onModalCloseCancel();
                   }}
                   style={{flexGrow: 1, flexBasis: 0, alignItems: 'flex-start'}}>
-                  <Text>Cancel</Text>
+                  <Text>Close</Text>
                 </TouchableOpacity>
                 <View style={{display: 'flex', flexDirection: 'row'}}>
-                  <EmotionTaggingIcon stroke={'black'} />
+                  {/* <EmotionTaggingIcon stroke={'black'} /> */}
                   <Text style={{fontSize: 20, fontWeight: 600}}>Events</Text>
                 </View>
-                <TouchableOpacity
-                  onPress={() => {
-                    if (recentEvent) {
-                      setEntry({
-                        ...entry,
-                        entry:
-                          entry.entry.substring(
-                            0,
-                            highlightedText.position[0],
-                          ) +
-                          highlightedText.str +
-                          entry.entry.substring(
-                            highlightedText.position[1] + 1,
-                          ),
-                      });
-                      setModalVisible(false);
-                    } else {
-                      setEntry({
-                        ...entry,
-                        entry: tempEntry,
-                        title: tempTitle,
-                        origins: {
-                          entry:
-                            tempEntry !== entry.entry
-                              ? {
-                                  source: 'auto',
-                                  time: Date.now(),
-                                }
-                              : tempOrigins.entry,
-                          title:
-                            tempTitle !== entry.title
-                              ? {
-                                  source: 'auto',
-                                  time: tempOrigins.title,
-                                }
-                              : entry.origins.title,
-                        },
-                      });
-                      setModalVisible(false);
-                    }
-                  }}
+                <View
                   style={{
                     flexGrow: 1,
                     flexBasis: 0,
                     alignItems: 'flex-end',
                   }}>
-                  <Text
+                  {/* <Text
                     style={{
                       color: recentEvent
                         ? highlightedText.str === recentEvent.str
@@ -2328,88 +2276,96 @@ export default App = ({route, navigation}) => {
                         : '#0BA5EC',
                     }}>
                     Update entry
-                  </Text>
-                </TouchableOpacity>
+                  </Text> */}
+                </View>
               </View>
-              <ScrollView
-                ref={EmotionScrollViewRef}
-                onLayout={() => {
-                  if (recentEvent) {
-                    EmotionScrollViewRef.current?.scrollToEnd({animated: true});
-                  }
-                }}
-                style={{height: '90%'}}
-                contentContainerStyle={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 20,
-                  padding: 20,
-                }}>
-                {entry.events?.map((event, i) => (
-                  <View
-                    key={i}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                    }}>
+              {entry.events.length > 0 ? (
+                <ScrollView
+                  ref={EmotionScrollViewRef}
+                  onLayout={() => {
+                    if (recentEvent) {
+                      EmotionScrollViewRef.current?.scrollToEnd({
+                        animated: true,
+                      });
+                    }
+                  }}
+                  style={{height: '90%'}}
+                  contentContainerStyle={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 20,
+                    padding: 20,
+                  }}>
+                  {entry.events?.map((event, i) => (
                     <View
+                      key={i}
                       style={{
+                        display: 'flex',
+                        flexDirection: 'row',
                         alignItems: 'center',
-                        backgroundColor: '#E1E3E6',
-                        padding: 5,
                       }}>
-                      <Text>{event.id}</Text>
-                    </View>
-                    <View style={{display: 'flex', flexGrow: 1, padding: 10}}>
                       <View
                         style={{
-                          display: 'flex',
-                          flexDirection: 'row',
-                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          backgroundColor: '#E1E3E6',
+                          padding: 5,
                         }}>
-                        <Text>{moment(event.time).format('LLL')}</Text>
-                        <View style={{display: 'flex', flexDirection: 'row'}}>
-                          {event.type === 'location' && <LocationIcon />}
-                          {event.type === 'calendar' && <CalendarIcon />}
-                          <Text>
-                            {event.type.charAt(0).toUpperCase() +
-                              event.type.slice(1)}
-                          </Text>
-                        </View>
+                        <Text>{event.id}</Text>
                       </View>
-                      <Text>{event.title}</Text>
-
-                      {event.type === 'photo' ? (
-                        <>
-                          <View style={{height: 100, width: 100}}>
-                            <ImageAsset
-                              localIdentifier={event.localIdentifier}
-                              setHeight={100}
-                              setWidth={100}
-                              // height={1}
-                              style={{flex: 1, height: '100%', width: '100%'}}
-                            />
+                      <View style={{display: 'flex', flexGrow: 1, padding: 10}}>
+                        <View
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                          }}>
+                          <Text>{moment(event.time).format('LLL')}</Text>
+                          <View style={{display: 'flex', flexDirection: 'row'}}>
+                            {event.type === 'location' && <LocationIcon />}
+                            {event.type === 'calendar' && <CalendarIcon />}
+                            <Text>
+                              {event.type.charAt(0).toUpperCase() +
+                                event.type.slice(1)}
+                            </Text>
                           </View>
-                          {event.lat ? (
-                            <>
-                              <Text>{event.loc}</Text>
-                            </>
-                          ) : (
-                            <>
-                              <Text>No location or Photo was downloaded</Text>
-                            </>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <Text>{event.additionalNotes}</Text>
-                        </>
-                      )}
+                        </View>
+                        <Text>{event.title}</Text>
+
+                        {event.type === 'photo' ? (
+                          <>
+                            <View style={{height: 100, width: 100}}>
+                              <ImageAsset
+                                localIdentifier={event.localIdentifier}
+                                setHeight={100}
+                                setWidth={100}
+                                // height={1}
+                                style={{flex: 1, height: '100%', width: '100%'}}
+                              />
+                            </View>
+                            {event.lat ? (
+                              <>
+                                <Text>{event.loc}</Text>
+                              </>
+                            ) : (
+                              <>
+                                <Text>No location or Photo was downloaded</Text>
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <Text>{event.additionalNotes}</Text>
+                          </>
+                        )}
+                      </View>
                     </View>
-                  </View>
-                ))}
-              </ScrollView>
+                  ))}
+                </ScrollView>
+              ) : (
+                <View>
+                  <Text>There are no events for this entry</Text>
+                </View>
+              )}
             </View>
           )}
         </View>
@@ -2849,6 +2805,7 @@ export default App = ({route, navigation}) => {
           }}>
           <TouchableOpacity
             onPress={() => {
+              setCurrentDate(Date.now());
               setModalScreen(1);
               setModalVisible(true);
               setTempEntry(entry.entry);
@@ -2863,13 +2820,18 @@ export default App = ({route, navigation}) => {
             }}>
             <ContentTaggingIcon fill={'black'} />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setModalScreen(5);
+              setModalVisible(true);
+            }}>
             <Text>Events</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
               setModalScreen(3);
               setModalVisible(true);
+              setTempVotes(entry.votes);
             }}>
             <ContentVotingIcon />
           </TouchableOpacity>
@@ -2877,6 +2839,10 @@ export default App = ({route, navigation}) => {
             onPress={() => {
               setModalScreen(4);
               setModalVisible(true);
+              setTempEmotions({
+                emotions: entry.emotions,
+                emotion: entry.emotion,
+              });
             }}>
             <EmotionTaggingIcon stroke={'#000'} />
           </TouchableOpacity>
