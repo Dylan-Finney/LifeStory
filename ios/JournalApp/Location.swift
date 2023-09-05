@@ -24,7 +24,7 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
   var startDate: Date!
   var endDate: Date!
   var allPhotos : PHFetchResult<PHAsset>? = nil
-  let semaphore = DispatchSemaphore(value: 1)
+  let semaphore = DispatchSemaphore(value: 0)
   let photoThread = DispatchSemaphore(value: 1)
   var calendarDenied = false
 
@@ -65,14 +65,15 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
   
   @objc
   func fetchEventsFromCalendar() -> Void {
+    // semaphore = DispatchGr
           let status = EKEventStore.authorizationStatus(for: EKEntityType.event)
           switch status {
-          case .notDetermined: semaphore.wait(); requestAccessToCalendar("Calendar")
+          case .notDetermined: requestAccessToCalendar("Calendar"); semaphore.wait();
           case .authorized: fetchEventsFromCalendar("Calendar")
           case .denied: calendarDenied = true
           default: break
           }
-      semaphore.wait();
+      // semaphore.wait();
       }
   @objc
 //  func requestAccessToCalendar(_ calendarTitle: String) {
@@ -133,7 +134,7 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
     startDate = date as Date
     let date2 = NSDate(timeIntervalSince1970: TimeInterval(data2))
     endDate = date2 as Date
-    
+
     let status = EKEventStore.authorizationStatus(for: EKEntityType.event)
     switch status {
 //    case .notDetermined: semaphore.wait(); requestAccessToCalendar("Calendar")
@@ -142,13 +143,13 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
     default: break
     }
     fetchEventsFromCalendar()
+    // resolve(dateEvents)
     if calendarDenied == true {
       reject("E_COUNT2", "DENIED", NSError(domain:"", code:101, userInfo:nil))
 
     } else {
       resolve(dateEvents)
     }
-//    semaphore.wait();
 
       }
 
@@ -325,10 +326,10 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
   var photoAccess = false
 
   @available(iOS 14, *)
-  func test() -> Void {
+  func getPhotosAccess() -> Void {
      let status2 = PHPhotoLibrary.authorizationStatus(for: .readWrite)
      switch status2 {
-        case .notDetermined: test2(); response = "nD"
+        case .notDetermined: test2(); photoThread.wait();
             // The user hasn't determined this app's access.
         case .restricted: photoAccess = false
             // The system restricted this app's access.
@@ -340,7 +341,7 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
             // The user authorized this app for limited Photos access.
         @unknown default: print("test")
         }
-    photoThread.wait()
+    
   }
 
   @available(iOS 14, *)
@@ -374,7 +375,7 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
       photoAccess = false
 // photoThread.activate()
 // photoThread.wait()
-  test()
+  getPhotosAccess()
   if photoAccess == true {
     fetchPhotos()
     // resolve(testIdentifiers)

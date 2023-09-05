@@ -167,7 +167,7 @@ export default App = ({route, navigation}) => {
     // `,
   };
 
-  moment.locale('en-gb');
+  // moment.locale('en-gb');
   const [entry, setEntry] = useState(null);
   const {entries, setEntries} = useContext(AppContext);
   // const [entries, setEntries] = useState(
@@ -200,6 +200,8 @@ export default App = ({route, navigation}) => {
 
   const [loading, setLoading] = useState(false);
   const [gettingData, setGettingData] = useState(true);
+  const [generatingEntry, setGeneratingEntry] = useState(false);
+
   // const [onBoarding, setOnBoarding] = useState(false);
 
   const [onBoardingStep, setOnBoardingStep] = useState(0);
@@ -338,6 +340,8 @@ export default App = ({route, navigation}) => {
                   setOnBoardingStep(onBoardingStep + 1);
                   if (onBoardingStep === 3) {
                     //DAY
+                    setGettingData(true);
+                    setLoading(true);
                     var events = [];
                     var locations = [];
                     var counter = 1;
@@ -382,18 +386,20 @@ export default App = ({route, navigation}) => {
                     } catch (e) {
                       console.error({e});
                     }
+                    setGettingData(false);
                     // console.log({photos});
                     var entriesCopy = [...entries];
                     // .sort((a, b) => a.time - b.time)
                     // .sort((a, b) => moment(b.time).week() - moment(a.time).week());
                     var entryEvents = [];
-                    locations = [
-                      {
-                        description: '21 Winchmore Hill Road',
-                        time: 1691762203882,
-                        id: 1,
-                      },
-                    ];
+                    //  Example Locations to limit size
+                    // locations = [
+                    //   {
+                    //     description: '21 Winchmore Hill Road',
+                    //     time: 1691762203882,
+                    //     id: 1,
+                    //   },
+                    // ];
                     locations = locations.map(location => {
                       entryEvents.push({
                         type: 'location',
@@ -412,6 +418,7 @@ export default App = ({route, navigation}) => {
                         type: 'calendar',
                         id: counter,
                         time: parseInt(event.start) * 1000,
+                        endTime: parseInt(event.end) * 1000,
                         title: event.title,
                         additionalNotes: event.notes,
                       });
@@ -445,7 +452,7 @@ export default App = ({route, navigation}) => {
                       entriesCopy.push({
                         ...baseEntry,
                         time: startOfUnixTime * 1000,
-                        entry: '',
+                        entry: 'No Events Found',
                         events: [],
                         entry: '',
                         title: 'New Entry',
@@ -549,6 +556,7 @@ export default App = ({route, navigation}) => {
                       console.error(e);
                     }
                     setEntries(entriesCopy);
+                    setLoading(false);
                     setOnBoarding(false);
                   }
                 }}>
@@ -790,127 +798,143 @@ export default App = ({route, navigation}) => {
                 flexDirection: 'row',
                 justifyContent: 'space-evenly',
               }}>
-              <TouchableOpacity
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#667085',
-                  padding: 5,
-                  borderRadius: 5,
-                }}>
-                <Text
-                  onPress={async () => {
-                    //DAY
-                    var events = [];
-                    var locations = [];
-                    var counter = 1;
-                    var photos = [];
-                    // GET CALENDAR EVENTS
-                    let startOfUnixTime = moment(Date.now())
-                      .startOf('day')
-                      .unix();
+              {generatingEntry ? (
+                <Text>Loading...</Text>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#667085',
+                      padding: 5,
+                      borderRadius: 5,
+                    }}
+                    onPress={async () => {
+                      setGeneratingEntry(true);
+                      console.log('Generate');
+                      // setGettingData(true);
+                      // setLoading(true);
+                      //DAY
+                      var events = [];
+                      var locations = [];
+                      var counter = 1;
+                      var photos = [];
+                      // GET CALENDAR EVENTS
+                      let startOfUnixTime = moment(Date.now())
+                        .startOf('day')
+                        .unix();
 
-                    let endOfUnixTime = moment(Date.now()).endOf('day').unix();
-                    try {
-                      events = await Location.sendDataToNative(
-                        startOfUnixTime,
-                        endOfUnixTime,
-                      );
-                      console.log(events);
-                    } catch (e) {
-                      if (e.message === 'DENIED') {
-                        console.error(
-                          'GIVE PERMISSION TO APP FOR CALENDAR USAGE',
+                      let endOfUnixTime = moment(Date.now())
+                        .endOf('day')
+                        .unix();
+                      try {
+                        console.log('events', {startOfUnixTime, endOfUnixTime});
+                        events = await Location.sendDataToNative(
+                          startOfUnixTime,
+                          endOfUnixTime,
                         );
-                      } else {
-                        console.error(e);
+                        console.log({events});
+                      } catch (e) {
+                        if (e.message === 'DENIED') {
+                          console.error(
+                            'GIVE PERMISSION TO APP FOR CALENDAR USAGE',
+                          );
+                        } else {
+                          console.error(e);
+                        }
                       }
-                    }
+                      console.log('locations');
+                      // GET LOCATIONS
+                      retrieveSpecificData(
+                        startOfUnixTime * 1000,
+                        endOfUnixTime * 1000,
+                        res => {
+                          (locations = res.map(obj => {
+                            return {
+                              description: obj.description.split(',')[0],
+                              time: obj.date,
+                            };
+                          })),
+                            console.log(locations);
+                        },
+                      );
+                      console.log('photos');
+                      try {
+                        photos = await Location.getPhotosFromNative();
+                        console.log({photos});
+                      } catch (e) {
+                        console.error({e});
+                      }
+                      // setGettingData(false);
+                      // console.log({photos});
 
-                    // GET LOCATIONS
-                    retrieveSpecificData(
-                      startOfUnixTime * 1000,
-                      endOfUnixTime * 1000,
-                      res => {
-                        (locations = res.map(obj => {
-                          return {
-                            description: obj.description.split(',')[0],
-                            time: obj.date,
-                          };
-                        })),
-                          console.log(locations);
-                      },
-                    );
-                    try {
-                      photos = await Location.getPhotosFromNative();
-                      console.log({photos});
-                    } catch (e) {
-                      console.error({e});
-                    }
-                    // console.log({photos});
-
-                    var entriesCopy = [...entries];
-                    // .sort((a, b) => a.time - b.time)
-                    // .sort((a, b) => moment(b.time).week() - moment(a.time).week());
-                    var entryEvents = [];
-                    locations = [
-                      {
-                        description: '21 Winchmore Hill Road',
-                        time: 1691762203882,
-                        id: 1,
-                      },
-                    ];
-                    locations = locations.map(location => {
-                      entryEvents.push({
-                        type: 'location',
-                        id: counter,
-                        time: location.time,
-                        title: location.description.split(',')[0],
-                        additionalNotes: '',
+                      var entriesCopy = [...entries];
+                      // .sort((a, b) => a.time - b.time)
+                      // .sort((a, b) => moment(b.time).week() - moment(a.time).week());
+                      var entryEvents = [];
+                      //  Example Locations to limit size
+                      // locations = [
+                      //   {
+                      //     description: '21 Winchmore Hill Road',
+                      //     time: 1691762203882,
+                      //     id: 1,
+                      //   },
+                      // ];
+                      locations = locations.map(location => {
+                        entryEvents.push({
+                          type: 'location',
+                          id: counter,
+                          time: location.time,
+                          title: location.description.split(',')[0],
+                          additionalNotes: '',
+                        });
+                        return {
+                          ...location,
+                          id: counter++,
+                        };
                       });
-                      return {
-                        ...location,
-                        id: counter++,
-                      };
-                    });
-                    events = events.map(event => {
-                      entryEvents.push({
-                        type: 'calendar',
-                        id: counter,
-                        time: parseInt(event.start) * 1000,
-                        title: event.title,
-                        additionalNotes: event.notes,
+                      events = events.map(event => {
+                        entryEvents.push({
+                          type: 'calendar',
+                          id: counter,
+                          time: parseInt(event.start) * 1000,
+                          endTime: parseInt(event.end) * 1000,
+                          title: event.title,
+                          additionalNotes: event.notes,
+                        });
+                        return {
+                          ...event,
+                          time: parseInt(event.start) * 1000,
+                          id: counter++,
+                        };
                       });
-                      return {
-                        ...event,
-                        time: parseInt(event.start) * 1000,
-                        id: counter++,
-                      };
-                    });
-                    photos = photos.map(photo => {
-                      entryEvents.push({
-                        type: 'photo',
-                        id: counter,
-                        time: Math.floor(parseFloat(photo.creation) * 1000),
-                        localIdentifier: photo.localIdentifier,
-                        title: photo.name,
+                      photos = photos.map(photo => {
+                        entryEvents.push({
+                          type: 'photo',
+                          id: counter,
+                          time: Math.floor(parseFloat(photo.creation) * 1000),
+                          localIdentifier: photo.localIdentifier,
+                          title: photo.name,
+                        });
+                        return {
+                          ...photo,
+                          creation: Math.floor(
+                            parseFloat(photo.creation) * 1000,
+                          ),
+                          id: counter++,
+                        };
                       });
-                      return {
-                        ...photo,
-                        creation: Math.floor(parseFloat(photo.creation) * 1000),
-                        id: counter++,
-                      };
-                    });
-                    var str = `${
-                      locations.length > 0
-                        ? `Locations Visited:
+                      var str = `${
+                        locations.length > 0
+                          ? `Locations Visited:
               ${locations.map(
                 location =>
                   `${location.description} @${moment(location.time).format(
                     'LT',
                   )} (id:${location.id})`,
               )}`
-                        : ''
-                    }
+                          : ''
+                      }
 
               ${
                 events.length > 0
@@ -919,9 +943,9 @@ export default App = ({route, navigation}) => {
                 event => `${event.title} @${
                   event.isAllDay === 'true'
                     ? `All-Day`
-                    : `${moment(event.start).format('LT')}-${moment(
-                        parseInt(event.end) * 1000,
-                      ).format('LT')}`
+                    : `${moment(parseInt(event.start) * 1000).format(
+                        'LT',
+                      )}-${moment(parseInt(event.end) * 1000).format('LT')}`
                 } ${event.notes ? `Notes: ${event.notes} (id:${event.id})` : ``}
               `,
               )}`
@@ -941,83 +965,129 @@ export default App = ({route, navigation}) => {
               }
               `;
 
-                    // ASK CHATGPT TO CREATE ENTRY
-                    console.log('CREATE NEW ENTRY', str);
-                    const completion = await openai.createChatCompletion({
-                      // model: 'gpt-3.5-turbo',
-                      model: 'gpt-4',
-                      messages: [
-                        {
-                          role: 'system',
-                          content:
-                            'You are to act as my journal writer. I will give you a list of events that took place today and you are to generate a journal entry based on that. The diary entry should be a transcription of the events that you are told. Do not add superfluous details that you are unsure if they actually happened as this will be not useful to me. Add a [[X]] every time one of the events has been completed, e.g. I went to a meeting [[X]] then I went to the beach [[X]]. Replace X with the number assigned to the event. There is no need for sign ins (Dear Diary) or send offs (Yours sincerely). Do not introduce any details, events, etc not supplied by the user. Keep it short.',
-                        },
-                        {role: 'user', content: str},
-                      ],
-                    });
-                    const response =
-                      completion.data.choices[0].message?.content;
-                    // const response =
-                    //   'This is a test entry. Please respond. &gt;';
-                    // console.log(response);
+                      // ASK CHATGPT TO CREATE ENTRY
+                      console.log('CREATE NEW ENTRY', str);
+                      var autoGenerate =
+                        locations.length === 0 &&
+                        events.length === 0 &&
+                        photos.length === 0
+                          ? false
+                          : true;
+                      var response = '';
+                      if (autoGenerate === true) {
+                        const completion = await openai.createChatCompletion({
+                          // model: 'gpt-3.5-turbo',
+                          model: 'gpt-4',
+                          messages: [
+                            {
+                              role: 'system',
+                              content:
+                                'You are to act as my journal writer. I will give you a list of events that took place today and you are to generate a journal entry based on that. The diary entry should be a transcription of the events that you are told. Do not add superfluous details that you are unsure if they actually happened as this will be not useful to me. Add a [[X]] every time one of the events has been completed, e.g. I went to a meeting [[X]] then I went to the beach [[X]]. Replace X with the number assigned to the event. There is no need for sign ins (Dear Diary) or send offs (Yours sincerely). Do not introduce any details, events, etc not supplied by the user. Keep it short.',
+                            },
+                            {role: 'user', content: str},
+                          ],
+                        });
+                        response = completion.data.choices[0].message?.content;
+                        // const response =
+                        //   'This is a test entry. Please respond. &gt;';
+                        console.log(response);
 
-                    entriesCopy.push({
-                      ...baseEntry,
-                      time: startOfUnixTime * 1000,
-                      entry: '',
-                      events: entryEvents,
-                      entry: response,
-                      title: 'New Entry',
-                    });
-                    setEntries(entriesCopy);
-                  }}>
-                  Generate new entry
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  borderWidth: 1,
-                  borderColor: '#667085',
-                  padding: 5,
-                  borderRadius: 5,
-                }}
-                onPress={async () => {
-                  let startOfUnixTime = moment(Date.now())
-                    .startOf('day')
-                    .unix();
-                  var entriesCopy = [...entries];
-                  entriesCopy.push({
-                    ...baseEntry,
-                    time: startOfUnixTime * 1000,
-                    entry: '',
-                    events: [],
-                    title: 'New Entry',
-                    generated: false,
-                  });
-                  try {
-                    saveEntryData(
-                      '',
-                      'Local Entry',
-                      Date.now(),
-                      0,
-                      '',
-                      '',
-                      Date.now(),
-                      'manual',
-                      Date.now(),
-                      'manual',
-                      '',
-                      '',
-                      0,
-                    );
-                  } catch (e) {
-                    console.error(e);
-                  }
+                        entriesCopy.push({
+                          ...baseEntry,
+                          time: startOfUnixTime * 1000,
+                          entry: '',
+                          events: entryEvents,
+                          entry: response,
+                          title: 'New Entry',
+                        });
+                      } else {
+                        entriesCopy.push({
+                          ...baseEntry,
+                          time: startOfUnixTime * 1000,
+                          entry: '',
+                          events: [],
+                          entry: 'No events found.',
+                          title: 'New Entry',
+                        });
+                      }
 
-                  setEntries(entriesCopy);
-                }}>
-                <Text>Create new entry (Manual)</Text>
-              </TouchableOpacity>
+                      try {
+                        saveEntryData(
+                          '',
+                          'New Entry',
+                          startOfUnixTime * 1000,
+                          0,
+                          '',
+                          '',
+                          Date.now(),
+                          'auto',
+                          Date.now(),
+                          'auto',
+                          entryEvents.length === 0
+                            ? ''
+                            : JSON.stringify(entryEvents),
+                          entryEvents.length === 0
+                            ? 'No events found.'
+                            : response,
+                          1,
+                        );
+                      } catch (e) {
+                        console.error(e);
+                      }
+                      setEntries(entriesCopy);
+                      setGeneratingEntry(false);
+                      // setLoading(false);
+                    }}>
+                    <Text>Generate new entry</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#667085',
+                      padding: 5,
+                      borderRadius: 5,
+                    }}
+                    onPress={async () => {
+                      setGeneratingEntry(true);
+                      let startOfUnixTime = moment(Date.now())
+                        .startOf('day')
+                        .unix();
+                      var entriesCopy = [...entries];
+                      entriesCopy.push({
+                        ...baseEntry,
+                        time: startOfUnixTime * 1000,
+                        entry: '',
+                        events: [],
+                        title: 'New Entry',
+                        generated: false,
+                      });
+                      try {
+                        saveEntryData(
+                          '',
+                          'Local Entry',
+                          Date.now(),
+                          0,
+                          '',
+                          '',
+                          Date.now(),
+                          'manual',
+                          Date.now(),
+                          'manual',
+                          '',
+                          '',
+                          0,
+                        );
+                      } catch (e) {
+                        console.error(e);
+                      }
+
+                      setEntries(entriesCopy);
+                      setGeneratingEntry(false);
+                    }}>
+                    <Text>Create new entry (Manual)</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
 
             {/* <Image

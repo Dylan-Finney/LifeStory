@@ -280,7 +280,7 @@ export default App = () => {
 
     // `,
   };
-  moment.locale('en-gb');
+  // moment.locale('en-gb');
   const [entry, setEntry] = useState(null);
   const [entries, setEntries] = useState(
     [],
