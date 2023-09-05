@@ -2,10 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Life Story</string>
+	<string>LifeStory AI</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -57,7 +61,7 @@
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>The user provides permission for the application to collect significant location changes to generate a diary entry which documents their travels</string>
 	<key>NSLocationUsageDescription</key>
-	<string>Test</string>
+	<string>Locations usage is required to access certain functionalities</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Life Story uses your location data as part of generating a entry. Location data is stored locally. Any Location Data before allowing permission cannot be accessed. Please select Allow While Using App for best experience.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
@@ -75,6 +79,10 @@
 		<string>processing</string>
 		<string>remote-notification</string>
 	</array>
+		<key>BGTaskSchedulerPermittedIdentifiers</key>
+<array>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen.storyboard</string>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -84,8 +92,12 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+		<string>UIInterfaceOrientationPortrait</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
