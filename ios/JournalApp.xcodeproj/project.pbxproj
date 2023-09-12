@@ -13,8 +13,6 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		7165D3A22A79405400D9E284 /* Inter-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 7165D3A12A79405400D9E284 /* Inter-Regular.ttf */; };
-		7165D3A62A79573600D9E284 /* Counter.m in Sources */ = {isa = PBXBuildFile; fileRef = 7165D3A52A79573600D9E284 /* Counter.m */; };
-		7165D3A82A79578700D9E284 /* Counter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7165D3A72A79578700D9E284 /* Counter.swift */; };
 		7165D3AA2A7D7D6300D9E284 /* Location.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7165D3A92A7D7D6200D9E284 /* Location.swift */; };
 		7165D3AC2A7D7D8200D9E284 /* Location.m in Sources */ = {isa = PBXBuildFile; fileRef = 7165D3AB2A7D7D8100D9E284 /* Location.m */; };
 		719592982A94E21700CA46E8 /* ImageAsset.m in Sources */ = {isa = PBXBuildFile; fileRef = 719592972A94E21700CA46E8 /* ImageAsset.m */; };
@@ -53,8 +51,6 @@
 		5B7EB9410499542E8C5724F5 /* Pods-JournalApp-JournalAppTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JournalApp-JournalAppTests.debug.xcconfig"; path = "Target Support Files/Pods-JournalApp-JournalAppTests/Pods-JournalApp-JournalAppTests.debug.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-JournalApp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-JournalApp.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7165D3A12A79405400D9E284 /* Inter-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Inter-Regular.ttf"; sourceTree = "<group>"; };
-		7165D3A52A79573600D9E284 /* Counter.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Counter.m; sourceTree = "<group>"; };
-		7165D3A72A79578700D9E284 /* Counter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Counter.swift; sourceTree = "<group>"; };
 		7165D3A92A7D7D6200D9E284 /* Location.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Location.swift; path = JournalApp/Location.swift; sourceTree = "<group>"; };
 		7165D3AB2A7D7D8100D9E284 /* Location.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = Location.m; path = JournalApp/Location.m; sourceTree = "<group>"; };
 		719592972A94E21700CA46E8 /* ImageAsset.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = ImageAsset.m; path = JournalApp/ImageAsset.m; sourceTree = "<group>"; };
@@ -122,8 +118,6 @@
 				719FC5D82A65A6AE00809A6A /* JournalApp-Bridging-Header.h */,
 				719FC5DB2A65A6F700809A6A /* Journal.swift */,
 				719FC5DD2A65A75500809A6A /* Journal.m */,
-				7165D3A52A79573600D9E284 /* Counter.m */,
-				7165D3A72A79578700D9E284 /* Counter.swift */,
 				7165D3A92A7D7D6200D9E284 /* Location.swift */,
 				7165D3AB2A7D7D8100D9E284 /* Location.m */,
 				719592972A94E21700CA46E8 /* ImageAsset.m */,
@@ -453,14 +447,12 @@
 				719FC5DE2A65A75500809A6A /* Journal.m in Sources */,
 				719FC5DA2A65A6AF00809A6A /* JournalView.swift in Sources */,
 				7165D3AA2A7D7D6300D9E284 /* Location.swift in Sources */,
-				7165D3A82A79578700D9E284 /* Counter.swift in Sources */,
 				719592982A94E21700CA46E8 /* ImageAsset.m in Sources */,
 				7165D3AC2A7D7D8200D9E284 /* Location.m in Sources */,
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 				7195929A2A94E24300CA46E8 /* ImageAsset.swift in Sources */,
 				7195929C2A94E29000CA46E8 /* ImageAssetView.swift in Sources */,
-				7165D3A62A79573600D9E284 /* Counter.m in Sources */,
 				719FC5DC2A65A6F700809A6A /* Journal.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

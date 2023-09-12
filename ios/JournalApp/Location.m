@@ -7,7 +7,7 @@ RCT_EXTERN_METHOD(
   rejecter: (RCTPromiseRejectBlock)reject
 )
 RCT_EXTERN_METHOD(
-                  sendDataToNative:(NSInteger)data
+                  getCalendarEvents:(NSInteger)data
                   data2:(NSInteger)data2
                   withResolver: (RCTPromiseResolveBlock)resolve
                   rejecter: (RCTPromiseRejectBlock)reject

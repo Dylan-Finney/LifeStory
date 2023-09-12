@@ -1,27 +1,11 @@
 import React, {useState, useEffect, useRef, createRef, useContext} from 'react';
-import {
-  Button,
-  Image,
-  KeyboardAvoidingView,
-  Modal,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableHighlight,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-  Alert,
-} from 'react-native';
+import {Text, View, Alert} from 'react-native';
 import useDatabaseHooks from './useDatabaseHooks';
 import AppContext from './Context';
 import useSettingsHooks from './useSettingsHooks';
 export default SettingsView = ({route, navigation}) => {
   const {deleteTable, createEntryTable} = useDatabaseHooks();
-  const {onBoarding, setOnBoarding} = useSettingsHooks();
+  const {setOnBoarding} = useSettingsHooks();
 
   const {setEntries} = useContext(AppContext);
   return (

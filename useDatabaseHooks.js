@@ -77,7 +77,7 @@ const useDatabaseHooks = () => {
     });
   };
 
-  const saveEntryData = (
+  const saveEntryData = ({
     tags,
     title,
     time,
@@ -91,7 +91,7 @@ const useDatabaseHooks = () => {
     events,
     body,
     generated,
-  ) => {
+  }) => {
     db.transaction(tx => {
       tx.executeSql(
         `INSERT INTO Entries (tags, title, time, emotion, emotions, votes, bodyModifiedAt, bodyModifiedSource, titleModifiedAt, titleModifiedSource, events, body, generated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
