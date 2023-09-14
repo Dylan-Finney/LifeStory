@@ -6,6 +6,7 @@ import 'react-native-url-polyfill/auto';
 import OnboardStep4Image from '../assets/OnboardStep4.svg';
 
 import {theme} from '../../Styling';
+import {verticalScale} from '../utils/Metrics';
 
 const Step = ({isActive}) => {
   return (
@@ -91,7 +92,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
               backgroundColor: 'black',
               marginHorizontal: 10,
               borderRadius: 5,
-              paddingVertical: 10,
+              paddingVertical: verticalScale(10),
               marginBottom: 10,
             }}
             onPress={async () => {

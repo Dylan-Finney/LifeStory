@@ -6,6 +6,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Dimensions,
 } from 'react-native';
 
 import {
@@ -32,6 +33,7 @@ import HomeHeading from './src/components/HomeHeading';
 import EntryList from './src/components/EntryList';
 import * as RNLocalize from 'react-native-localize';
 import {NativeModules} from 'react-native';
+import {horizontalScale, verticalScale} from './src/utils/Metrics';
 const {RNShare} = NativeModules;
 const {Configuration, OpenAIApi} = require('openai');
 const configuration = new Configuration({
@@ -399,6 +401,8 @@ export default FullHomeView = ({route, navigation}) => {
     setGeneratingEntry(false);
   };
 
+  console.log(Dimensions.get('window'));
+
   return (
     <SafeAreaView style={{flexGrow: 1}}>
       <StatusBar
@@ -438,7 +442,10 @@ export default FullHomeView = ({route, navigation}) => {
             }
           />
           <ScrollView
-            contentContainerStyle={{padding: 10}}
+            contentContainerStyle={{
+              paddingVertical: verticalScale(10),
+              paddingHorizontal: horizontalScale(10),
+            }}
             style={{height: '70%'}}>
             <View
               style={{

@@ -8,6 +8,7 @@ import EmotionTaggingIcon from '../assets/emotion-tagging-icon.svg';
 import WordCountIcon from '../assets/open-book.svg';
 import UpvoteIcon from '../assets/arrow-block-up.svg';
 import {theme} from '../../Styling';
+import {horizontalScale, verticalScale} from '../utils/Metrics';
 const HomeHeading = ({entries, manual, events, photos}) => {
   return (
     <View
@@ -16,9 +17,8 @@ const HomeHeading = ({entries, manual, events, photos}) => {
         flexDirection: 'row',
         justifyContent: 'space-between',
         backgroundColor: theme.general.barMenu,
-        padding: 10,
-        paddingLeft: 30,
-        paddingRight: 30,
+        paddingVertical: verticalScale(10),
+        paddingHorizontal: horizontalScale(30),
       }}>
       <View
         style={{

@@ -2,6 +2,7 @@ import {Text, TouchableOpacity, View} from 'react-native';
 import {theme} from '../../Styling';
 import moment from 'moment';
 import ExpandIcon from '../assets/expand.svg';
+import {horizontalScale, verticalScale} from '../utils/Metrics';
 
 const EntryListItem = ({entry, index, startOfWeek, endOfWeek, open}) => {
   return (
@@ -20,7 +21,8 @@ const EntryListItem = ({entry, index, startOfWeek, endOfWeek, open}) => {
         borderTopWidth: startOfWeek ? 1 : 0,
         borderBottomWidth: endOfWeek ? 1 : 1,
 
-        padding: 20,
+        paddingVertical: verticalScale(20),
+        paddingHorizontal: horizontalScale(20),
         // marginTop: 3,
         borderBottomLeftRadius: endOfWeek ? 15 : 0,
         borderBottomRightRadius: endOfWeek ? 15 : 0,
@@ -50,7 +52,8 @@ const EntryListItem = ({entry, index, startOfWeek, endOfWeek, open}) => {
             borderWidth: 1,
             borderColor: theme.home.entryItem.expandIconBorder,
             borderRadius: 5,
-            padding: 2,
+            paddingVertical: verticalScale(2),
+            paddingHorizontal: horizontalScale(2),
           }}
           onPress={() => {
             open();

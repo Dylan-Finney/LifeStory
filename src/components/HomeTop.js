@@ -4,6 +4,7 @@ import {Text, TouchableOpacity, View} from 'react-native';
 import 'react-native-url-polyfill/auto';
 import SettingsIcon from '../assets/settings-svgrepo-com.svg';
 import {theme} from '../../Styling';
+import {horizontalScale, verticalScale} from '../utils/Metrics';
 const HomeTop = ({navigation}) => {
   return (
     <View
@@ -29,9 +30,9 @@ const HomeTop = ({navigation}) => {
           color: 'white',
           fontSize: 30,
           fontWeight: 700,
-          padding: 20,
-          paddingTop: 20,
-          paddingBottom: 10,
+          paddingHorizontal: horizontalScale(20),
+          paddingTop: verticalScale(20),
+          paddingBottom: verticalScale(10),
         }}>
         Journal home
       </Text>
