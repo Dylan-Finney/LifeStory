@@ -7,7 +7,7 @@ RCT_EXTERN_METHOD(
   rejecter: (RCTPromiseRejectBlock)reject
 )
 RCT_EXTERN_METHOD(
-                  sendDataToNative:(NSInteger)data
+                  getCalendarEvents:(NSInteger)data
                   data2:(NSInteger)data2
                   withResolver: (RCTPromiseResolveBlock)resolve
                   rejecter: (RCTPromiseRejectBlock)reject
@@ -19,5 +19,13 @@ RCT_EXTERN_METHOD(
 RCT_EXTERN_METHOD(
                   enableCalendarPermissions:(RCTPromiseResolveBlock)resolve
                   rejecter: (RCTPromiseRejectBlock)reject
+                  )
+RCT_EXTERN_METHOD(
+                  chooserOpen
+                  )
+RCT_EXTERN_METHOD(
+                  getCalendarIdentifiers: (RCTResponseSenderBlock)callback)
+RCT_EXTERN_METHOD(
+                  setCalendarIdentifiers: (NSArray<NSString>)calendarIdentifiers
                   )
 @end

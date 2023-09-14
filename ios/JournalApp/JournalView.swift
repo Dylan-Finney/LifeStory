@@ -6,15 +6,6 @@ class JournalView: UIView, UITextViewDelegate {
   
   
   
-  @objc var isOn: Bool = false {
-    didSet {
-      button.backgroundColor = isOn ? .yellow : .black
-      button.setTitle(String(describing: isOn ? "I am ON" : "I am OFF"), for: .normal)
-      
-    }
-    
-  }
-  
   @objc var initalTxtString: NSString = "" {
     didSet {
       let initalTxtStringConverted = initalTxtString as String
@@ -53,14 +44,12 @@ class JournalView: UIView, UITextViewDelegate {
   }
   override init(frame: CGRect) {
     super.init(frame: frame)
-//    self.addSubview(button)
     self.addSubview(textInput)
     textInput.delegate = self
     textInput.allowsEditingTextAttributes = true
-//    textInput.textColor = .red
     
     let query = "@"
-
+            // Color all instances of "[[X]]" where X is any number red, e.g. [[102]]
             if let str = textInput.text {
                 let text = NSMutableAttributedString(string: str)
                 var searchRange = str.startIndex..<str.endIndex
@@ -77,18 +66,7 @@ class JournalView: UIView, UITextViewDelegate {
     fatalError("init has not been implemented")
     
   }
-  lazy var button: UIButton = {
-    let button = UIButton.init(type: UIButton.ButtonType.system)
-    button.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    button.titleLabel?.font = UIFont.systemFont(ofSize: 20)
-    button.addTarget(
-      self,
-      action: #selector(toggleSwitchStatus),
-      for: .touchUpInside
-    )
-    return button
-    
-  }()
+
   lazy var textInput: UITextView = {
     let textInput = UITextView.init()
     textInput.autoresizingMask = [.flexibleWidth, .flexibleHeight]
@@ -100,17 +78,15 @@ class JournalView: UIView, UITextViewDelegate {
   }()
   
 
-  @objc func toggleSwitchStatus() {
-    isOn = !isOn as Bool
-    
-  }
-   
+
+   //Send back the updated text of the UITextView
   func textViewDidChange(_ textView: UITextView) {
     print(textView.text!)
     onTxtChange!(["nativeStr": textView.text!])
 
   }
 
+  // Custom Context Menu for Voting, AI Rewriting, Emotion Tagging, and Tagging
   @available(iOS 13.0, *)
   func textView(
         _ textView: UITextView,
@@ -172,12 +148,7 @@ class JournalView: UIView, UITextViewDelegate {
         return UIMenu(children: additionalActions)
     }
   
-  func UIColorFromRGB(_ rgbValue: Int) -> UIColor! {
-    return UIColor(red: CGFloat((Float((rgbValue & 0xff0000)>>16))/255.0),
-                   green: CGFloat((Float((rgbValue & 0xff0000)>>8))/255.0),
-                   blue: CGFloat((Float((rgbValue & 0xff0000)>>0))/255.0),
-                   alpha: 1.0)
-  }
+
   
   
   
