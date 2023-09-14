@@ -10,13 +10,14 @@ import CoreLocation
 import EventKit
 import Photos
 import Dispatch
+import EventKitUI
 @objc(Location)
-class Location: RCTEventEmitter, CLLocationManagerDelegate {
+class Location: RCTEventEmitter, CLLocationManagerDelegate, EKCalendarChooserDelegate {
   var locationManager: CLLocationManager = CLLocationManager()
   let geoCoder = CLGeocoder()
   let eventStore = EKEventStore()
   var testIdentifiers: [[String: String]] = []
-
+var presentingVC = RCTPresentedViewController()
   var dateEvents: [[String: String]] = []
   var startDate: Date!
   var endDate: Date!
@@ -24,6 +25,9 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
   let photoThread = DispatchSemaphore(value: 1)
   var calendarDenied = false
   var photoAccess = false
+  var calendarIdentifiers: [String] = []
+    var calendarInital = false
+
 
 
 
@@ -48,7 +52,7 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
   func fetchEventsFromCalendar() -> Void {
           let status = EKEventStore.authorizationStatus(for: EKEntityType.event)
           switch status {
-          case .notDetermined: requestAccessToCalendar("Calendar"); semaphore.wait();
+          case .notDetermined: calendarInital = true; requestAccessToCalendar("Calendar"); semaphore.wait(); calendarInital = false;
           case .authorized: fetchEventsFromCalendar("Calendar")
           case .denied: calendarDenied = true
           default: break
@@ -60,13 +64,14 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
   func requestAccessToCalendar(_ calendarTitle: String) {
     eventStore.requestAccess(to: EKEntityType.event) { (accessGranted, error) in
       if accessGranted == true {
-        self.fetchEventsFromCalendar(calendarTitle)
+        // self.fetchEventsFromCalendar(calendarTitle)
+        self.chooserOpen()
+
       } else {
         self.calendarDenied = true
-
-      }
       self.semaphore.signal()
 
+      }
     }
   }
 
@@ -74,31 +79,47 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
   @objc
   func fetchEventsFromCalendar(_ calendarTitle: String) -> Void {
       dateEvents = []
-          for calendar in eventStore.calendars(for: .event) {
-              if calendar.title == calendarTitle {
-//                  let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-//                  let oneMonthAfter = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
-                  let predicate = eventStore.predicateForEvents(
-                      withStart: startDate,
-                      end: endDate,
-                      calendars: [calendar]
-                  )
-                  let events = eventStore.events(matching: predicate)
-                  for event in events {
-                      var newEvent = [String: String]()
-                    newEvent["title"] = event.title
-                    newEvent["start"] = String(event.startDate.timeIntervalSince1970)
-                    newEvent["end"] = String(event.endDate.timeIntervalSince1970)
-                    newEvent["isAllDay"] = String(event.isAllDay)
-                    newEvent["notes"] = event.notes
-
-                    dateEvents.append(newEvent)
-                  }
-              }
+      var calendars : [EKCalendar] = []
+          
+          for localIdentifier in calendarIdentifiers {
+            if let calendar = eventStore.calendar(withIdentifier: localIdentifier){
+              calendars.append(calendar)
+            }
           }
+          
+          if calendars.count > 0 {
+            let predicate = eventStore.predicateForEvents(
+                withStart: startDate,
+                end: endDate,
+                calendars: calendars
+            )
+            let events = eventStore.events(matching: predicate)
+            for event in events {
+                var newEvent = [String: String]()
+              newEvent["title"] = event.title
+              newEvent["start"] = String(event.startDate.timeIntervalSince1970)
+              newEvent["end"] = String(event.endDate.timeIntervalSince1970)
+              newEvent["isAllDay"] = String(event.isAllDay)
+              newEvent["notes"] = event.notes
+              newEvent["calendar"] = event.calendar.title
+              if let colorComponents = event.calendar.cgColor.components, event.calendar.cgColor.numberOfComponents == 4 {
+                let red = Int(colorComponents[0] * 255)
+                let green = Int(colorComponents[1] * 255)
+                let blue = Int(colorComponents[2] * 255)
+                
+                let hexRed = String(format: "%02X", red)
+                let hexGreen = String(format: "%02X", green)
+                let hexBlue = String(format: "%02X", blue)
+                
+                let hexColor = "#\(hexRed)\(hexGreen)\(hexBlue)"
+                newEvent["calendarColor"] = hexColor
+              }
+              dateEvents.append(newEvent)
+            }
 
-          // Print the event titles so check if everything works correctly
+          }
           print(dateEvents)
+
       }
   @objc func getCalendarEvents(_ data: Int, data2: Int, withResolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
     calendarDenied = false
@@ -116,6 +137,78 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
     }
 
       }
+
+  @objc func getCalendarIdentifiers(_ callback: RCTResponseSenderBlock) {
+      callback([calendarIdentifiers])
+    }
+
+    @objc func setCalendarIdentifiers(_ calendarIdentifiers: [String]) -> Void {
+      self.calendarIdentifiers = calendarIdentifiers
+    }
+
+
+    @objc func chooserOpen() -> Void{
+      DispatchQueue.main.async {
+      self._chooserOpen()
+    }
+
+    }
+     @objc func _chooserOpen() -> Void {
+//    let controller = RCTPresentedViewController();
+var selectedCalendars = Set<EKCalendar>()
+
+for localIdentifier in calendarIdentifiers {
+          if let calendar = eventStore.calendar(withIdentifier: localIdentifier){
+            selectedCalendars.insert(calendar)
+          }
+        }
+
+    presentingVC = RCTPresentedViewController()
+    let vc = EKCalendarChooser(selectionStyle: .multiple, displayStyle: .allCalendars, entityType: .event, eventStore: eventStore)
+    vc.showsDoneButton = true
+            vc.showsCancelButton = true
+    vc.delegate = self
+
+    vc.selectedCalendars = selectedCalendars
+    let nvc = UINavigationController(rootViewController: vc)
+
+    presentingVC?.present(nvc, animated: true, completion: nil)
+
+  }
+
+  func calendarChooserDidFinish(_ calendarChooser: EKCalendarChooser) {
+          var calendars: [String] = []
+          
+          for calendar in calendarChooser.selectedCalendars {
+            calendars.append(calendar.calendarIdentifier)
+          }
+          print(calendarChooser.selectedCalendars)
+          setCalendarIdentifiers(calendars)
+          presentingVC?.dismiss(animated: true, completion: nil)
+          if calendarInital == true {
+            fetchEventsFromCalendar("Calendar")
+      self.semaphore.signal()
+    } else {
+        self.sendEvent(withName: "calendarChange", body: calendars)
+
+    }
+
+  }
+  
+  func calendarChooserDidCancel(_ calendarChooser: EKCalendarChooser) {
+          presentingVC?.dismiss(animated: true, completion: nil)
+          
+          if calendarInital == true {
+      self.semaphore.signal()
+
+    } else {
+        self.sendEvent(withName: "calendarChange", body: "null")
+
+    }
+
+  }
+
+
 
 
 /*
@@ -166,7 +259,7 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate {
 
       }
     }
-
+  
 
   }
 
@@ -291,7 +384,7 @@ Other Functions
   // we need to override this method and
   // return an array of event names that we can listen to
   override func supportedEvents() -> [String]! {
-    return ["onIncrement", "init", "locationChange", "onCalendar"]
+    return ["onIncrement", "init", "locationChange", "onCalendar", "calendarChange"]
   }
   // you also need to add the override attribute
   // on these methods

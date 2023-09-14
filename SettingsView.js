@@ -1,11 +1,18 @@
 import React, {useState, useEffect, useRef, createRef, useContext} from 'react';
-import {Text, View, Alert} from 'react-native';
+import {
+  Text,
+  View,
+  Alert,
+  NativeModules,
+  NativeEventEmitter,
+} from 'react-native';
 import useDatabaseHooks from './useDatabaseHooks';
 import AppContext from './Context';
 import useSettingsHooks from './useSettingsHooks';
 export default SettingsView = ({route, navigation}) => {
   const {deleteTable, createEntryTable} = useDatabaseHooks();
-  const {setOnBoarding} = useSettingsHooks();
+  const {setOnBoarding, calendars, setCalendars} = useSettingsHooks();
+  const CalendarEvents = new NativeEventEmitter(NativeModules.Location);
 
   const {setEntries} = useContext(AppContext);
   return (
@@ -23,7 +30,7 @@ export default SettingsView = ({route, navigation}) => {
         onPress={() => {
           Alert.alert(
             'Delete Entries',
-            'Are you sure you want to dlete all of your entries?\nThis action is irreversible.',
+            'Are you sure you want to delete all of your entries?\nThis action is irreversible.',
             [
               {
                 text: 'Confirm',
@@ -45,7 +52,7 @@ export default SettingsView = ({route, navigation}) => {
         onPress={() => {
           Alert.alert(
             'Delete Location Data',
-            'Are you sure you want to dlete all of your LifeStory Location Data?\nThis app can only gets your data from the point it has access and starts recording it.\nThis action is irreversible.',
+            'Are you sure you want to delete all of your LifeStory Location Data?\nThis app can only gets your data from the point it has access and starts recording it.\nThis action is irreversible.',
             [
               {
                 text: 'Confirm',
@@ -59,6 +66,20 @@ export default SettingsView = ({route, navigation}) => {
           );
         }}>
         Delete Location History
+      </Text>
+      <Text
+        style={{color: 'red', fontWeight: 600}}
+        onPress={() => {
+          NativeModules.Location.chooserOpen();
+          CalendarEvents.addListener('calendarChange', event => {
+            console.log('calendarChange EVENT', {event});
+            if (event !== 'null') {
+              setCalendars(JSON.stringify(event));
+            }
+            CalendarEvents.removeAllListeners('calendarChange');
+          });
+        }}>
+        Change Connected Calendars
       </Text>
       <Text
         style={{color: 'red', fontWeight: 600}}

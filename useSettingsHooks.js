@@ -8,9 +8,17 @@ const useSettingsHooks = () => {
     settingsStorage,
     true,
   );
+  const [calendars, setCalendars] = useMMKVStorage(
+    'calendars',
+    settingsStorage,
+    '[]',
+  );
+
   return {
     onBoarding,
     setOnBoarding,
+    calendars,
+    setCalendars,
   };
 };
 

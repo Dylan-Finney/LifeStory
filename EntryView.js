@@ -1537,7 +1537,26 @@ export default FullEntryView = ({route, navigation}) => {
                             </Text>
                           </View>
                         </View>
-                        <Text>{event.title}</Text>
+                        <Text style={{fontWeight: 600}}>{event.title}</Text>
+                        {event.type === 'calendar' && (
+                          <View
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 5,
+                            }}>
+                            <View
+                              style={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: 10,
+                                backgroundColor: event.calendar.color,
+                              }}
+                            />
+                            <Text>{event.calendar.title}</Text>
+                          </View>
+                        )}
 
                         {event.type === 'photo' ? (
                           <>

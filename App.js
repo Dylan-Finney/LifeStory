@@ -26,9 +26,11 @@ import Home from './Home';
 import AppContext from './Context';
 
 import useDatabaseHooks from './useDatabaseHooks';
+import useSettingsHooks from './useSettingsHooks.js';
 import SettingsView from './SettingsView';
 
 const {createVisitsTable, insertData, retrieveData} = useDatabaseHooks();
+// const {calendars} = useSettingsHooks();
 export default App = () => {
   const isDarkMode = useColorScheme() === 'dark';
   // moment.locale('en-gb');
@@ -60,6 +62,7 @@ export default App = () => {
     //   .sort((a, b) => a.time - b.time)
     //   .sort((a, b) => moment(b.time).week() - moment(a.time).week()),
   );
+  const {calendars} = useSettingsHooks();
 
   useEffect(() => {
     retrieveData('Entries', localEntries => {
@@ -99,6 +102,19 @@ export default App = () => {
         console.error(e);
       }
     });
+    // try {
+    //   NativeModules.Location.getCalendarIdentifiers(value => {
+    //     console.log('count is ' + value);
+    //   });
+    // } catch (E) {
+    //   console.error(E);
+    // }
+    console.log({calendars});
+    try {
+      NativeModules.Location.setCalendarIdentifiers(JSON.parse(calendars));
+    } catch (E) {
+      console.error(E);
+    }
   }, []);
 
   const RootStack = createNativeStackNavigator();

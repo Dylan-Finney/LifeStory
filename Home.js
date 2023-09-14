@@ -1,5 +1,12 @@
 import React, {useState, useEffect, useRef, createRef, useContext} from 'react';
-import {SafeAreaView, ScrollView, StatusBar, Text, View} from 'react-native';
+import {
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import {
   Colors,
@@ -24,6 +31,8 @@ import HomeTop from './src/components/HomeTop';
 import HomeHeading from './src/components/HomeHeading';
 import EntryList from './src/components/EntryList';
 import * as RNLocalize from 'react-native-localize';
+import {NativeModules} from 'react-native';
+const {RNShare} = NativeModules;
 const {Configuration, OpenAIApi} = require('openai');
 const configuration = new Configuration({
   apiKey: Config.OPENAI_KEY,
@@ -74,7 +83,7 @@ export default FullHomeView = ({route, navigation}) => {
   const [generatingEntry, setGeneratingEntry] = useState(false);
 
   // const [onBoarding, setOnBoarding] = useState(false);
-  console.log('TIMEZONE', RNLocalize.getTimeZone());
+  // console.log('TIMEZONE', RNLocalize.getTimeZone());
 
   const [onBoardingStep, setOnBoardingStep] = useState(0);
   useEffect(() => {
@@ -117,7 +126,7 @@ export default FullHomeView = ({route, navigation}) => {
 
   const getPermissionsAndData = async () => {
     setGeneratingEntry(true);
-    console.log('Generate');
+    console.log('Get Permissions and Data');
     // setGettingData(true);
     // setLoading(true);
     //DAY
@@ -211,6 +220,10 @@ export default FullHomeView = ({route, navigation}) => {
           endTime: parseInt(event.end) * 1000,
           title: event.title,
           additionalNotes: event.notes,
+          calendar: {
+            title: event.calendar,
+            color: event.calendarColor,
+          },
         });
         return {
           ...event,
@@ -254,7 +267,7 @@ export default FullHomeView = ({route, navigation}) => {
                     : `${moment(parseInt(event.start) * 1000).format(
                         'LT',
                       )}-${moment(parseInt(event.end) * 1000).format('LT')}`
-                } ${event.notes ? `Notes: ${event.notes} (id:${event.id})` : ``}
+                } (id:${event.id})
               `,
               )}`
                   : ''
@@ -424,7 +437,6 @@ export default FullHomeView = ({route, navigation}) => {
                 .filter(event => event.type === 'photo').length
             }
           />
-
           <ScrollView
             contentContainerStyle={{padding: 10}}
             style={{height: '70%'}}>
