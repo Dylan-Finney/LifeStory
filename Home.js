@@ -33,7 +33,11 @@ import HomeHeading from './src/components/HomeHeading';
 import EntryList from './src/components/EntryList';
 import * as RNLocalize from 'react-native-localize';
 import {NativeModules} from 'react-native';
-import {horizontalScale, verticalScale} from './src/utils/Metrics';
+import {
+  horizontalScale,
+  moderateScale,
+  verticalScale,
+} from './src/utils/Metrics';
 const {RNShare} = NativeModules;
 const {Configuration, OpenAIApi} = require('openai');
 const configuration = new Configuration({
@@ -335,7 +339,7 @@ export default FullHomeView = ({route, navigation}) => {
         tags: '',
         title: 'New Entry',
         time: startOfUnixTime * 1000,
-        emotion: 0,
+        emotion: -1,
         emotions: '',
         votes: '',
         titleModifiedAt: Date.now(),
@@ -383,7 +387,7 @@ export default FullHomeView = ({route, navigation}) => {
         tags: '',
         title: newEntry.title,
         time: newEntry.time,
-        emotion: 0,
+        emotion: -1,
         emotions: '',
         votes: '',
         titleModifiedAt: Date.now(),
@@ -455,7 +459,7 @@ export default FullHomeView = ({route, navigation}) => {
                 marginBottom: 10,
               }}>
               {generatingEntry ? (
-                <Text>Loading...</Text>
+                <Text style={{fontSize: moderateScale(14)}}>Loading...</Text>
               ) : (
                 <>
                   <CreateEntryButton

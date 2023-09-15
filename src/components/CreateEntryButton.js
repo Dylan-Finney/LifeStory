@@ -1,6 +1,6 @@
 import {TouchableOpacity, Text} from 'react-native';
 import {theme} from '../../Styling';
-import {horizontalScale, verticalScale} from '../utils/Metrics';
+import {horizontalScale, moderateScale, verticalScale} from '../utils/Metrics';
 
 const CreateEntryButton = ({onPress, text}) => {
   return (
@@ -14,7 +14,7 @@ const CreateEntryButton = ({onPress, text}) => {
         borderRadius: 5,
       }}
       onPress={onPress}>
-      <Text>{text}</Text>
+      <Text style={{fontSize: moderateScale(14)}}>{text}</Text>
     </TouchableOpacity>
   );
 };

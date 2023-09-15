@@ -8,7 +8,7 @@ import EmotionTaggingIcon from '../assets/emotion-tagging-icon.svg';
 import WordCountIcon from '../assets/open-book.svg';
 import UpvoteIcon from '../assets/arrow-block-up.svg';
 import {theme} from '../../Styling';
-import {horizontalScale, verticalScale} from '../utils/Metrics';
+import {horizontalScale, moderateScale, verticalScale} from '../utils/Metrics';
 const HomeHeading = ({entries, manual, events, photos}) => {
   return (
     <View
@@ -31,7 +31,9 @@ const HomeHeading = ({entries, manual, events, photos}) => {
           <WordCountIcon></WordCountIcon>
           <Text style={{color: 'white'}}>{entries || 0}</Text>
         </View>
-        <Text style={{color: 'white', fontSize: 13}}>Entries</Text>
+        <Text style={{color: 'white', fontSize: moderateScale(13)}}>
+          Entries
+        </Text>
       </View>
       <View
         style={{
@@ -44,7 +46,9 @@ const HomeHeading = ({entries, manual, events, photos}) => {
           <ContentTaggingIcon width={17} height={16} fill={'white'} />
           <Text style={{color: 'white'}}>{manual || 0}</Text>
         </View>
-        <Text style={{color: 'white', fontSize: 13}}>Manual</Text>
+        <Text style={{color: 'white', fontSize: moderateScale(13)}}>
+          Manual
+        </Text>
       </View>
       <View
         style={{
@@ -57,7 +61,9 @@ const HomeHeading = ({entries, manual, events, photos}) => {
           <EmotionTaggingIcon width={17} height={16} stroke={'white'} />
           <Text style={{color: 'white'}}>{events || 0}</Text>
         </View>
-        <Text style={{color: 'white', fontSize: 13}}>Events</Text>
+        <Text style={{color: 'white', fontSize: moderateScale(13)}}>
+          Events
+        </Text>
       </View>
       <View
         style={{
@@ -70,7 +76,9 @@ const HomeHeading = ({entries, manual, events, photos}) => {
           <UpvoteIcon stroke={'white'} />
           <Text style={{color: 'white'}}>{photos || 0}</Text>
         </View>
-        <Text style={{color: 'white', fontSize: 13}}>Photos</Text>
+        <Text style={{color: 'white', fontSize: moderateScale(13)}}>
+          Photos
+        </Text>
       </View>
     </View>
   );

@@ -6,18 +6,18 @@ import 'react-native-url-polyfill/auto';
 import OnboardStep4Image from '../assets/OnboardStep4.svg';
 
 import {theme} from '../../Styling';
-import {verticalScale} from '../utils/Metrics';
+import {horizontalScale, moderateScale, verticalScale} from '../utils/Metrics';
 
 const Step = ({isActive}) => {
   return (
     <View
       style={{
-        height: 4,
-        width: 40,
+        height: verticalScale(4),
+        width: horizontalScale(40),
         backgroundColor: isActive
           ? theme.onboarding.tab.active
           : theme.onboarding.tab.inactive,
-        borderRadius: 2,
+        borderRadius: moderateScale(2),
       }}
     />
   );
@@ -34,8 +34,8 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
         alignContent: 'center',
         // justifyContent: 'space-between',
         backgroundColor: theme.onboarding.background,
-        height: '100%',
-        marginHorizontal: 20,
+        height: '99%',
+        marginHorizontal: horizontalScale(20),
       }}>
       <View style={{flexGrow: 1, justifyContent: 'center'}}>
         {onBoardingStep < 3 ? (
@@ -63,8 +63,8 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
             style={{
               color: theme.onboarding.title,
               fontWeight: '700',
-              fontSize: 28,
-              marginBottom: 40,
+              fontSize: moderateScale(28),
+              marginBottom: verticalScale(40),
             }}>
             {onBoardingStep === 0 && 'Automated Journaling'}
             {onBoardingStep === 1 && 'You are the lead in your story'}
@@ -75,8 +75,8 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
             style={{
               color: theme.onboarding.text,
               fontWeight: '400',
-              fontSize: 18,
-              marginBottom: 40,
+              fontSize: moderateScale(18),
+              marginBottom: verticalScale(40),
             }}>
             {onBoardingStep === 0 &&
               'Lifestory creates your daily journal entries automatically based on your photos, location and more.'}
@@ -90,10 +90,10 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
           <TouchableOpacity
             style={{
               backgroundColor: 'black',
-              marginHorizontal: 10,
-              borderRadius: 5,
+              marginHorizontal: horizontalScale(10),
+              borderRadius: moderateScale(5),
               paddingVertical: verticalScale(10),
-              marginBottom: 10,
+              marginBottom: verticalScale(10),
             }}
             onPress={async () => {
               console.log({onBoardingStep});
@@ -112,7 +112,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
                 color: 'white',
                 textAlign: 'center',
                 fontWeight: '600',
-                fontSize: 18,
+                fontSize: moderateScale(18),
               }}>
               Next
             </Text>
@@ -123,7 +123,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
               flexDirection: 'row',
               width: 'auto',
               justifyContent: 'space-evenly',
-              marginHorizontal: 30,
+              marginHorizontal: horizontalScale(30),
             }}>
             <Step isActive={onBoardingStep === 0} />
             <Step isActive={onBoardingStep === 1} />
@@ -132,13 +132,13 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
           </View>
         </>
       ) : (
-        <View style={{flexGrow: 1, marginHorizontal: 20}}>
+        <View style={{flexGrow: 1, marginHorizontal: horizontalScale(20)}}>
           <Text
             style={{
               color: theme.onboarding.title,
               fontWeight: '700',
-              fontSize: 22,
-              marginBottom: 20,
+              fontSize: moderateScale(22),
+              marginBottom: verticalScale(20),
               textAlign: 'center',
             }}>
             {gettingData === true
@@ -149,8 +149,8 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
             style={{
               color: theme.onboarding.text,
               fontWeight: '400',
-              fontSize: 18,
-              marginBottom: 40,
+              fontSize: moderateScale(18),
+              marginBottom: verticalScale(40),
               textAlign: 'center',
             }}>
             We will notify you when your first story is ready...
@@ -161,8 +161,8 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
             style={{
               alignSelf: 'center',
               display: 'flex',
-              width: 50,
-              height: 50,
+              width: horizontalScale(50),
+              height: verticalScale(50),
               justifyContent: 'center',
             }}
           />

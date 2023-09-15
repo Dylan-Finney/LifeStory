@@ -15,6 +15,7 @@ import {
   NativeModules,
   NativeEventEmitter,
   View,
+  Dimensions,
 } from 'react-native';
 
 import 'react-native-url-polyfill/auto';
@@ -116,7 +117,8 @@ export default App = () => {
       console.error(E);
     }
   }, []);
-
+  const {width, height} = Dimensions.get('window');
+  console.log({width, height});
   const RootStack = createNativeStackNavigator();
 
   const contextValues = {

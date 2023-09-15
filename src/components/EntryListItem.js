@@ -2,15 +2,15 @@ import {Text, TouchableOpacity, View} from 'react-native';
 import {theme} from '../../Styling';
 import moment from 'moment';
 import ExpandIcon from '../assets/expand.svg';
-import {horizontalScale, verticalScale} from '../utils/Metrics';
+import {horizontalScale, moderateScale, verticalScale} from '../utils/Metrics';
 
 const EntryListItem = ({entry, index, startOfWeek, endOfWeek, open}) => {
   return (
     <View
       key={index}
       style={{
-        marginTop: startOfWeek ? 20 : 0,
-        marginBottom: endOfWeek ? 20 : 0,
+        marginTop: startOfWeek ? verticalScale(20) : verticalScale(0),
+        marginBottom: endOfWeek ? verticalScale(20) : verticalScale(0),
         borderTopLeftRadius: startOfWeek ? 15 : 0,
         borderTopRightRadius: startOfWeek ? 15 : 0,
         borderLeftWidth: 15,
@@ -35,13 +35,13 @@ const EntryListItem = ({entry, index, startOfWeek, endOfWeek, open}) => {
           justifyContent: 'space-between',
         }}>
         <Text>
-          <Text style={{fontWeight: 700, fontSize: 18}}>
+          <Text style={{fontWeight: 700, fontSize: moderateScale(18)}}>
             {moment(entry.time).format('dddd')}
           </Text>{' '}
           <Text
             style={{
               fontWeight: 700,
-              fontSize: 18,
+              fontSize: moderateScale(18),
               color: theme.general.timeText,
             }}>
             ({moment(entry.time).format('L')})
@@ -62,8 +62,16 @@ const EntryListItem = ({entry, index, startOfWeek, endOfWeek, open}) => {
         </TouchableOpacity>
       </View>
 
-      <Text>{entry.title}</Text>
-      <Text>{entry.entry}</Text>
+      <Text style={{fontSize: moderateScale(16), fontWeight: 500}}>
+        {entry.title}
+      </Text>
+      <Text
+        style={{fontSize: moderateScale(14)}}
+        ellipsizeMode="tail"
+        numberOfLines={10}
+        lineBreakMode="tail">
+        {entry.entry}
+      </Text>
     </View>
   );
 };

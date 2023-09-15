@@ -1,8 +1,10 @@
 import React, {useState, useEffect, useRef, createRef, useContext} from 'react';
 import {
   Button,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
+  Platform,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -13,6 +15,7 @@ import {
   TouchableOpacity,
   useColorScheme,
   View,
+  Dimensions,
 } from 'react-native';
 
 import {
@@ -50,8 +53,15 @@ import {ImageAsset} from './NativeImage';
 import Config from 'react-native-config';
 import {theme} from './Styling';
 import {textChangeHelperFuncs} from './Utils';
-
+import {
+  horizontalScale,
+  moderateScale,
+  verticalScale,
+} from './src/utils/Metrics';
+import {useKeyboard} from '@react-native-community/hooks';
+import {useHeaderHeight} from '@react-navigation/elements';
 const diff = require('diff');
+const {width, height} = Dimensions.get('window');
 const {Configuration, OpenAIApi} = require('openai');
 const configuration = new Configuration({
   apiKey: Config.OPENAI_KEY,
@@ -112,6 +122,8 @@ export default FullEntryView = ({route, navigation}) => {
 
   const [recentEvent, setRecentEvent] = useState(null);
   const [currentDate, setCurrentDate] = useState(Date.now());
+
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
 
   const {
     addAtMiddle,
@@ -221,6 +233,28 @@ export default FullEntryView = ({route, navigation}) => {
       // setRecentEvent(null);
     }
   }, [recentEvent]);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        console.log('setKeyboardVisible', true);
+        setKeyboardVisible(true); // or some other action
+      },
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        console.log('setKeyboardVisible', false);
+        setKeyboardVisible(false); // or some other action
+      },
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
+    };
+  }, []);
 
   // useEffect(() => {
   //   startTimer();
@@ -605,9 +639,9 @@ export default FullEntryView = ({route, navigation}) => {
             style={{
               backgroundColor: theme.entry.modal.header.swiper,
               // backgroundColor: 'black',
-              height: 5,
-              minWidth: 150,
-              maxWidth: 150,
+              height: verticalScale(5),
+              minWidth: horizontalScale(150),
+              maxWidth: horizontalScale(150),
               display: 'flex',
             }}
           />
@@ -668,8 +702,10 @@ export default FullEntryView = ({route, navigation}) => {
                 contentContainerStyle={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 20,
-                  padding: 20,
+                  gap: verticalScale(20),
+                  paddingHorizontal: horizontalScale(20),
+                  paddingVertical: verticalScale(20),
+                  // padding: 20
                 }}>
                 {recentEvent ? (
                   <>
@@ -730,11 +766,17 @@ export default FullEntryView = ({route, navigation}) => {
                     />
                   </>
                 )}
-                <View style={{backgroundColor: 'white', padding: 10, gap: 5}}>
+                <View
+                  style={{
+                    backgroundColor: 'white',
+                    paddingHorizontal: horizontalScale(10),
+                    paddingVertical: verticalScale(10),
+                    gap: verticalScale(5),
+                  }}>
                   <Text
                     style={{
                       color: theme.general.strongText,
-                      fontSize: 16,
+                      fontSize: moderateScale(16),
                       fontWeight: 600,
                     }}>
                     Writing settings
@@ -742,26 +784,32 @@ export default FullEntryView = ({route, navigation}) => {
                   <Text
                     style={{
                       color: theme.general.strongText,
-                      fontSize: 12,
+                      fontSize: moderateScale(12),
                       fontWeight: 500,
                     }}>
                     Customize output by using the options below
                   </Text>
                   <View
                     style={{
-                      height: 0.5,
+                      height: verticalScale(0.5),
                       backgroundColor: theme.home.entryItem.highlightBorder,
                     }}
                   />
                   <View
                     style={{
-                      padding: 10,
+                      paddingHorizontal: horizontalScale(10),
+                      paddingVertical: verticalScale(10),
                       borderColor: theme.home.entryItem.highlightBorder,
                       borderWidth: 1,
                       borderRadius: 5,
                     }}>
                     <Text
-                      style={{padding: 2, paddingBottom: 10, fontWeight: 500}}>
+                      style={{
+                        paddingHorizontal: horizontalScale(2),
+                        paddingVertical: verticalScale(2),
+                        paddingBottom: verticalScale(10),
+                        fontWeight: 500,
+                      }}>
                       Tone
                     </Text>
                     <View
@@ -769,7 +817,7 @@ export default FullEntryView = ({route, navigation}) => {
                         display: 'flex',
                         flexDirection: 'row',
                         flexWrap: 'wrap',
-                        gap: 10,
+                        gap: horizontalScale(10),
                       }}>
                       {toneTags.map((toneStr, i) => {
                         return (
@@ -797,7 +845,8 @@ export default FullEntryView = ({route, navigation}) => {
                               <Text
                                 key={i}
                                 style={{
-                                  padding: 5,
+                                  paddingHorizontal: horizontalScale(5),
+                                  paddingVertical: verticalScale(5),
                                   color:
                                     writingSettings.tone === i
                                       ? theme.entry.buttons.toggle.text.active
@@ -814,13 +863,19 @@ export default FullEntryView = ({route, navigation}) => {
                   </View>
                   <View
                     style={{
-                      padding: 10,
+                      paddingHorizontal: horizontalScale(10),
+                      paddingVertical: verticalScale(10),
                       borderColor: theme.home.entryItem.highlightBorder,
                       borderWidth: 1,
                       borderRadius: 5,
                     }}>
                     <Text
-                      style={{padding: 2, paddingBottom: 10, fontWeight: 500}}>
+                      style={{
+                        paddingHorizontal: horizontalScale(2),
+                        paddingVertical: verticalScale(2),
+                        paddingBottom: verticalScale(10),
+                        fontWeight: 500,
+                      }}>
                       Emotion
                     </Text>
                     <View
@@ -828,7 +883,7 @@ export default FullEntryView = ({route, navigation}) => {
                         display: 'flex',
                         flexDirection: 'row',
                         flexWrap: 'wrap',
-                        gap: 10,
+                        gap: horizontalScale(10),
                       }}>
                       {emotionTags.map((emotionStr, i) => {
                         return (
@@ -859,7 +914,8 @@ export default FullEntryView = ({route, navigation}) => {
                               <Text
                                 key={i}
                                 style={{
-                                  padding: 5,
+                                  paddingHorizontal: horizontalScale(5),
+                                  paddingVertical: verticalScale(5),
                                   color:
                                     writingSettings.emotion === i
                                       ? theme.entry.buttons.toggle.text.active
@@ -897,26 +953,28 @@ export default FullEntryView = ({route, navigation}) => {
                 contentContainerStyle={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 20,
-                  padding: 20,
+                  gap: verticalScale(20),
+                  paddingHorizontal: horizontalScale(20),
+                  paddingVertical: verticalScale(20),
                 }}>
                 <View
                   style={{
                     backgroundColor: theme.entry.modal.tagging.background,
-                    padding: 10,
-                    gap: 5,
+                    paddingHorizontal: horizontalScale(10),
+                    paddingVertical: verticalScale(10),
+                    gap: verticalScale(5),
                   }}>
                   <View
                     style={{
                       display: 'flex',
                       flexDirection: 'row',
-                      gap: 10,
+                      gap: horizontalScale(10),
                       alignItems: 'center',
                     }}>
                     <Text
                       style={{
                         color: theme.general.strongText,
-                        fontSize: 16,
+                        fontSize: moderateScale(16),
                         fontWeight: 600,
                       }}>
                       {entry.title}
@@ -924,10 +982,11 @@ export default FullEntryView = ({route, navigation}) => {
                     <Text
                       style={{
                         color: theme.entry.tags.text,
-                        fontSize: 14,
+                        fontSize: moderateScale(14),
                         fontWeight: 500,
                         backgroundColor: theme.entry.tags.background,
-                        padding: 3,
+                        paddingHorizontal: horizontalScale(3),
+                        paddingVertical: verticalScale(3),
                         borderRadius: 5,
                       }}>
                       {entry.tags.length} tags applied
@@ -937,14 +996,14 @@ export default FullEntryView = ({route, navigation}) => {
                   <Text
                     style={{
                       color: theme.general.strongText,
-                      fontSize: 16,
+                      fontSize: moderateScale(16),
                       fontWeight: 600,
                     }}>
                     Tagging helps your group and find content easily
                   </Text>
                   <View
                     style={{
-                      height: 0.5,
+                      height: verticalScale(0.5),
                       backgroundColor: theme.entry.modal.divider,
                     }}
                   />
@@ -957,7 +1016,8 @@ export default FullEntryView = ({route, navigation}) => {
                     <TextInput
                       style={{
                         backgroundColor: 'white',
-                        padding: 10,
+                        paddingHorizontal: horizontalScale(10),
+                        paddingVertical: verticalScale(10),
                         borderRadius: 10,
                         borderWidth: 1,
                         borderColor: theme.entry.textInput.border,
@@ -980,10 +1040,11 @@ export default FullEntryView = ({route, navigation}) => {
                       style={{
                         alignItems: 'center',
                         position: 'absolute',
-                        right: 10,
+                        right: horizontalScale(10),
                         backgroundColor:
                           theme.entry.buttons.tagSubmit.background,
-                        padding: 5,
+                        paddingHorizontal: horizontalScale(5),
+                        paddingVertical: verticalScale(5),
                         borderRadius: 5,
                       }}>
                       {/* <View> */}
@@ -999,7 +1060,7 @@ export default FullEntryView = ({route, navigation}) => {
                       display: 'flex',
                       flexDirection: 'row',
                       flexWrap: 'wrap',
-                      gap: 10,
+                      gap: horizontalScale(10),
                     }}>
                     {contentTags.map((tagStr, i) => {
                       return (
@@ -1036,7 +1097,8 @@ export default FullEntryView = ({route, navigation}) => {
                             <Text
                               key={i}
                               style={{
-                                padding: 5,
+                                paddingHorizontal: horizontalScale(5),
+                                paddingVertical: verticalScale(5),
                                 color: entry.tags.includes(tagStr)
                                   ? theme.entry.buttons.toggle.text.active
                                   : theme.entry.buttons.toggle.text.inactive,
@@ -1086,7 +1148,8 @@ export default FullEntryView = ({route, navigation}) => {
                   display: 'flex',
                   flexDirection: 'column',
                   // gap: 20,
-                  padding: 20,
+                  paddingHorizontal: horizontalScale(20),
+                  paddingVertical: verticalScale(20),
                 }}>
                 <View>
                   {tempVotes
@@ -1108,15 +1171,16 @@ export default FullEntryView = ({route, navigation}) => {
                           <View
                             style={{
                               backgroundColor: 'white',
-                              padding: 10,
-                              gap: 5,
+                              paddingHorizontal: horizontalScale(10),
+                              paddingVertical: verticalScale(10),
+                              gap: verticalScale(5),
                             }}>
                             <View
                               style={{
                                 display: 'flex',
                                 flexDirection: 'row',
                                 flexWrap: 'wrap',
-                                gap: 10,
+                                gap: horizontalScale(10),
                               }}>
                               <View
                                 style={{
@@ -1140,7 +1204,7 @@ export default FullEntryView = ({route, navigation}) => {
                                     display: 'flex',
                                     flexDirection: 'row',
                                     alignItems: 'center',
-                                    gap: 5,
+                                    gap: horizontalScale(5),
                                   }}>
                                   {[1, -1].map((vote, voteIndex) => {
                                     return (
@@ -1164,7 +1228,9 @@ export default FullEntryView = ({route, navigation}) => {
                                         }}>
                                         <View
                                           style={{
-                                            padding: 3,
+                                            paddingHorizontal:
+                                              horizontalScale(3),
+                                            paddingVertical: verticalScale(3),
                                             backgroundColor:
                                               extract.vote === vote
                                                 ? theme.entry.buttons.toggle
@@ -1213,14 +1279,15 @@ export default FullEntryView = ({route, navigation}) => {
                                   backgroundColor: theme.entry.modal.background,
                                   display: 'flex',
                                   flexDirection: 'row',
-                                  padding: 7,
-                                  gap: 2,
+                                  paddingHorizontal: horizontalScale(7),
+                                  paddingVertical: verticalScale(7),
+                                  gap: horizontalScale(2),
                                   width: '100%',
                                 }}>
                                 <Text
                                   style={{
                                     color: theme.general.strongText,
-                                    fontSize: 15,
+                                    fontSize: moderateScale(15),
                                   }}>
                                   {extract.string !== undefined
                                     ? extract.string
@@ -1276,9 +1343,16 @@ export default FullEntryView = ({route, navigation}) => {
                   display: 'flex',
                   flexDirection: 'column',
                   // gap: 20,
-                  padding: 20,
+                  paddingHorizontal: horizontalScale(20),
+                  paddingVertical: verticalScale(20),
                 }}>
-                <View style={{backgroundColor: 'white', padding: 10, gap: 5}}>
+                <View
+                  style={{
+                    backgroundColor: 'white',
+                    paddingHorizontal: horizontalScale(10),
+                    paddingVertical: verticalScale(10),
+                    gap: verticalScale(5),
+                  }}>
                   <View
                     style={{
                       display: 'flex',
@@ -1289,7 +1363,7 @@ export default FullEntryView = ({route, navigation}) => {
                     <Text
                       style={{
                         color: theme.general.strongText,
-                        fontSize: 16,
+                        fontSize: moderateScale(16),
                         fontWeight: 600,
                       }}>
                       {days[new Date(entry.time).getDay()]}{' '}
@@ -1307,7 +1381,7 @@ export default FullEntryView = ({route, navigation}) => {
                     <Text
                       style={{
                         color: theme.general.strongText,
-                        fontSize: 12,
+                        fontSize: moderateScale(12),
                         fontWeight: 500,
                       }}>
                       Log your daily vibe with emotion tagging.
@@ -1315,7 +1389,7 @@ export default FullEntryView = ({route, navigation}) => {
                   </View>
                   <View
                     style={{
-                      height: 0.5,
+                      height: verticalScale(0.5),
                       backgroundColor: theme.entry.modal.divider,
                     }}
                   />
@@ -1324,7 +1398,7 @@ export default FullEntryView = ({route, navigation}) => {
                       display: 'flex',
                       flexDirection: 'row',
                       flexWrap: 'wrap',
-                      gap: 10,
+                      gap: horizontalScale(10),
                     }}>
                     {emotions.map((emotion, i) => {
                       return (
@@ -1338,8 +1412,9 @@ export default FullEntryView = ({route, navigation}) => {
                               display: 'flex',
                               flexDirection: 'row',
                               alignItems: 'center',
-                              padding: 3,
-                              gap: 2,
+                              paddingHorizontal: horizontalScale(3),
+                              paddingVertical: verticalScale(3),
+                              gap: horizontalScale(2),
                               backgroundColor:
                                 tempEmotions.emotion === i
                                   ? theme.entry.buttons.toggle.background.active
@@ -1370,7 +1445,11 @@ export default FullEntryView = ({route, navigation}) => {
                     })}
                   </View>
                 </View>
-                <View style={{padding: 10}}>
+                <View
+                  style={{
+                    paddingHorizontal: horizontalScale(10),
+                    paddingVertical: verticalScale(10),
+                  }}>
                   <View>
                     <View
                       style={{
@@ -1392,8 +1471,8 @@ export default FullEntryView = ({route, navigation}) => {
                         style={{
                           backgroundColor: theme.entry.tags.background,
                           borderRadius: 10,
-                          padding: 5,
-                          paddingHorizontal: 8,
+                          paddingHorizontal: horizontalScale(8),
+                          paddingVertical: verticalScale(5),
                         }}>
                         <Text
                           style={{
@@ -1500,8 +1579,9 @@ export default FullEntryView = ({route, navigation}) => {
                   contentContainerStyle={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 20,
-                    padding: 20,
+                    gap: verticalScale(20),
+                    paddingHorizontal: horizontalScale(20),
+                    paddingVertical: verticalScale(20),
                   }}>
                   {entry.events?.map((event, i) => (
                     <View
@@ -1516,11 +1596,18 @@ export default FullEntryView = ({route, navigation}) => {
                           alignItems: 'center',
                           backgroundColor:
                             theme.entry.modal.events.id.background,
-                          padding: 5,
+                          paddingHorizontal: horizontalScale(5),
+                          paddingVertical: verticalScale(5),
                         }}>
                         <Text>{event.id}</Text>
                       </View>
-                      <View style={{display: 'flex', flexGrow: 1, padding: 10}}>
+                      <View
+                        style={{
+                          display: 'flex',
+                          flexGrow: 1,
+                          paddingHorizontal: horizontalScale(10),
+                          paddingVertical: verticalScale(10),
+                        }}>
                         <View
                           style={{
                             display: 'flex',
@@ -1544,12 +1631,12 @@ export default FullEntryView = ({route, navigation}) => {
                               display: 'flex',
                               flexDirection: 'row',
                               alignItems: 'center',
-                              gap: 5,
+                              gap: horizontalScale(5),
                             }}>
                             <View
                               style={{
-                                width: 10,
-                                height: 10,
+                                width: horizontalScale(10),
+                                height: verticalScale(10),
                                 borderRadius: 10,
                                 backgroundColor: event.calendar.color,
                               }}
@@ -1560,7 +1647,11 @@ export default FullEntryView = ({route, navigation}) => {
 
                         {event.type === 'photo' ? (
                           <>
-                            <View style={{height: 100, width: 100}}>
+                            <View
+                              style={{
+                                height: verticalScale(100),
+                                width: horizontalScale(100),
+                              }}>
                               <ImageAsset
                                 localIdentifier={event.localIdentifier}
                                 setHeight={100}
@@ -1621,7 +1712,9 @@ export default FullEntryView = ({route, navigation}) => {
           console.log(nativeEventMenu);
           setRecentEvent(nativeEventMenu);
         }}
+        isKeyboardVisible={isKeyboardVisible}
       />
+      {/* <TextInput placeholder="Hey" /> */}
       <EntryFooter
         openModalScreen={screen => {
           setModalScreen(screen);
@@ -1654,15 +1747,35 @@ const EntryInput = ({
   entry,
   onContextMenu,
 }) => {
+  const keyboard = useKeyboard();
   return (
-    <KeyboardAvoidingView
-      keyboardVerticalOffset={200}
-      behavior="padding"
-      style={{height: '85%', padding: 10}}>
+    <View
+      style={{
+        paddingTop: verticalScale(10),
+        paddingHorizontal: horizontalScale(10),
+        paddingBottom:
+          height > 900
+            ? keyboard.keyboardShown
+              ? keyboard.keyboardHeight + 114
+              : 30
+            : height > 800
+            ? keyboard.keyboardShown
+              ? keyboard.keyboardHeight + 139
+              : 30
+            : keyboard.keyboardShown
+            ? keyboard.keyboardHeight + 145
+            : 30,
+        // paddingBottom: isKeyboardVisible
+        //   ? verticalScale(475)
+        //   : 0,
+        // padding: 10,
+        // backgroundColor: 'red',
+      }}>
       <TextInput
         style={{
-          padding: 3,
-          fontSize: 20,
+          paddingTop: verticalScale(3),
+          paddingHorizontal: horizontalScale(3),
+          fontSize: moderateScale(20),
           fontWeight: '700',
           color: theme.general.strongText,
         }}
@@ -1670,21 +1783,12 @@ const EntryInput = ({
         onChangeText={changeTitle}
       />
       <CustomInput
-        style={{height: '100%'}}
-        // isOn={false}
+        style={{height: '88%'}}
         onTxtChange={changeEntry}
         initalTxtString={entry}
-        // initalTxtString={entry.entryArr
-        //   .map(
-        //     (currentExtract, extractIndex) =>
-        //       `${currentExtract.entry}${
-        //         currentExtract.ref !== '' ? `[${extractIndex + 1}]` : ``
-        //       } `,
-        //   )
-        //   .join('')}
         onEventMenu={onContextMenu}
       />
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -1696,21 +1800,41 @@ const EntryFooter = ({
   setTempVotes,
   setCurrentDate,
 }) => {
+  const keyboard = useKeyboard();
   return (
-    <KeyboardAvoidingView
-      behavior="position"
-      keyboardVerticalOffset={100}
-      contentContainerStyle={{backgroundColor: 'white'}}>
+    <View
+      style={{
+        bottom:
+          height > 900
+            ? keyboard.keyboardShown
+              ? keyboard.keyboardHeight + 40
+              : 30
+            : height > 800
+            ? keyboard.keyboardShown
+              ? keyboard.keyboardHeight + 50
+              : 30
+            : keyboard.keyboardShown
+            ? keyboard.keyboardHeight + 48
+            : 5,
+        position: 'absolute',
+        width: '100%',
+        transition: 'bottom 1s',
+      }}>
       <View
-        style={{backgroundColor: theme.entry.footer.divider, height: 0.5}}
+        style={{
+          backgroundColor: theme.entry.footer.divider,
+          height: verticalScale(0.5),
+        }}
       />
       <View
         style={{
           display: 'flex',
           flexDirection: 'row',
           justifyContent: 'space-between',
-          backgroundColor: theme.entry.footer.background,
-          padding: 15,
+          backgroundColor: 'white',
+          // padding: 15,
+          paddingHorizontal: horizontalScale(15),
+          paddingVertical: verticalScale(15),
         }}>
         <TouchableOpacity
           onPress={() => {
@@ -1751,7 +1875,7 @@ const EntryFooter = ({
           <EmotionTaggingIcon stroke={'black'} />
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -1768,9 +1892,8 @@ const EntryHeader = ({
         flexDirection: 'row',
         justifyContent: 'space-between',
         backgroundColor: theme.general.barMenu,
-        padding: 10,
-        paddingLeft: 30,
-        paddingRight: 30,
+        paddingVertical: verticalScale(10),
+        paddingHorizontal: horizontalScale(30),
       }}>
       <View
         style={{
@@ -1783,7 +1906,7 @@ const EntryHeader = ({
           <WordCountIcon></WordCountIcon>
           <Text style={{color: 'white'}}>{countedWords}</Text>
         </View>
-        <Text style={{color: 'white', fontSize: 13}}>Words</Text>
+        <Text style={{color: 'white', fontSize: moderateScale(13)}}>Words</Text>
       </View>
       <View
         style={{
@@ -1796,7 +1919,7 @@ const EntryHeader = ({
           <ContentTaggingIcon width={17} height={16} fill={'white'} />
           <Text style={{color: 'white'}}>{tagsLength}</Text>
         </View>
-        <Text style={{color: 'white', fontSize: 13}}>Tags</Text>
+        <Text style={{color: 'white', fontSize: moderateScale(13)}}>Tags</Text>
       </View>
       <View
         style={{
@@ -1809,7 +1932,9 @@ const EntryHeader = ({
           <EmotionTaggingIcon width={17} height={16} stroke={'white'} />
           <Text style={{color: 'white'}}>{emotionsLength}</Text>
         </View>
-        <Text style={{color: 'white', fontSize: 13}}>Emotions</Text>
+        <Text style={{color: 'white', fontSize: moderateScale(13)}}>
+          Emotions
+        </Text>
       </View>
       <View
         style={{
@@ -1822,7 +1947,7 @@ const EntryHeader = ({
           <UpvoteIcon stroke={'white'} />
           <Text style={{color: 'white'}}>{votesLength}</Text>
         </View>
-        <Text style={{color: 'white', fontSize: 13}}>Votes</Text>
+        <Text style={{color: 'white', fontSize: moderateScale(13)}}>Votes</Text>
       </View>
     </View>
   );
@@ -1958,7 +2083,13 @@ const AIRewriteAttr = ({
   tempValue,
 }) => {
   return (
-    <View style={{backgroundColor: 'white', padding: 10, gap: 5}}>
+    <View
+      style={{
+        backgroundColor: 'white',
+        paddingHorizontal: horizontalScale(10),
+        paddingVertical: verticalScale(10),
+        gap: verticalScale(5),
+      }}>
       <Text
         style={{
           color: theme.general.strongText,
@@ -1969,7 +2100,7 @@ const AIRewriteAttr = ({
       </Text>
       <View
         style={{
-          height: 0.5,
+          height: verticalScale(0.5),
           backgroundColor: theme.entry.modal.divider,
         }}
       />
@@ -1987,8 +2118,8 @@ const AIRewriteAttr = ({
               flexDirection: 'row',
               backgroundColor: theme.entry.tags.background,
               borderRadius: 10,
-              paddingHorizontal: 10,
-              paddingVertical: 3,
+              paddingHorizontal: horizontalScale(10),
+              paddingVertical: verticalScale(3),
             }}>
             <AIRewriteIcon
               width={17}
@@ -2022,11 +2153,13 @@ const AIRewriteAttr = ({
         />
       </View>
       {attribute === 'entry' ? (
-        <ScrollView style={{height: 200}}>
+        <ScrollView style={{height: verticalScale(200)}}>
           <Text>{tempValue}</Text>
         </ScrollView>
       ) : (
-        <Text style={{fontSize: 18, fontWeight: 600}}>{tempValue}</Text>
+        <Text style={{fontSize: moderateScale(18), fontWeight: 600}}>
+          {tempValue}
+        </Text>
       )}
     </View>
   );
@@ -2036,7 +2169,9 @@ const ModalScreenTitle = ({icon, title}) => {
   return (
     <View style={{display: 'flex', flexDirection: 'row'}}>
       {icon}
-      <Text style={{fontSize: 20, fontWeight: 600}}>{title}</Text>
+      <Text style={{fontSize: moderateScale(20), fontWeight: 600}}>
+        {title}
+      </Text>
     </View>
   );
 };
@@ -2049,7 +2184,9 @@ const ModalScreenHeader = ({close, update, updateable, icon, title}) => {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: 10,
+        // padding: 10,
+        paddingHorizontal: horizontalScale(10),
+        paddingVertical: verticalScale(10),
         // backgroundColor: 'black',
       }}>
       <ModalScreenClose
@@ -2082,7 +2219,7 @@ const AIRewriteOptions = ({
       style={{
         display: 'flex',
         flexDirection: 'row',
-        gap: 5,
+        gap: horizontalScale(5),
       }}>
       {changes && (
         <TouchableOpacity
@@ -2092,7 +2229,9 @@ const AIRewriteOptions = ({
           style={{
             backgroundColor:
               theme.entry.buttons.requestRewrite.background.inactive,
-            padding: 2.5,
+            // padding: 2.5,
+            paddingHorizontal: horizontalScale(2.5),
+            paddingVertical: verticalScale(2.5),
             borderRadius: 3,
           }}>
           <UndoIcon />
@@ -2107,7 +2246,8 @@ const AIRewriteOptions = ({
             loading.attribute === attribute && loading.action === 'new'
               ? theme.entry.buttons.requestRewrite.background.active
               : theme.entry.buttons.requestRewrite.background.inactive,
-          padding: 2.5,
+          paddingHorizontal: horizontalScale(2.5),
+          paddingVertical: verticalScale(2.5),
           borderRadius: 3,
           borderWidth: 1,
           borderColor:
@@ -2132,7 +2272,8 @@ const AIRewriteOptions = ({
             loading.attribute === attribute && loading.action === 'shorten'
               ? theme.entry.buttons.requestRewrite.background.active
               : theme.entry.buttons.requestRewrite.background.inactive,
-          padding: 2.5,
+          paddingHorizontal: horizontalScale(2.5),
+          paddingVertical: verticalScale(2.5),
           borderRadius: 3,
           borderWidth: 1,
           borderColor:
@@ -2157,7 +2298,8 @@ const AIRewriteOptions = ({
             loading.attribute === attribute && loading.action === 'lengthen'
               ? theme.entry.buttons.requestRewrite.background.active
               : theme.entry.buttons.requestRewrite.background.inactive,
-          padding: 2.5,
+          paddingHorizontal: horizontalScale(2.5),
+          paddingVertical: verticalScale(2.5),
           borderRadius: 3,
           borderWidth: 1,
           borderColor:
@@ -2191,8 +2333,8 @@ const TimeDivider = ({previousTime, currentTime, index}) => {
       <View
         style={{
           alignSelf: 'center',
-          width: 2,
-          height: height,
+          width: horizontalScale(2),
+          height: verticalScale(height),
           backgroundColor: theme.general.timeDivider,
         }}
       />
@@ -2220,7 +2362,7 @@ const TimeDivider = ({previousTime, currentTime, index}) => {
             <Text
               style={{
                 color: theme.general.timeText,
-                paddingLeft: 3,
+                paddingLeft: horizontalScale(3),
                 fontWeight: 600,
               }}>
               {moment(currentTime).format('L')}
@@ -2231,7 +2373,7 @@ const TimeDivider = ({previousTime, currentTime, index}) => {
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 5,
+                gap: horizontalScale(5),
               }}>
               <ClockIcon />
               <Text style={{color: theme.general.timeText}}>
@@ -2248,7 +2390,7 @@ const TimeDivider = ({previousTime, currentTime, index}) => {
                 <Text
                   style={{
                     color: theme.general.timeText,
-                    paddingLeft: 3,
+                    paddingLeft: horizontalScale(3),
                     fontWeight: 600,
                   }}>
                   {moment(currentTime).format('L')}
@@ -2263,7 +2405,7 @@ const TimeDivider = ({previousTime, currentTime, index}) => {
                     display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'center',
-                    gap: 5,
+                    gap: horizontalScale(5),
                   }}>
                   <ClockIcon />
                   <Text style={{color: theme.general.timeText}}>
@@ -2285,15 +2427,18 @@ const EmotionItem = ({extract, changeEmotion}) => {
     <View
       style={{
         backgroundColor: 'white',
-        padding: 10,
-        gap: 5,
+        // padding: 10,
+        // gap: 5,
+        paddingVertical: verticalScale(10),
+        paddingHorizontal: horizontalScale(10),
+        gap: verticalScale(5),
       }}>
       <View
         style={{
           display: 'flex',
           flexDirection: 'row',
           flexWrap: 'wrap',
-          gap: 10,
+          gap: horizontalScale(10),
         }}>
         <View
           style={{
@@ -2302,8 +2447,9 @@ const EmotionItem = ({extract, changeEmotion}) => {
             alignItems: 'center',
             justifyContent: 'space-between',
             width: '100%',
-            height: 35,
-            padding: 10,
+            height: verticalScale(35),
+            // paddingVertical: verticalScale(10),
+            paddingHorizontal: horizontalScale(10),
           }}>
           <View
             style={{
@@ -2312,15 +2458,15 @@ const EmotionItem = ({extract, changeEmotion}) => {
               alignItems: 'center',
             }}>
             <FileIcon />
-            <Text>Item</Text>
+            <Text style={{fontSize: moderateScale(14)}}>Item</Text>
           </View>
           {extract.emotion > -1 ? (
             <View
               style={{
                 backgroundColor: theme.entry.tags.background,
                 borderRadius: 10,
-                padding: 1,
-                paddingHorizontal: 6,
+                paddingVertical: verticalScale(1),
+                paddingHorizontal: horizontalScale(6),
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -2343,13 +2489,14 @@ const EmotionItem = ({extract, changeEmotion}) => {
             backgroundColor: theme.entry.modal.background,
             display: 'flex',
             flexDirection: 'row',
-            padding: 7,
-            gap: 2,
+            paddingVertical: verticalScale(7),
+            paddingHorizontal: horizontalScale(7),
+            gap: horizontalScale(2),
             width: '100%',
           }}>
           <View
             style={{
-              width: 2,
+              width: horizontalScale(2),
               height: 'auto',
               backgroundColor: theme.entry.background,
             }}
@@ -2357,7 +2504,7 @@ const EmotionItem = ({extract, changeEmotion}) => {
           <Text
             style={{
               color: theme.general.strongText,
-              fontSize: 15,
+              fontSize: moderateScale(15),
             }}>
             {extract.string}
           </Text>
@@ -2375,8 +2522,9 @@ const EmotionItem = ({extract, changeEmotion}) => {
                   display: 'flex',
                   flexDirection: 'row',
                   alignItems: 'center',
-                  padding: 3,
-                  gap: 2,
+                  paddingVertical: verticalScale(3),
+                  paddingHorizontal: horizontalScale(3),
+                  gap: horizontalScale(2),
                   backgroundColor:
                     extract.emotion === i
                       ? theme.entry.buttons.toggle.background.active

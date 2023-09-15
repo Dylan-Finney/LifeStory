@@ -9,6 +9,7 @@ import {
 import useDatabaseHooks from './useDatabaseHooks';
 import AppContext from './Context';
 import useSettingsHooks from './useSettingsHooks';
+import {verticalScale} from './src/utils/Metrics';
 export default SettingsView = ({route, navigation}) => {
   const {deleteTable, createEntryTable} = useDatabaseHooks();
   const {setOnBoarding, calendars, setCalendars} = useSettingsHooks();
@@ -22,7 +23,7 @@ export default SettingsView = ({route, navigation}) => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 10,
+        gap: verticalScale(10),
         flexGrow: 1,
       }}>
       <Text
