@@ -191,6 +191,14 @@ const useDatabaseHooks = () => {
     });
   };
 
+  const resetTable = tableName => {
+    db.transaction(tx => {
+      tx.executeSql(`DELETE FROM ${tableName}`, [], (tx, results) => {
+        console.log(`${tableName} RESET`, {results});
+      });
+    });
+  };
+
   const retrieveSpecificData = (startDate, endDate, callback) => {
     // var startOfDay = new Date(
     //   startDate.getFullYear(),
@@ -266,6 +274,7 @@ const useDatabaseHooks = () => {
     saveEntryData,
     updateEntryData,
     retrieveSpecificData,
+    resetTable,
   };
 };
 

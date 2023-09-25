@@ -28,4 +28,9 @@ RCT_EXTERN_METHOD(
 RCT_EXTERN_METHOD(
                   setCalendarIdentifiers: (NSArray<NSString>)calendarIdentifiers
                   )
+RCT_EXTERN_METHOD(
+                  setDateRange:(NSInteger)data
+                  data2:(NSInteger)data2
+                  )
+
 @end

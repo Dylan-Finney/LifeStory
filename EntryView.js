@@ -824,7 +824,10 @@ export default FullEntryView = ({route, navigation}) => {
                           <TouchableOpacity
                             key={i}
                             onPress={() => {
-                              setWritingSettings({...writingSettings, tone: i});
+                              setWritingSettings({
+                                ...writingSettings,
+                                tone: writingSettings.tone === i ? -1 : i,
+                              });
                             }}>
                             <View
                               style={{
@@ -892,7 +895,7 @@ export default FullEntryView = ({route, navigation}) => {
                             onPress={() => {
                               setWritingSettings({
                                 ...writingSettings,
-                                emotion: i,
+                                emotion: writingSettings.emotion === i ? -1 : i,
                               });
                             }}>
                             <View
@@ -1644,7 +1647,7 @@ export default FullEntryView = ({route, navigation}) => {
                             <Text>{event.calendar.title}</Text>
                           </View>
                         )}
-
+                        {console.log(event)}
                         {event.type === 'photo' ? (
                           <>
                             <View
@@ -1660,6 +1663,7 @@ export default FullEntryView = ({route, navigation}) => {
                                 style={{flex: 1, height: '100%', width: '100%'}}
                               />
                             </View>
+                            <Text>{event.description}</Text>
                             {event.lat ? (
                               <>
                                 <Text>{event.loc}</Text>

@@ -123,10 +123,10 @@ var presentingVC = RCTPresentedViewController()
       }
   @objc func getCalendarEvents(_ data: Int, data2: Int, withResolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
     calendarDenied = false
-    let date = NSDate(timeIntervalSince1970: TimeInterval(data))
-    startDate = date as Date
-    let date2 = NSDate(timeIntervalSince1970: TimeInterval(data2))
-    endDate = date2 as Date
+//    let date = NSDate(timeIntervalSince1970: TimeInterval(data))
+//    startDate = date as Date
+//    let date2 = NSDate(timeIntervalSince1970: TimeInterval(data2))
+//    endDate = date2 as Date
 
     fetchEventsFromCalendar()
     if calendarDenied == true {
@@ -229,8 +229,8 @@ for localIdentifier in calendarIdentifiers {
     locationManager.desiredAccuracy = kCLLocationAccuracyBest
     locationManager.distanceFilter = kCLDistanceFilterNone
     locationManager.allowsBackgroundLocationUpdates = true
-     locationManager.startMonitoringVisits()
-//    locationManager.startUpdatingLocation()
+     locationManager.startMonitoringVisits() //Make Sure this is active for release
+  //  locationManager.startUpdatingLocation() //Simulator Debug as Visits doesn't work
     resolve(true)
 
   }
@@ -278,15 +278,26 @@ for localIdentifier in calendarIdentifiers {
    @objc func fetchPhotos() {
     testIdentifiers = []
     let fetchOptions = PHFetchOptions()
-    let dateOne =  Calendar.current.startOfDay(for: Date())
-    let dateTwo = Calendar.current.date(byAdding: .day, value: 1, to: dateOne)
-    fetchOptions.predicate = NSPredicate(format: "mediaType = %d AND ( creationDate > %@ ) AND ( creationDate < %@ )", PHAssetMediaType.image.rawValue, dateOne as NSDate, dateTwo! as NSDate)
+     let requestOptions = PHImageRequestOptions()
+     requestOptions.isSynchronous = true
+//    let dateOne =  Calendar.current.startOfDay(for: Date())
+//    let dateTwo = Calendar.current.date(byAdding: .day, value: 1, to: dateOne)
+    fetchOptions.predicate = NSPredicate(format: "mediaType = %d AND ( creationDate > %@ ) AND ( creationDate < %@ )", PHAssetMediaType.image.rawValue, startDate as NSDate, endDate as NSDate)
     PHAsset.fetchAssets(with: .image, options: fetchOptions).enumerateObjects({ (object, count, stop) in
       var newPhoto = [String: String]()
 
       newPhoto["name"] = PHAssetResource.assetResources(for: object).first?.originalFilename
 
       newPhoto["localIdentifier"] = object.localIdentifier
+      PHImageManager.default().requestImage(for: object, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: requestOptions) { image, _ in
+        if let pngData = image?.pngData() {
+//          newPhoto["data"] = String(decoding: pngData, as: UTF8.self)
+          newPhoto["data"] = pngData.base64EncodedString()
+          
+        }
+        
+      }
+
       if let unwrappedDate = object.creationDate {
         newPhoto["creation"] = String(unwrappedDate.timeIntervalSince1970)
       } else {
@@ -380,6 +391,15 @@ for localIdentifier in calendarIdentifiers {
 /*
 Other Functions
 */
+  
+  @objc func setDateRange(_ data: Int, data2: Int) -> Void {
+    let date = NSDate(timeIntervalSince1970: TimeInterval(data))
+    startDate = date as Date
+    let date2 = NSDate(timeIntervalSince1970: TimeInterval(data2))
+    endDate = date2 as Date
+
+
+      }
 
   // we need to override this method and
   // return an array of event names that we can listen to

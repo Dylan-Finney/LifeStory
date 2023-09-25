@@ -21,6 +21,7 @@ import {
 import 'react-native-url-polyfill/auto';
 
 import EntryView from './EntryView.js';
+import LocationAliases from './LocationAliases.js';
 import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Home from './Home';
@@ -149,7 +150,7 @@ export default App = () => {
   navTheme.colors.background = '#FBFBFB';
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer>
       <RootStack.Navigator screenOptions={{headerShown: false}}>
         <RootStack.Screen
           name="Home"
@@ -172,6 +173,16 @@ export default App = () => {
               <SettingsView {...params} />
             </AppContext.Provider>
           )}
+        />
+        <RootStack.Screen
+          name="Locations"
+          options={{headerShown: true, title: ''}}
+          component={LocationAliases}
+          // children={params => (
+          //   <AppContext.Provider value={contextValues}>
+          //     <SettingsView {...params} />
+          //   {/* </AppContext.Provider> */}
+          // )}
         />
       </RootStack.Navigator>
     </NavigationContainer>
