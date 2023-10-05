@@ -10,6 +10,7 @@ import CoreLocation
 import EventKit
 import Photos
 import Dispatch
+import UserNotifications
 import EventKitUI
 @objc(Location)
 class Location: RCTEventEmitter, CLLocationManagerDelegate, EKCalendarChooserDelegate {
@@ -187,6 +188,7 @@ for localIdentifier in calendarIdentifiers {
           presentingVC?.dismiss(animated: true, completion: nil)
           if calendarInital == true {
             fetchEventsFromCalendar("Calendar")
+            self.sendEvent(withName: "calendarChange", body: calendars)
       self.semaphore.signal()
     } else {
         self.sendEvent(withName: "calendarChange", body: calendars)
@@ -400,6 +402,64 @@ Other Functions
 
 
       }
+//  
+//  @objc func createNotifications() -> Void {
+//    checkForNotificationsPermissions()
+//  }
+//  func checkForNotificationsPermissions() {
+//    let notificationCenter = UNUserNotificationCenter.current()
+//    notificationCenter.getNotificationSettings { settings in
+//      switch settings.authorizationStatus {
+//      case .authorized :
+//        self.dispatchNotification()
+//      case .denied:
+//        return
+//      case .notDetermined:
+//        notificationCenter.requestAuthorization(options: [.alert, .sound]) { didAllow, error in
+//          if didAllow {
+//            self.dispatchNotification()
+//          }
+//        }
+//      default:
+//        return
+//      }
+//    }
+//  }
+//  func dispatchNotification() {
+//    let identifier = "story-alert"
+//    let title = "Test Title"
+//    let body = "Test Body"
+//    let hour = 15
+//    let minute = 12
+//    let isDaily = true
+//    let notificationCenter = UNUserNotificationCenter.current()
+//    let content = UNMutableNotificationContent()
+//    content.title = title
+//    content.body = body
+//    content.sound = .default
+//    
+//    let calendar = Calendar.current
+////    let currentDate = Date()
+////    var dateComponentsAdd = DateComponents()
+////    dateComponentsAdd.minute = 1
+////    if let  nextHourDate = calendar.date(byAdding: dateComponentsAdd, to: currentDate) {
+////      let nextHourComponents = calendar.dateComponents([.hour, .minute], from: nextHourDate)
+////      let trigger = UNCalendarNotificationTrigger(dateMatching: nextHourComponents, repeats: isDaily)
+////      let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+////      notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
+////      notificationCenter.add(request)
+////
+////    }
+//        var dateComponents = DateComponents(calendar: calendar, timeZone: TimeZone.current)
+//    dateComponents.hour = hour
+//    dateComponents.minute = minute
+//    let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: isDaily)
+//    let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+//    notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
+//    notificationCenter.add(request)
+//
+//    
+//      }
 
   // we need to override this method and
   // return an array of event names that we can listen to

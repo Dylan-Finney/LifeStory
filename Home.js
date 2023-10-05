@@ -10,6 +10,8 @@ import {
   Alert,
   StyleSheet,
   Image,
+  Button,
+  NativeEventEmitter,
 } from 'react-native';
 
 import {
@@ -22,6 +24,12 @@ import {
 import Svg, {Defs, Rect, LinearGradient, Stop} from 'react-native-svg';
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
+import notifee, {
+  EventType,
+  TimestampTrigger,
+  TriggerType,
+} from '@notifee/react-native';
+
 // import AMImage from './src/assets/am_image.svg';
 // import AMImage from './src/assets/AMImage.png';
 
@@ -47,6 +55,8 @@ import {
 } from './src/utils/Metrics';
 import DatePicker from 'react-native-date-picker';
 import {decode, encode} from 'base-64';
+import {useAppState} from '@react-native-community/hooks';
+import onCreateTriggerNotification from './src/utils/CreateNotification';
 // const {
 //   DetectFacesCommand,
 //   DetectLabelsCommand,
@@ -84,6 +94,7 @@ export default FullHomeView = ({route, navigation}) => {
     createEntryTime,
     language,
     globalWritingSettings,
+    onboardingTime,
   } = useSettingsHooks();
   const baseEntry = {
     tags: [],
@@ -119,10 +130,12 @@ export default FullHomeView = ({route, navigation}) => {
     generated: false,
     entry: '',
   };
-  const {entries, setEntries} = useContext(AppContext);
-
+  const {entries, setEntries, loadingEntries} = useContext(AppContext);
   const [loading, setLoading] = useState(false);
   const [generatingEntry, setGeneratingEntry] = useState(false);
+  const [clickedNotification, setClickedNotification] = useState(null);
+  // const CalendarEvents = new NativeEventEmitter(NativeModules.Location);
+
   // const [onBoarding, setOnBoarding] = useState(false);
   // console.log('TIMEZONE', RNLocalize.getTimeZone());
 
@@ -180,14 +193,30 @@ export default FullHomeView = ({route, navigation}) => {
     var locations = [];
     var photos = [];
     // GET CALENDAR EVENTS
-    let startOfUnixTime = moment(date).startOf('day').unix();
+    // let startOfUnixTime = moment(date).startOf('day').unix();
 
-    let endOfUnixTime = moment(date).endOf('day').unix();
+    // let endOfUnixTime = moment(date).endOf('day').unix();
+    let endOfUnixTime = new Date(date);
+    endOfUnixTime.setHours(createEntryTime);
+    endOfUnixTime.setMinutes(0);
+    endOfUnixTime.setSeconds(0);
+    endOfUnixTime.setMilliseconds(0);
+    let startOfUnixTime = new Date(endOfUnixTime.getTime());
+    startOfUnixTime.setDate(startOfUnixTime.getDate() - 1);
+    endOfUnixTime = Math.floor(endOfUnixTime.getTime() / 1000);
+    startOfUnixTime = Math.floor(startOfUnixTime.getTime() / 1000);
 
     Location.setDateRange(startOfUnixTime, endOfUnixTime);
     try {
       console.log('events', {startOfUnixTime, endOfUnixTime});
       events = await Location.getCalendarEvents(startOfUnixTime, endOfUnixTime);
+      // CalendarEvents.addListener('calendarChange', event => {
+      //   console.log('calendarChange EVENT', {event});
+      //   if (event !== 'null') {
+      //     setCalendars(JSON.stringify(event));
+      //   }
+      //   CalendarEvents.removeAllListeners('calendarChange');
+      // });
       console.log({events});
     } catch (e) {
       if (e.message === 'DENIED') {
@@ -243,7 +272,7 @@ export default FullHomeView = ({route, navigation}) => {
         await new Promise((resolve, reject) => {
           Alert.alert(
             'Include Other Photos',
-            'Photos downloaded or from Third Party apps will NOT be included in your entries.\nDo you wish to proceed?',
+            'Photos downloaded or from Third Party apps WILL be included in your entries.\nDo you wish to proceed? Select no to exclude these photos.',
 
             [
               {
@@ -276,6 +305,10 @@ export default FullHomeView = ({route, navigation}) => {
     if (includeDownloadedPhotosCheck !== true) {
       photos = photos.filter(photo => photo.lat !== 'null');
     }
+
+    // NOTIFICATIONS
+    await notifee.requestPermission();
+    //RETURNS
     return {
       photos,
       locations,
@@ -290,6 +323,13 @@ export default FullHomeView = ({route, navigation}) => {
 
     console.log({photos});
 
+    var entryCreationTime = new Date(Date.now());
+    entryCreationTime.setHours(createEntryTime);
+    entryCreationTime.setMinutes(0);
+    entryCreationTime.setSeconds(0);
+    entryCreationTime.setMilliseconds(0);
+    // console.log({entryCreationTime});
+    // entryCreationTime = entryCreationTime.getTime();
     // setGettingData(true);
     // setLoading(true);
     //DAY
@@ -300,10 +340,18 @@ export default FullHomeView = ({route, navigation}) => {
     var entriesCopy = [...entries];
     var entryEvents = [];
     // GET CALENDAR EVENTS
-    let startOfUnixTime = moment(date).startOf('day').unix();
+    // let startOfUnixTime = moment(date).startOf('day').unix();
 
-    let endOfUnixTime = moment(date).endOf('day').unix();
-
+    // let endOfUnixTime = moment(date).endOf('day').unix();
+    let endOfUnixTime = new Date(date);
+    endOfUnixTime.setHours(createEntryTime);
+    endOfUnixTime.setMinutes(0);
+    endOfUnixTime.setSeconds(0);
+    endOfUnixTime.setMilliseconds(0);
+    let startOfUnixTime = new Date(endOfUnixTime.getTime());
+    startOfUnixTime.setDate(startOfUnixTime.getDate() - 1);
+    endOfUnixTime = Math.floor(endOfUnixTime.getTime() / 1000);
+    startOfUnixTime = Math.floor(startOfUnixTime.getTime() / 1000);
     // ASK CHATGPT TO CREATE ENTRY
 
     var autoGenerate =
@@ -739,7 +787,7 @@ export default FullHomeView = ({route, navigation}) => {
 
       entriesCopy.push({
         ...baseEntry,
-        time: date,
+        time: entryCreationTime.getTime(),
         entry: '',
         events: entryEvents,
         entry: response,
@@ -748,7 +796,7 @@ export default FullHomeView = ({route, navigation}) => {
     } else {
       entriesCopy.push({
         ...baseEntry,
-        time: date,
+        time: entryCreationTime.getTime(),
         entry: '',
         events: [],
         entry: 'No events found.',
@@ -766,7 +814,7 @@ export default FullHomeView = ({route, navigation}) => {
       saveEntryData({
         tags: '',
         title: 'New Entry',
-        time: date,
+        time: entryCreationTime.getTime(),
         emotion: -1,
         emotions: '',
         votes: '',
@@ -784,6 +832,7 @@ export default FullHomeView = ({route, navigation}) => {
     } catch (e) {
       console.error(e);
     }
+
     setEntries(entriesCopy);
     setGeneratingEntry(false);
     // setLoading(false);
@@ -834,6 +883,100 @@ export default FullHomeView = ({route, navigation}) => {
   };
 
   console.log(Dimensions.get('window'));
+
+  const checkIfReadyToGenerate = async () => {
+    var now = new Date(Date.now());
+    if (entries.length > 0) {
+      if (
+        new Date(entries.sort((a, b) => b.time - a.time)[0].time).getDate() <
+          now.getDate() &&
+        now.getHours() >= createEntryTime
+      ) {
+        console.log('Time to generate entry');
+        await generateEntry({
+          data: await getPermissionsAndData(now.getTime()),
+          date: now.getTime(),
+        });
+        onCreateTriggerNotification({
+          first: false,
+          createEntryTime,
+          time: null,
+        });
+      } else {
+        console.log('Not Ready');
+      }
+    } else {
+      if (onboardingTime < Date.now()) {
+        console.log('Time to generate entry');
+        await generateEntry({
+          data: await getPermissionsAndData(now.getTime()),
+          date: now.getTime(),
+        });
+        onCreateTriggerNotification({
+          first: false,
+          createEntryTime,
+          time: null,
+        });
+      } else {
+        console.log('Not Ready');
+      }
+    }
+  };
+
+  useEffect(() => {
+    console.log({loadingEntries});
+  }, [loadingEntries]);
+  useEffect(() => {
+    if (
+      ((!loadingEntries && clickedNotification === null) ||
+        (!loadingEntries && clickedNotification === true)) &&
+      !onBoarding
+    ) {
+      console.log({loadingEntries, clickedNotification});
+      checkIfReadyToGenerate();
+      if (clickedNotification === true) {
+        setClickedNotification(false);
+      }
+    }
+  }, [loadingEntries, clickedNotification]);
+  var inital = null;
+  const bootStrap = async () => {
+    const initialNotification = await notifee.getInitialNotification();
+    if (initialNotification) {
+      console.log(
+        'Notification caused application to open',
+        initialNotification.notification,
+      );
+      console.log(
+        'Press action used to open the app',
+        initialNotification.pressAction,
+      );
+      inital = true;
+    }
+  };
+  useEffect(() => {
+    bootStrap();
+    return notifee.onForegroundEvent(({type, detail}) => {
+      console.log('foreground', {type, detail});
+      switch (type) {
+        case EventType.DISMISSED:
+          console.log('User dismissed notification', detail.notification);
+          break;
+        case EventType.PRESS:
+          console.log('User pressed notification', detail.notification);
+          if (inital !== true) {
+            setClickedNotification(true);
+          } else {
+            inital = false;
+          }
+
+          // checkIfReadyToGenerate();
+          break;
+        case 7:
+          break;
+      }
+    });
+  }, []);
 
   return (
     <SafeAreaView style={{flexGrow: 1}}>
@@ -948,6 +1091,10 @@ export default FullHomeView = ({route, navigation}) => {
                     }}
                     text={'Create new entry (Manual)'}
                   />
+                  {/* <Button
+                    title="Create Trigger Notification"
+                    onPress={() => onCreateTriggerNotification()}
+                  /> */}
                 </>
               )}
             </View>
@@ -959,37 +1106,54 @@ export default FullHomeView = ({route, navigation}) => {
               }}
             /> */}
 
-            {!loading && (
-              <EntryList entries={entries} navigation={navigation} />
-            )}
-            {entries.length === 0 && (
-              <View style={{gap: 20}}>
-                <Image
-                  source={
-                    createEntryTime === 8
-                      ? require('./src/assets/AMImage.png')
-                      : require('./src/assets/PMImage.png')
-                  }
-                  resizeMethod="auto"
-                  style={{
-                    alignSelf: 'center',
-                    display: 'flex',
-                    marginTop: 50,
-                    width: horizontalScale(250),
-                    height: verticalScale(250),
-                    justifyContent: 'center',
-                  }}
-                />
-                <Text
-                  style={{fontWeight: 600, textAlign: 'center', fontSize: 23}}>
-                  Please wait till 8{createEntryTime === 8 ? 'AM' : 'PM'}
-                </Text>
-                <Text
-                  style={{fontWeight: 400, textAlign: 'center', fontSize: 18}}>
-                  We will notify you as soon as your first daily summary will be
-                  ready
-                </Text>
-              </View>
+            {!loading && !loadingEntries ? (
+              <>
+                {entries.length === 0 ? (
+                  <View style={{gap: 20}}>
+                    <Image
+                      source={
+                        createEntryTime === 8
+                          ? require('./src/assets/AMImage.png')
+                          : require('./src/assets/PMImage.png')
+                      }
+                      resizeMode="contain"
+                      style={{
+                        alignSelf: 'center',
+                        display: 'flex',
+                        marginTop: 50,
+                        width: horizontalScale(250),
+                        height: verticalScale(250),
+                        justifyContent: 'center',
+                      }}
+                    />
+                    <Text
+                      style={{
+                        fontWeight: 600,
+                        textAlign: 'center',
+                        fontSize: 23,
+                      }}>
+                      Please wait till 8{createEntryTime === 8 ? 'AM' : 'PM'}
+                    </Text>
+                    <Text
+                      style={{
+                        fontWeight: 400,
+                        textAlign: 'center',
+                        fontSize: 18,
+                      }}>
+                      We will notify you as soon as your first daily summary
+                      will be ready
+                    </Text>
+                  </View>
+                ) : (
+                  <EntryList entries={entries} navigation={navigation} />
+                )}
+              </>
+            ) : (
+              //
+              <>
+                {console.log({loading, loadingEntries})}
+                <Text>Loading Entries...</Text>
+              </>
             )}
           </ScrollView>
         </>

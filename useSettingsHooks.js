@@ -37,6 +37,12 @@ const useSettingsHooks = () => {
     0,
   );
 
+  const [onboardingTime, setOnboardingTime] = useMMKVStorage(
+    'onboardingTime',
+    settingsStorage,
+    0,
+  );
+
   const [language, setLanguage] = useMMKVStorage(
     'language',
     settingsStorage,
@@ -65,6 +71,8 @@ const useSettingsHooks = () => {
     setLanguage,
     globalWritingSettings,
     setGlobalWritingSettings,
+    onboardingTime,
+    setOnboardingTime,
   };
 };
 

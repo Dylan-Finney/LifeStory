@@ -20,6 +20,7 @@ import {
   verticalScale,
 } from './src/utils/Metrics';
 import {theme} from './Styling';
+import notifee from '@notifee/react-native';
 // var langmap = require('langmap');
 
 export default SettingsView = ({route, navigation}) => {
@@ -209,7 +210,8 @@ export default SettingsView = ({route, navigation}) => {
             Cancel
           </Text>
           <Text style={{fontSize: moderateScale(20), fontWeight: 600}}>
-            Set Languages
+            {modalScreen === 'language' && 'Set Languages'}
+            {modalScreen === 'writing' && 'Writings Settings'}
           </Text>
           <Text
             onPress={() => {
@@ -292,10 +294,12 @@ export default SettingsView = ({route, navigation}) => {
                   multiline
                   value={tempWritingSettings.generate}
                   onChangeText={text => {
-                    setTempWritingSettings({
-                      ...tempWritingSettings,
-                      generate: text,
-                    });
+                    if (text.length <= 200) {
+                      setTempWritingSettings({
+                        ...tempWritingSettings,
+                        generate: text,
+                      });
+                    }
                   }}
                 />
                 <Text>{tempWritingSettings.generate.length}/200</Text>
@@ -304,10 +308,12 @@ export default SettingsView = ({route, navigation}) => {
                   multiline
                   value={tempWritingSettings.title}
                   onChangeText={text => {
-                    setTempWritingSettings({
-                      ...tempWritingSettings,
-                      title: text,
-                    });
+                    if (text.length <= 200) {
+                      setTempWritingSettings({
+                        ...tempWritingSettings,
+                        title: text,
+                      });
+                    }
                   }}
                 />
                 <Text>{tempWritingSettings.title.length}/200</Text>
@@ -316,10 +322,12 @@ export default SettingsView = ({route, navigation}) => {
                   multiline
                   value={tempWritingSettings.body}
                   onChangeText={text => {
-                    setTempWritingSettings({
-                      ...tempWritingSettings,
-                      body: text,
-                    });
+                    if (text.length <= 200) {
+                      setTempWritingSettings({
+                        ...tempWritingSettings,
+                        body: text,
+                      });
+                    }
                   }}
                 />
                 <Text>{tempWritingSettings.body.length}/200</Text>
@@ -509,6 +517,7 @@ export default SettingsView = ({route, navigation}) => {
                   resetTable('Entries');
                   setEntries([]);
                   setOnBoarding(true);
+                  notifee.cancelAllNotifications();
                   navigation.navigate({
                     name: 'Home',
                   });

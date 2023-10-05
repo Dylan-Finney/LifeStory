@@ -6,6 +6,8 @@ import {
   View,
   StyleSheet,
   Animated,
+  NativeEventEmitter,
+  NativeModules,
 } from 'react-native';
 
 import 'react-native-url-polyfill/auto';
@@ -18,9 +20,8 @@ import Svg, {Defs, Rect, LinearGradient, Stop} from 'react-native-svg';
 import useSettingsHooks from '../../useSettingsHooks';
 import {horizontalScale, moderateScale, verticalScale} from '../utils/Metrics';
 import LottieView from 'lottie-react-native';
-// import Video from 'react-native-video';
-// import animation1 from '../assets/OnboardingAnimation1.mp4';
-// import animation2 from '../assets/OnboaringAnim1.mov';
+import onCreateTriggerNotification from '../utils/CreateNotification';
+import useDatabaseHooks from '../../useDatabaseHooks';
 const FROM_COLOR = 'rgb(255, 255, 255)';
 const TO_COLOR = 'rgb(0,102,84)';
 
@@ -41,11 +42,14 @@ const Step = ({isActive}) => {
 
 const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
   const [onBoardingStep, setOnBoardingStep] = useState(0);
-  const [gettingData, setGettingData] = useState(false);
   const [gettingPermissions, setGettingPermissions] = useState(false);
-  const {createEntryTime, setCreateEntryTime} = useSettingsHooks();
+  const {createEntryTable} = useDatabaseHooks();
+  const {setCreateEntryTime, setOnboardingTime, setCalendars} =
+    useSettingsHooks();
   const [initalScreen, setInitalScreen] = useState(true);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const CalendarEvents = new NativeEventEmitter(NativeModules.Location);
+
   useEffect(() => {
     fadeIn();
   }, []);
@@ -65,6 +69,28 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
     });
   };
 
+  const finalStep = async hour => {
+    setCreateEntryTime(hour);
+    var date = new Date(Date.now());
+    // date.setSeconds(date.getSeconds() + 10);
+
+    if (date.getHours() >= hour) {
+      date.setDate(date.getDate() + 1);
+    }
+    date.setHours(hour);
+    date.setMinutes(0);
+    date.setSeconds(0);
+    date.setMilliseconds(0);
+    setOnboardingTime(date.getTime());
+    setCreateEntryTime(hour);
+    await onCreateTriggerNotification({
+      first: true,
+      time: date.getTime(),
+    });
+    createEntryTable();
+    endOnboarding();
+  };
+
   return (
     <View
       style={{
@@ -77,38 +103,13 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
         marginHorizontal: horizontalScale(20),
       }}>
       <View style={{flexGrow: initalScreen === true ? 0 : 1, marginTop: 10}}>
-        {/* {onBoardingStep < 3 ? (
-          <Image
-            source={
-              (onBoardingStep === 0 && require('../assets/OnboardStep1.gif')) ||
-              (onBoardingStep === 1 && require('../assets/OnboardStep2.gif')) ||
-              (onBoardingStep === 2 && require('../assets/OnboardStep3.gif'))
-            }
-            style={{
-              alignSelf: 'center',
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          />
-        ) : (
-          <View style={{alignSelf: 'center'}}>
-            <LogoImage />
-          </View>
-        )} */}
-        {/* <View style={{alignSelf: 'center'}}>
-          <LogoImage />
-        </View> */}
-        {/* <Video
-          source={animation1}
-          repeat={false}
-          paused={false}
-          hideShutterView={true}
-          style={{width: 500, height: 500}}
-        /> */}
         {initalScreen === true ? (
           <>
             <View style={{alignSelf: 'center'}}>
-              <LogoImage />
+              <LogoImage
+                width={horizontalScale(375)}
+                height={verticalScale(375)}
+              />
             </View>
           </>
         ) : (
@@ -116,7 +117,11 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
             {onBoardingStep === 0 && (
               <LottieView
                 source={require('../assets/OnboardingAnimation1.json')}
-                style={{width: 500, height: 500, alignSelf: 'center'}}
+                style={{
+                  width: horizontalScale(500),
+                  height: verticalScale(500),
+                  alignSelf: 'center',
+                }}
                 autoPlay
                 loop={false}
               />
@@ -124,7 +129,11 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
             {onBoardingStep === 1 && (
               <LottieView
                 source={require('../assets/OnboardingAnimation2.json')}
-                style={{width: 500, height: 500, alignSelf: 'center'}}
+                style={{
+                  width: horizontalScale(500),
+                  height: verticalScale(500),
+                  alignSelf: 'center',
+                }}
                 autoPlay
                 loop={false}
               />
@@ -132,7 +141,11 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
             {onBoardingStep === 2 && (
               <LottieView
                 source={require('../assets/OnboardingAnimation3.json')}
-                style={{width: 500, height: 500, alignSelf: 'center'}}
+                style={{
+                  width: horizontalScale(500),
+                  height: verticalScale(500),
+                  alignSelf: 'center',
+                }}
                 autoPlay
                 loop={false}
               />
@@ -154,7 +167,10 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
                   justifyContent: 'center',
                   flexGrow: 1,
                 }}>
-                <LogoImage />
+                <LogoImage
+                  width={horizontalScale(375)}
+                  height={verticalScale(375)}
+                />
               </View>
             )}
           </>
@@ -183,7 +199,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
               color: theme.onboarding.title,
               fontWeight: '700',
               fontSize: moderateScale(28),
-              marginBottom: verticalScale(40),
+              marginBottom: verticalScale(20),
             }}>
             {onBoardingStep === 0 &&
               initalScreen === false &&
@@ -202,8 +218,8 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
             style={{
               color: theme.onboarding.text,
               fontWeight: '400',
-              fontSize: moderateScale(18),
-              marginBottom: verticalScale(40),
+              fontSize: moderateScale(16),
+              marginBottom: verticalScale(20),
             }}>
             {onBoardingStep === 0 &&
               initalScreen === false &&
@@ -235,6 +251,13 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
                       setOnBoardingStep(onBoardingStep + 1);
                       if (onBoardingStep === 3) {
                         setGettingPermissions(true);
+                        CalendarEvents.addListener('calendarChange', event => {
+                          console.log('calendarChange EVENT', {event});
+                          if (event !== 'null') {
+                            setCalendars(JSON.stringify(event));
+                          }
+                          CalendarEvents.removeAllListeners('calendarChange');
+                        });
                         await getPermissionsAndData(Date.now());
                         setGettingPermissions(false);
                       }
@@ -268,7 +291,6 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
                 <>
                   <TouchableOpacity
                     style={{
-                      // backgroundColor: 'white',
                       borderColor: 'white',
                       borderWidth: 1,
                       marginHorizontal: horizontalScale(10),
@@ -277,19 +299,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
                       marginBottom: verticalScale(20),
                     }}
                     onPress={async () => {
-                      setCreateEntryTime(8);
-                      endOnboarding();
-                      // if (onBoardingStep === 3) {
-                      //   setGettingData(true);
-                      //   const data = await getPermissionsAndData(Date.now());
-                      //   setGettingData(false);
-                      //   await generateEntry({
-                      //     data,
-                      //     date: Date.now(),
-                      //   });
-                      //   // await onPress();
-                      //   endOnboarding();
-                      // }
+                      finalStep(8);
                     }}>
                     <Text
                       style={{
@@ -311,19 +321,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
                       marginBottom: verticalScale(20),
                     }}
                     onPress={async () => {
-                      setCreateEntryTime(20);
-                      endOnboarding();
-                      // if (onBoardingStep === 3) {
-                      //   setGettingData(true);
-                      //   const data = await getPermissionsAndData(Date.now());
-                      //   setGettingData(false);
-                      //   await generateEntry({
-                      //     data,
-                      //     date: Date.now(),
-                      //   });
-                      //   // await onPress();
-                      //   endOnboarding();
-                      // }
+                      finalStep(20);
                     }}>
                     <Text
                       style={{

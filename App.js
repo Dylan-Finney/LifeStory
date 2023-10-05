@@ -30,48 +30,27 @@ import AppContext from './Context';
 import useDatabaseHooks from './useDatabaseHooks';
 import useSettingsHooks from './useSettingsHooks.js';
 import SettingsView from './SettingsView';
-
+import notifee, {
+  TimestampTrigger,
+  TriggerType,
+  EventType,
+} from '@notifee/react-native';
 const {createVisitsTable, insertData, retrieveData} = useDatabaseHooks();
 // const {calendars} = useSettingsHooks();
 export default App = () => {
   const isDarkMode = useColorScheme() === 'dark';
   // moment.locale('en-gb');
-  const [entries, setEntries] = useState(
-    [],
-    // [
-    //   baseEntry,
-    //   {
-    //     ...baseEntry,
-    //     time: 1690285514000,
-    //   },
-    //   {
-    //     ...baseEntry,
-    //     time: 1690372313000,
-    //   },
-    //   {
-    //     ...baseEntry,
-    //     time: 1690113113000,
-    //   },
-    //   {
-    //     ...baseEntry,
-    //     time: 1690026713000,
-    //   },
-    //   {
-    //     ...baseEntry,
-    //     time: 1689940313000,
-    //   },
-    // ]
-    //   .sort((a, b) => a.time - b.time)
-    //   .sort((a, b) => moment(b.time).week() - moment(a.time).week()),
-  );
-  const {calendars} = useSettingsHooks();
+
+  const [entries, setEntries] = useState([]);
+  const [loadingEntries, setLoadingEntries] = useState(true);
+  const {onBoarding, calendars} = useSettingsHooks();
 
   useEffect(() => {
-    retrieveData('Entries', localEntries => {
-      console.log('LOADING ENTRIES DATA');
-      console.log({localEntries});
-      console.log({test: JSON.parse('["tags"]')});
+    const getEntries = async () => {
       try {
+        console.log('LOADING ENTRIES DATA');
+        const localEntries = await retrieveData('Entries');
+        console.log({localEntries});
         var updatedEntries = localEntries.map(localEntry => {
           return {
             ...localEntry,
@@ -100,22 +79,22 @@ export default App = () => {
         });
         console.log({updatedEntries});
         setEntries(updatedEntries);
+        setLoadingEntries(false);
       } catch (e) {
         console.error(e);
       }
-    });
-    // try {
-    //   NativeModules.Location.getCalendarIdentifiers(value => {
-    //     console.log('count is ' + value);
-    //   });
-    // } catch (E) {
-    //   console.error(E);
-    // }
-    console.log({calendars});
-    try {
-      NativeModules.Location.setCalendarIdentifiers(JSON.parse(calendars));
-    } catch (E) {
-      console.error(E);
+    };
+    if (onBoarding === false) {
+      setLoadingEntries(true);
+      getEntries();
+      console.log({calendars});
+      try {
+        NativeModules.Location.setCalendarIdentifiers(JSON.parse(calendars));
+      } catch (E) {
+        console.error(E);
+      }
+    } else {
+      setLoadingEntries(false);
     }
   }, []);
   const {width, height} = Dimensions.get('window');
@@ -125,6 +104,7 @@ export default App = () => {
   const contextValues = {
     entries,
     setEntries,
+    loadingEntries,
   };
 
   const CounterEvents = new NativeEventEmitter(NativeModules.Location);
@@ -149,6 +129,7 @@ export default App = () => {
   const navTheme = DefaultTheme;
   navTheme.colors.background = '#FBFBFB';
 
+  notifee.setBadgeCount(0);
   return (
     <NavigationContainer>
       <RootStack.Navigator screenOptions={{headerShown: false}}>
