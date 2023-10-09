@@ -10,6 +10,7 @@ import CoreLocation
 import EventKit
 import Photos
 import Dispatch
+import UserNotifications
 import EventKitUI
 @objc(Location)
 class Location: RCTEventEmitter, CLLocationManagerDelegate, EKCalendarChooserDelegate {
@@ -123,10 +124,10 @@ var presentingVC = RCTPresentedViewController()
       }
   @objc func getCalendarEvents(_ data: Int, data2: Int, withResolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
     calendarDenied = false
-    let date = NSDate(timeIntervalSince1970: TimeInterval(data))
-    startDate = date as Date
-    let date2 = NSDate(timeIntervalSince1970: TimeInterval(data2))
-    endDate = date2 as Date
+//    let date = NSDate(timeIntervalSince1970: TimeInterval(data))
+//    startDate = date as Date
+//    let date2 = NSDate(timeIntervalSince1970: TimeInterval(data2))
+//    endDate = date2 as Date
 
     fetchEventsFromCalendar()
     if calendarDenied == true {
@@ -187,6 +188,7 @@ for localIdentifier in calendarIdentifiers {
           presentingVC?.dismiss(animated: true, completion: nil)
           if calendarInital == true {
             fetchEventsFromCalendar("Calendar")
+            self.sendEvent(withName: "calendarChange", body: calendars)
       self.semaphore.signal()
     } else {
         self.sendEvent(withName: "calendarChange", body: calendars)
@@ -229,8 +231,8 @@ for localIdentifier in calendarIdentifiers {
     locationManager.desiredAccuracy = kCLLocationAccuracyBest
     locationManager.distanceFilter = kCLDistanceFilterNone
     locationManager.allowsBackgroundLocationUpdates = true
-     locationManager.startMonitoringVisits()
-//    locationManager.startUpdatingLocation()
+     locationManager.startMonitoringVisits() //Make Sure this is active for release
+  //  locationManager.startUpdatingLocation() //Simulator Debug as Visits doesn't work
     resolve(true)
 
   }
@@ -278,15 +280,26 @@ for localIdentifier in calendarIdentifiers {
    @objc func fetchPhotos() {
     testIdentifiers = []
     let fetchOptions = PHFetchOptions()
-    let dateOne =  Calendar.current.startOfDay(for: Date())
-    let dateTwo = Calendar.current.date(byAdding: .day, value: 1, to: dateOne)
-    fetchOptions.predicate = NSPredicate(format: "mediaType = %d AND ( creationDate > %@ ) AND ( creationDate < %@ )", PHAssetMediaType.image.rawValue, dateOne as NSDate, dateTwo! as NSDate)
+     let requestOptions = PHImageRequestOptions()
+     requestOptions.isSynchronous = true
+//    let dateOne =  Calendar.current.startOfDay(for: Date())
+//    let dateTwo = Calendar.current.date(byAdding: .day, value: 1, to: dateOne)
+    fetchOptions.predicate = NSPredicate(format: "mediaType = %d AND ( creationDate > %@ ) AND ( creationDate < %@ )", PHAssetMediaType.image.rawValue, startDate as NSDate, endDate as NSDate)
     PHAsset.fetchAssets(with: .image, options: fetchOptions).enumerateObjects({ (object, count, stop) in
       var newPhoto = [String: String]()
 
       newPhoto["name"] = PHAssetResource.assetResources(for: object).first?.originalFilename
 
       newPhoto["localIdentifier"] = object.localIdentifier
+      PHImageManager.default().requestImage(for: object, targetSize: CGSize(width: 1000,height: 1000), contentMode: .aspectFit, options: requestOptions) { image, _ in
+        if let pngData = image?.pngData() {
+//          newPhoto["data"] = String(decoding: pngData, as: UTF8.self)
+          newPhoto["data"] = pngData.base64EncodedString()
+          
+        }
+        
+      }
+
       if let unwrappedDate = object.creationDate {
         newPhoto["creation"] = String(unwrappedDate.timeIntervalSince1970)
       } else {
@@ -380,6 +393,73 @@ for localIdentifier in calendarIdentifiers {
 /*
 Other Functions
 */
+  
+  @objc func setDateRange(_ data: Int, data2: Int) -> Void {
+    let date = NSDate(timeIntervalSince1970: TimeInterval(data))
+    startDate = date as Date
+    let date2 = NSDate(timeIntervalSince1970: TimeInterval(data2))
+    endDate = date2 as Date
+
+
+      }
+//  
+//  @objc func createNotifications() -> Void {
+//    checkForNotificationsPermissions()
+//  }
+//  func checkForNotificationsPermissions() {
+//    let notificationCenter = UNUserNotificationCenter.current()
+//    notificationCenter.getNotificationSettings { settings in
+//      switch settings.authorizationStatus {
+//      case .authorized :
+//        self.dispatchNotification()
+//      case .denied:
+//        return
+//      case .notDetermined:
+//        notificationCenter.requestAuthorization(options: [.alert, .sound]) { didAllow, error in
+//          if didAllow {
+//            self.dispatchNotification()
+//          }
+//        }
+//      default:
+//        return
+//      }
+//    }
+//  }
+//  func dispatchNotification() {
+//    let identifier = "story-alert"
+//    let title = "Test Title"
+//    let body = "Test Body"
+//    let hour = 15
+//    let minute = 12
+//    let isDaily = true
+//    let notificationCenter = UNUserNotificationCenter.current()
+//    let content = UNMutableNotificationContent()
+//    content.title = title
+//    content.body = body
+//    content.sound = .default
+//    
+//    let calendar = Calendar.current
+////    let currentDate = Date()
+////    var dateComponentsAdd = DateComponents()
+////    dateComponentsAdd.minute = 1
+////    if let  nextHourDate = calendar.date(byAdding: dateComponentsAdd, to: currentDate) {
+////      let nextHourComponents = calendar.dateComponents([.hour, .minute], from: nextHourDate)
+////      let trigger = UNCalendarNotificationTrigger(dateMatching: nextHourComponents, repeats: isDaily)
+////      let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+////      notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
+////      notificationCenter.add(request)
+////
+////    }
+//        var dateComponents = DateComponents(calendar: calendar, timeZone: TimeZone.current)
+//    dateComponents.hour = hour
+//    dateComponents.minute = minute
+//    let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: isDaily)
+//    let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+//    notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
+//    notificationCenter.add(request)
+//
+//    
+//      }
 
   // we need to override this method and
   // return an array of event names that we can listen to

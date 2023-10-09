@@ -11,6 +11,7 @@ module.exports = (async () => {
     resolver: {
       assetExts: assetExts.filter(ext => ext !== 'svg'),
       sourceExts: [...sourceExts, 'svg'],
+      // resolverMainFields: ['react-native', 'module', 'browser', 'main'],
     },
   };
 })();

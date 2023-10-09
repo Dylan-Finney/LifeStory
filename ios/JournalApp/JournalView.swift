@@ -10,14 +10,14 @@ class JournalView: UIView, UITextViewDelegate {
     didSet {
       let initalTxtStringConverted = initalTxtString as String
       let attributedString = NSMutableAttributedString(string: initalTxtStringConverted)
-      let fullRange = NSRange(location: 0, length: initalTxtStringConverted.count)
+      let fullRange = NSRange(location: 0, length: (initalTxtStringConverted as NSString).length)
 
       attributedString.addAttribute(.font, value: UIFont(name: "Inter-Regular", size: 18.0)!, range: fullRange)
       attributedString.addAttribute(.foregroundColor, value: UIColor(red: 0.28, green: 0.33, blue: 0.40, alpha: 1.00), range: fullRange)
 
       if #available(iOS 16.0, *) {
         do {
-          let selectedRange = textInput.selectedRange
+//          let selectedRange = textInput.selectedRange
           let pattern = #"\[\[\d+\]\]"#
           let eventRegex = try NSRegularExpression(pattern: pattern, options: .caseInsensitive)
           let searchRange = NSRange(location: 0, length: initalTxtStringConverted.count)
@@ -28,7 +28,7 @@ class JournalView: UIView, UITextViewDelegate {
 //          attributedString.addAttribute(.foregroundColor, value: UIColor.red, range: NSRange(location: 0, length: 5))
 //          attributedString.addAttribute(.foregroundColor, value: UIColor.red, range: NSRange(location: 0, length: 5))
           textInput.attributedText = attributedString
-          textInput.selectedRange = selectedRange
+//          textInput.selectedRange = selectedRange
         } catch let error {
           print(error.localizedDescription)
           textInput.attributedText = attributedString
@@ -70,9 +70,18 @@ class JournalView: UIView, UITextViewDelegate {
   lazy var textInput: UITextView = {
     let textInput = UITextView.init()
     textInput.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    textInput.text = String("Text")
-    textInput.font = UIFont(name: "Callout", size: 30)
-    textInput.textColor =   UIColor(red: 0.28, green: 0.33, blue: 0.40, alpha: 1.00) // #475467
+    let initalTxtStringConverted = "" as String
+    let attributedString = NSMutableAttributedString(string: initalTxtStringConverted)
+    let fullRange = NSRange(location: 0, length: (initalTxtStringConverted as NSString).length)
+
+    attributedString.addAttribute(.font, value: UIFont(name: "Inter-Regular", size: 18.0)!, range: fullRange)
+    attributedString.addAttribute(.foregroundColor, value: UIColor(red: 0.28, green: 0.33, blue: 0.40, alpha: 1.00), range: fullRange)
+    textInput.attributedText = attributedString
+//    textInput.font = UIFont(name: "Callout", size: 30)
+//    textInput.font = UIFont(name: "AppleColorEmoji", size: 30)
+
+//    textInput.textColor =   UIColor(red: 0.28, green: 0.33, blue: 0.40, alpha: 1.00) // #475467
+    
     return textInput
     
   }()
@@ -85,6 +94,7 @@ class JournalView: UIView, UITextViewDelegate {
     onTxtChange!(["nativeStr": textView.text!])
 
   }
+
 
   // Custom Context Menu for Voting, AI Rewriting, Emotion Tagging, and Tagging
   @available(iOS 13.0, *)
@@ -153,5 +163,3 @@ class JournalView: UIView, UITextViewDelegate {
   
   
 }
-
-

@@ -8,10 +8,50 @@ const useSettingsHooks = () => {
     settingsStorage,
     true,
   );
+  const [photoAnalysis, setPhotoAnalysis] = useMMKVStorage(
+    'photoAnalysis',
+    settingsStorage,
+    false,
+  );
+  const [includeDownloadedPhotos, setIncludeDownloadedPhotos] = useMMKVStorage(
+    'includeDownloadedPhotos',
+    settingsStorage,
+    false,
+  );
+
   const [calendars, setCalendars] = useMMKVStorage(
     'calendars',
     settingsStorage,
     '[]',
+  );
+
+  const [locationAliases, setLocationAliases] = useMMKVStorage(
+    'locationAliases',
+    settingsStorage,
+    '[]',
+  );
+
+  const [createEntryTime, setCreateEntryTime] = useMMKVStorage(
+    'createEntryTime',
+    settingsStorage,
+    0,
+  );
+
+  const [onboardingTime, setOnboardingTime] = useMMKVStorage(
+    'onboardingTime',
+    settingsStorage,
+    0,
+  );
+
+  const [language, setLanguage] = useMMKVStorage(
+    'language',
+    settingsStorage,
+    'English',
+  );
+  const [globalWritingSettings, setGlobalWritingSettings] = useMMKVStorage(
+    'writingSettings',
+    settingsStorage,
+    '{"title": "", "body": "", "generate": ""}',
   );
 
   return {
@@ -19,6 +59,20 @@ const useSettingsHooks = () => {
     setOnBoarding,
     calendars,
     setCalendars,
+    photoAnalysis,
+    setPhotoAnalysis,
+    includeDownloadedPhotos,
+    setIncludeDownloadedPhotos,
+    locationAliases,
+    setLocationAliases,
+    createEntryTime,
+    setCreateEntryTime,
+    language,
+    setLanguage,
+    globalWritingSettings,
+    setGlobalWritingSettings,
+    onboardingTime,
+    setOnboardingTime,
   };
 };
 

@@ -1,6 +1,5 @@
 import {useEffect} from 'react';
 import SQLite from 'react-native-sqlite-storage';
-
 const useDatabaseHooks = () => {
   const db = SQLite.openDatabase(
     {
@@ -32,11 +31,6 @@ const useDatabaseHooks = () => {
       );
     });
   };
-
-  // useEffect(() => {
-  //   // deleteTable('Visits');
-  //   createVisitsTable();
-  // }, []);
 
   const createEntryTable = () => {
     db.transaction(tx => {
@@ -179,29 +173,34 @@ const useDatabaseHooks = () => {
     });
   };
 
-  const retrieveData = (tableName, callback) => {
+  const retrieveData = async tableName => {
+    return new Promise((resolve, reject) => {
+      db.transaction(
+        tx => {
+          tx.executeSql(`SELECT * FROM ${tableName}`, [], (tx, results) => {
+            let data = [];
+            for (let i = 0; i < results.rows.length; i++) {
+              data.push(results.rows.item(i));
+            }
+            resolve(data);
+          });
+        },
+        error => {
+          reject(error);
+        },
+      );
+    });
+  };
+
+  const resetTable = tableName => {
     db.transaction(tx => {
-      tx.executeSql(`SELECT * FROM ${tableName}`, [], (tx, results) => {
-        let data = [];
-        for (let i = 0; i < results.rows.length; i++) {
-          data.push(results.rows.item(i));
-        }
-        callback(data);
+      tx.executeSql(`DELETE FROM ${tableName}`, [], (tx, results) => {
+        console.log(`${tableName} RESET`, {results});
       });
     });
   };
 
   const retrieveSpecificData = (startDate, endDate, callback) => {
-    // var startOfDay = new Date(
-    //   startDate.getFullYear(),
-    //   startDate.getMonth(),
-    //   startDate.getDate(),
-    // );
-    // var endOfDay = new Date(
-    //   endDate.getFullYear(),
-    //   endDate.getMonth(),
-    //   endDate.getDate() - 1,
-    // );
     db.transaction(tx => {
       tx.executeSql(
         `SELECT * FROM Visits WHERE Visits.date BETWEEN ? AND ?`,
@@ -218,16 +217,6 @@ const useDatabaseHooks = () => {
   };
 
   const retrieveEntriesData = (startDate, endDate, callback) => {
-    // var startOfDay = new Date(
-    //   startDate.getFullYear(),
-    //   startDate.getMonth(),
-    //   startDate.getDate(),
-    // );
-    // var endOfDay = new Date(
-    //   endDate.getFullYear(),
-    //   endDate.getMonth(),
-    //   endDate.getDate() - 1,
-    // );
     db.transaction(tx => {
       tx.executeSql(`SELECT * FROM Entries`, [], (tx, results) => {
         let data = [];
@@ -238,34 +227,17 @@ const useDatabaseHooks = () => {
       });
     });
   };
-  // const calculateAverage = (
-  //   tableName,
-  //   columnName,
-  //   startDate,
-  //   endDate,
-  //   callback,
-  // ) => {
-  //   db.transaction(tx => {
-  //     tx.executeSql(
-  //       `SELECT AVG(${columnName}) as average FROM ${tableName} WHERE date BETWEEN ? AND ?`,
-  //       [startDate.getTime(), endDate.getTime()],
-  //       (tx, results) => {
-  //         callback(results.rows.item(0).average);
-  //       },
-  //     );
-  //   });
-  // };
 
   return {
     createVisitsTable,
     deleteTable,
     insertData,
     retrieveData,
-    // calculateAverage,
     createEntryTable,
     saveEntryData,
     updateEntryData,
     retrieveSpecificData,
+    resetTable,
   };
 };
 

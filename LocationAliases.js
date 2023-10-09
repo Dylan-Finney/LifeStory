@@ -1,0 +1,194 @@
+import {
+  ScrollView,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+} from 'react-native';
+import {verticalScale} from './src/utils/Metrics';
+import {useEffect, useState, createRef, useRef} from 'react';
+import useSettingsHooks from './useSettingsHooks';
+export default LocationAliasesView = ({route, navigation}) => {
+  //   const [locations, setLocations] = useState(
+  //     '[{"address":"17 Hawthorne Lane", "alias": "Home"}]',
+  //   );
+  const [dataArr, setDataArr] = useState([]);
+  const [deleteMode, setDeleteMode] = useState(true);
+  const [add, setAdd] = useState(false);
+  const {locationAliases, setLocationAliases} = useSettingsHooks();
+  const ScrollViewRef = useRef(null);
+  useEffect(() => {
+    console.log(locationAliases);
+    setDataArr(JSON.parse(locationAliases));
+  }, [locationAliases]);
+  useEffect(() => {
+    if (add === true) {
+      //   console.log(ScrollViewRef.current);
+      //   ScrollViewRef.current?.scrollToEnd({animated: true});
+      //   ScrollViewRef.current?.scrollToIndex({index: dataArr.length - 1});
+      //   setAdd(false);
+    }
+  }, [dataArr.length]);
+
+  return (
+    <View
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        height: '100%',
+        // gap: verticalScale(10),
+        padding: 10,
+        flexGrow: 1,
+      }}>
+      <TouchableOpacity
+        onPress={() => {
+          setDeleteMode(!deleteMode);
+        }}>
+        <Text>Delete Mode</Text>
+      </TouchableOpacity>
+      <View style={{flexDirection: 'row'}}>
+        <View
+          style={{
+            width: `${deleteMode === true ? 47 : 50}%`,
+            borderWidth: 1,
+            borderColor: 'black',
+            padding: 5,
+          }}>
+          <Text>Address</Text>
+        </View>
+        <View
+          style={{
+            width: `${deleteMode === true ? 47 : 50}%`,
+            borderWidth: 1,
+            borderColor: 'black',
+            padding: 5,
+          }}>
+          <Text>Alias</Text>
+        </View>
+        {deleteMode === true && (
+          <View
+            style={{
+              width: `6%`,
+              borderWidth: 1,
+              borderColor: 'black',
+              padding: 5,
+            }}>
+            {/* <Text style={{textAlign: 'center'}}>-</Text> */}
+          </View>
+        )}
+      </View>
+      {/* <FlatList></FlatList> */}
+
+      <ScrollView
+        ref={ScrollViewRef}
+        style={{width: '100%', maxHeight: '80%'}}
+        onContentSizeChange={(contentWidth, contentHeight) => {
+          if (add === true) {
+            ScrollViewRef.current?.scrollToEnd({animated: true});
+
+            setAdd(false);
+          }
+        }}>
+        {dataArr.map((data, i) => {
+          return (
+            <View style={{flexDirection: 'row'}} key={i}>
+              <View
+                style={{
+                  width: `${deleteMode === true ? 47 : 50}%`,
+                  backgroundColor:
+                    dataArr
+                      .slice(0, i)
+                      .some(dataCheck => dataCheck.address === data.address) &&
+                    data.address !== ''
+                      ? '#D9544D'
+                      : 'white',
+                  flexGrow: 1,
+                  borderWidth: 1,
+                  borderColor: 'black',
+                  padding: 5,
+                }}>
+                <TextInput
+                  value={data.address}
+                  onChangeText={text => {
+                    var dataCopy = data;
+                    var dataArrCopy = dataArr;
+                    data.address = text;
+                    dataArrCopy[i] = dataCopy;
+
+                    setLocationAliases(JSON.stringify(dataArrCopy));
+                  }}
+                  placeholder="662 Timothy Terrace"
+                />
+              </View>
+              <View
+                style={{
+                  width: `${deleteMode === true ? 47 : 50}%`,
+                  //   flexGrow: 1,
+                  borderWidth: 1,
+                  borderColor: 'black',
+                  padding: 5,
+                }}>
+                <TextInput
+                  value={data.alias}
+                  onChangeText={text => {
+                    var dataCopy = data;
+                    var dataArrCopy = dataArr;
+                    data.alias = text;
+                    dataArrCopy[i] = dataCopy;
+
+                    setLocationAliases(JSON.stringify(dataArrCopy));
+                  }}
+                  placeholder="Home"
+                />
+              </View>
+              {deleteMode === true && (
+                <View
+                  style={{
+                    width: `6%`,
+                    borderWidth: 1,
+                    borderColor: 'black',
+                    padding: 5,
+                  }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      // var dataCopy = data;
+                      var dataArrCopy = dataArr;
+                      // data.alias = text;
+                      dataArrCopy.splice(i, 1);
+
+                      setLocationAliases(JSON.stringify(dataArrCopy));
+                    }}>
+                    <Text style={{textAlign: 'center', color: 'red'}}>X</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          );
+        })}
+      </ScrollView>
+      <TouchableOpacity
+        onPress={() => {
+          setLocationAliases(
+            JSON.stringify([
+              ...JSON.parse(locationAliases),
+              {address: '', alias: ''},
+            ]),
+          );
+          setAdd(true);
+          //   ScrollViewRef.current?.scrollToEnd({animated: true});
+          //   ScrollViewRef.current?.scrollTo({y: 0});
+        }}
+        style={{
+          width: '100%',
+          borderWidth: 1,
+          borderColor: 'black',
+          padding: 5,
+        }}>
+        <Text style={{textAlign: 'center'}}>+</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};

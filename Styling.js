@@ -1,11 +1,15 @@
 export const theme = {
   onboarding: {
-    background: '#FBFBFB',
-    title: '#494949',
-    text: '#767676',
+    // background: 'linear-gradient(#002C67, #005FFF)',
+    background: {
+      to: '#012C69',
+      from: '#028DFD',
+    },
+    title: '#F2F2F2',
+    text: '#F2F2F2',
     tab: {
-      active: 'black',
-      inactive: '#C0C0C0',
+      active: '#E7E7E7',
+      inactive: '#91A5C0',
     },
   },
   home: {

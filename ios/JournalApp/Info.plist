@@ -53,7 +53,7 @@
 		</dict>
 	</dict>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Collects events from the User's day in order to generate a diary entry based on this data </string>
+	<string>Collects events from the User&apos;s day in order to generate a diary entry based on this data </string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Life Story uses your calendar data to generate a diary entry featuring events from your day.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
@@ -70,6 +70,7 @@
 	<true/>
 	<key>UIAppFonts</key>
 	<array>
+		<string>AppleColorEmoji</string>
 		<string>Inter-Regular.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
@@ -79,10 +80,6 @@
 		<string>processing</string>
 		<string>remote-notification</string>
 	</array>
-		<key>BGTaskSchedulerPermittedIdentifiers</key>
-<array>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen.storyboard</string>
 	<key>UIRequiredDeviceCapabilities</key>

@@ -5,48 +5,438 @@ import {
   Alert,
   NativeModules,
   NativeEventEmitter,
+  ScrollView,
+  Modal,
+  Touchable,
+  TouchableOpacity,
+  TextInput,
 } from 'react-native';
 import useDatabaseHooks from './useDatabaseHooks';
 import AppContext from './Context';
 import useSettingsHooks from './useSettingsHooks';
+import {
+  horizontalScale,
+  moderateScale,
+  verticalScale,
+} from './src/utils/Metrics';
+import {theme} from './Styling';
+import notifee from '@notifee/react-native';
+// var langmap = require('langmap');
+
 export default SettingsView = ({route, navigation}) => {
-  const {deleteTable, createEntryTable} = useDatabaseHooks();
-  const {setOnBoarding, calendars, setCalendars} = useSettingsHooks();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalScreen, setModalScreen] = useState('');
+
+  const {deleteTable, createEntryTable, createVisitsTable, resetTable} =
+    useDatabaseHooks();
+  const {
+    setOnBoarding,
+    calendars,
+    setCalendars,
+    photoAnalysis,
+    setPhotoAnalysis,
+    includeDownloadedPhotos,
+    setIncludeDownloadedPhotos,
+    language,
+    setLanguage,
+    globalWritingSettings,
+    setGlobalWritingSettings,
+  } = useSettingsHooks();
+  const [tempLanguage, setTempLanguage] = useState(language);
+  const [tempWritingSettings, setTempWritingSettings] = useState(
+    JSON.parse(globalWritingSettings),
+  );
   const CalendarEvents = new NativeEventEmitter(NativeModules.Location);
 
   const {setEntries} = useContext(AppContext);
+
+  const Divider = ({title}) => {
+    return (
+      <>
+        <Text
+          style={{
+            fontWeight: 700,
+            color: theme.general.strongText,
+            marginTop: 10,
+          }}>
+          {title}
+        </Text>
+        <View
+          style={{
+            width: '50%',
+            height: 1,
+            backgroundColor: theme.home.createEntryBorder,
+          }}
+        />
+      </>
+    );
+  };
+  // var languages = Object.keys(langmap).map(langCode => {
+  //   return {
+  //     code: langCode,
+  //     ...langmap[langCode],
+  //   };
+  // });
+  var languages = [
+    {englishName: 'Albanian', nativeName: 'Shqip'},
+    {englishName: 'Arabic', nativeName: 'العربية'},
+    {englishName: 'Armenian', nativeName: 'Հայերեն'},
+    {englishName: 'Awadhi', nativeName: 'अवधी'},
+    {englishName: 'Azerbaijani', nativeName: 'Azərbaycanca'},
+    {englishName: 'Bashkir', nativeName: 'Башҡорт'},
+    {englishName: 'Basque', nativeName: 'Euskara'},
+    {englishName: 'Belarusian', nativeName: 'Беларуская'},
+    {englishName: 'Bengali', nativeName: 'বাংলা'},
+    {englishName: 'Bhojpuri', nativeName: 'भोजपुरी'},
+    {englishName: 'Bosnian', nativeName: 'Bosanski'},
+    {englishName: 'Brazilian Portuguese', nativeName: 'português brasileiro'},
+    {englishName: 'Bulgarian', nativeName: 'български'},
+    {englishName: 'Cantonese (Yue)', nativeName: '粵語'},
+    {englishName: 'Catalan', nativeName: 'Català'},
+    {englishName: 'Chhattisgarhi', nativeName: 'छत्तीसगढ़ी'},
+    {englishName: 'Chinese', nativeName: '中文'},
+    {englishName: 'Croatian', nativeName: 'Hrvatski'},
+    {englishName: 'Czech', nativeName: 'Čeština'},
+    {englishName: 'Danish', nativeName: 'Dansk'},
+    {englishName: 'Dogri', nativeName: 'डोगरी'},
+    {englishName: 'Dutch', nativeName: 'Nederlands'},
+    {englishName: 'English', nativeName: 'English'},
+    {englishName: 'Estonian', nativeName: 'Eesti'},
+    ,
+    {englishName: 'Faroese', nativeName: 'Føroyskt'},
+    {englishName: 'Finnish', nativeName: 'Suomi'},
+    {englishName: 'French', nativeName: 'Français'},
+    {englishName: 'Galician', nativeName: 'Galego'},
+    {englishName: 'Georgian', nativeName: 'ქართული'},
+    {englishName: 'German', nativeName: 'Deutsch'},
+    {englishName: 'Greek', nativeName: 'Ελληνικά'},
+    {englishName: 'Gujarati', nativeName: 'ગુજરાતી'},
+    {englishName: 'Haryanvi', nativeName: 'हरियाणवी'},
+    {englishName: 'Hindi', nativeName: 'हिंदी'},
+    {englishName: 'Hungarian', nativeName: 'Magyar'},
+    {englishName: 'Indonesian', nativeName: 'Bahasa Indonesia'},
+    {englishName: 'Irish', nativeName: 'Gaeilge'},
+    {englishName: 'Italian', nativeName: 'Italiano'},
+    {englishName: 'Japanese', nativeName: '日本語'},
+    {englishName: 'Javanese', nativeName: 'Basa Jawa'},
+    {englishName: 'Kannada', nativeName: 'ಕನ್ನಡ'},
+    {englishName: 'Kashmiri', nativeName: 'कश्मीरी'},
+    {englishName: 'Kazakh', nativeName: 'Қазақша'},
+    {englishName: 'Konkani', nativeName: 'कोंकणी'},
+    {englishName: 'Korean', nativeName: '한국어'},
+    {englishName: 'Kyrgyz', nativeName: 'Кыргызча'},
+    {englishName: 'Latvian', nativeName: 'Latviešu'},
+    {englishName: 'Lithuanian', nativeName: 'Lietuvių'},
+    {englishName: 'Macedonian', nativeName: 'Македонски'},
+    {englishName: 'Maithili', nativeName: 'मैथिली'},
+    {englishName: 'Malay', nativeName: 'Bahasa Melayu'},
+    {englishName: 'Maltese', nativeName: 'Malti'},
+    {englishName: 'Mandarin', nativeName: '普通话'},
+    {englishName: 'Mandarin Chinese', nativeName: '中文'},
+    {englishName: 'Marathi', nativeName: 'मराठी'},
+    {englishName: 'Marwari', nativeName: 'मारवाड़ी'},
+    {englishName: 'Min Nan', nativeName: '閩南語'},
+    {englishName: 'Moldovan', nativeName: 'Moldovenească'},
+    {englishName: 'Mongolian', nativeName: 'Монгол'},
+    {englishName: 'Montenegrin', nativeName: 'Crnogorski'},
+    {englishName: 'Nepali', nativeName: 'नेपाली'},
+    {englishName: 'Norwegian', nativeName: 'Norsk'},
+    {englishName: 'Oriya', nativeName: 'ଓଡ଼ିଆ'},
+    {englishName: 'Pashto', nativeName: 'پښتو'},
+    {englishName: 'Persian (Farsi)', nativeName: 'فارسی'},
+    {englishName: 'Polish', nativeName: 'Polski'},
+    {englishName: 'Portuguese', nativeName: 'Português'},
+    {englishName: 'Punjabi', nativeName: 'ਪੰਜਾਬੀ'},
+    {englishName: 'Rajasthani', nativeName: 'राजस्थानी'},
+    {englishName: 'Romanian', nativeName: 'Română'},
+    {englishName: 'Russian', nativeName: 'Русский'},
+    {englishName: 'Sanskrit', nativeName: 'संस्कृतम्'},
+    {englishName: 'Santali', nativeName: 'संताली'},
+    {englishName: 'Serbian', nativeName: 'Српски'},
+    {englishName: 'Sindhi', nativeName: 'سنڌي'},
+    {englishName: 'Sinhala', nativeName: 'සිංහල'},
+    {englishName: 'Slovak', nativeName: 'Slovenčina'},
+    {englishName: 'Slovene', nativeName: 'Slovenščina'},
+    {englishName: 'Slovenian', nativeName: 'Slovenščina'},
+    {englishName: 'Spanish', nativeName: 'Slovenščina'},
+    {englishName: 'Swahili', nativeName: 'Slovenščina'},
+    {englishName: 'Swedish', nativeName: 'Slovenščina'},
+    {englishName: 'Tajik', nativeName: 'Slovenščina'},
+    {englishName: 'Tamil', nativeName: 'Slovenščina'},
+    {englishName: 'Tatar', nativeName: 'Slovenščina'},
+    {englishName: 'Telugu', nativeName: 'Slovenščina'},
+    {englishName: 'Thai', nativeName: 'Slovenščina'},
+    {englishName: 'Turkish', nativeName: 'Slovenščina'},
+    {englishName: 'Turkmen', nativeName: 'Slovenščina'},
+    {englishName: 'Ukrainian', nativeName: 'Українська'},
+    {englishName: 'Urdu', nativeName: 'اردو'},
+    {englishName: 'Uzbek', nativeName: 'Ўзбек'},
+    {englishName: 'Vietnamese', nativeName: 'Việt Nam'},
+    {englishName: 'Welsh', nativeName: 'Cymraeg'},
+    {englishName: 'Wu', nativeName: '吴语'},
+  ].sort((a, b) => a.englishName.localeCompare(b.englishName));
   return (
-    <View
-      style={{
+    <ScrollView
+      contentContainerStyle={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 10,
+        gap: verticalScale(10),
         flexGrow: 1,
       }}>
+      <Modal
+        visible={modalVisible}
+        presentationStyle="pageSheet"
+        onRequestClose={() => {
+          setModalVisible(false);
+        }}
+        animationType="slide">
+        <View
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            // padding: 10,
+            paddingHorizontal: horizontalScale(10),
+            paddingVertical: verticalScale(10),
+            // backgroundColor: 'black',
+          }}>
+          <Text
+            onPress={() => {
+              setModalVisible(false);
+            }}>
+            Cancel
+          </Text>
+          <Text style={{fontSize: moderateScale(20), fontWeight: 600}}>
+            {modalScreen === 'language' && 'Set Languages'}
+            {modalScreen === 'writing' && 'Writings Settings'}
+          </Text>
+          <Text
+            onPress={() => {
+              switch (modalScreen) {
+                case 'language':
+                  setLanguage(tempLanguage);
+                  break;
+                case 'writing':
+                  setGlobalWritingSettings(JSON.stringify(tempWritingSettings));
+                  break;
+              }
+
+              setModalVisible(false);
+            }}
+            disabled={
+              (modalScreen === 'language' && language === tempLanguage) ||
+              (modalScreen === 'writing' &&
+                (JSON.parse(globalWritingSettings) === tempWritingSettings ||
+                  tempWritingSettings.title.length > 200 ||
+                  tempWritingSettings.body.length > 200 ||
+                  tempWritingSettings.generate.length > 200))
+            }>
+            Save
+          </Text>
+        </View>
+
+        <ScrollView contentContainerStyle={{padding: 10}}>
+          {modalScreen === 'language' && (
+            <>
+              {languages.map((lang, i) => (
+                <TouchableOpacity
+                  key={i}
+                  onPress={() => {
+                    setTempLanguage(lang.englishName);
+                  }}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignContent: 'center',
+                  }}>
+                  <View style={{display: 'flex', flexDirection: 'column'}}>
+                    <Text
+                      style={{
+                        color: theme.general.strongText,
+                        fontWeight: 600,
+                        fontSize: 18,
+                      }}>
+                      {lang.englishName}
+                    </Text>
+                    <Text style={{color: theme.general.timeText, fontSize: 16}}>
+                      {lang.nativeName}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      marginLeft: 'auto',
+                      width: 20,
+                      height: 20,
+                      backgroundColor:
+                        lang.englishName !== tempLanguage ? 'white' : 'gray',
+                      borderRadius: 20,
+                      borderBlockColor: 'black',
+                      borderWidth: 2,
+                      alignSelf: 'center',
+                    }}
+                  />
+                </TouchableOpacity>
+              ))}
+            </>
+          )}
+          {modalScreen === 'writing' && (
+            <>
+              <Text>
+                These settings allow you to append to the prompts that are used
+                in LifeStory for greater customization and power over your data.
+              </Text>
+              <View>
+                <Text>Generate</Text>
+                <TextInput
+                  multiline
+                  value={tempWritingSettings.generate}
+                  onChangeText={text => {
+                    if (text.length <= 200) {
+                      setTempWritingSettings({
+                        ...tempWritingSettings,
+                        generate: text,
+                      });
+                    }
+                  }}
+                />
+                <Text>{tempWritingSettings.generate.length}/200</Text>
+                <Text>Title Rewrite</Text>
+                <TextInput
+                  multiline
+                  value={tempWritingSettings.title}
+                  onChangeText={text => {
+                    if (text.length <= 200) {
+                      setTempWritingSettings({
+                        ...tempWritingSettings,
+                        title: text,
+                      });
+                    }
+                  }}
+                />
+                <Text>{tempWritingSettings.title.length}/200</Text>
+                <Text>Body Rewrite</Text>
+                <TextInput
+                  multiline
+                  value={tempWritingSettings.body}
+                  onChangeText={text => {
+                    if (text.length <= 200) {
+                      setTempWritingSettings({
+                        ...tempWritingSettings,
+                        body: text,
+                      });
+                    }
+                  }}
+                />
+                <Text>{tempWritingSettings.body.length}/200</Text>
+              </View>
+            </>
+          )}
+        </ScrollView>
+      </Modal>
+      <Divider title={'Prompt'} />
       <Text
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
-          Alert.alert(
-            'Delete Entries',
-            'Are you sure you want to delete all of your entries?\nThis action is irreversible.',
-            [
-              {
-                text: 'Confirm',
-                style: 'default',
-                onPress: () => {
-                  deleteTable('Entries');
-                  setEntries([]);
-                  createEntryTable();
-                },
-              },
-              {text: 'Cancel', style: 'cancel'},
-            ],
-          );
+          setTempLanguage(language);
+          setModalScreen('language');
+          setModalVisible(true);
         }}>
-        Delete Entries
+        Set Language
       </Text>
+      <Text
+        style={{color: 'red', fontWeight: 600}}
+        onPress={() => {
+          setTempWritingSettings(JSON.parse(globalWritingSettings));
+          setModalScreen('writing');
+          setModalVisible(true);
+        }}>
+        Writing Profile
+      </Text>
+      <Divider title={'Photo'} />
+      <Text
+        style={{color: 'red', fontWeight: 600}}
+        onPress={() => {
+          if (photoAnalysis === true) {
+            Alert.alert(
+              'Warning!',
+              'Photos taken from the camera will not be analyzed and, as such, no descriptions can be generated about them.\nDo you wish to proceed?',
+              [
+                {
+                  text: 'Confirm',
+                  style: 'default',
+                  onPress: () => {
+                    setPhotoAnalysis(false);
+                  },
+                },
+                {text: 'Cancel', style: 'cancel'},
+              ],
+            );
+          } else {
+            Alert.alert(
+              'Warning!',
+              'Photos taken from the camera will be sent to Amazon to be analyzed. We WILL NOT store these photos.\nDo you wish to proceed?',
+
+              [
+                {
+                  text: 'Confirm',
+                  style: 'default',
+                  onPress: () => {
+                    setPhotoAnalysis(true);
+                  },
+                },
+                {text: 'Cancel', style: 'cancel'},
+              ],
+            );
+          }
+        }}>
+        {photoAnalysis
+          ? 'Stop photos being analyzed'
+          : 'Allow photos to be analyzed'}
+      </Text>
+      <Text
+        style={{color: 'red', fontWeight: 600}}
+        onPress={() => {
+          if (includeDownloadedPhotos === true) {
+            Alert.alert(
+              'Warning!',
+              'Photos downloaded or from Third Party apps will NOT be included in your entries.\nDo you wish to proceed?',
+              [
+                {
+                  text: 'Confirm',
+                  style: 'default',
+                  onPress: () => {
+                    setIncludeDownloadedPhotos(false);
+                  },
+                },
+                {text: 'Cancel', style: 'cancel'},
+              ],
+            );
+          } else {
+            Alert.alert(
+              'Warning!',
+              'Photos downloaded or from Third Party apps will be included in your entries.\nDo you wish to proceed?',
+
+              [
+                {
+                  text: 'Confirm',
+                  style: 'default',
+                  onPress: () => {
+                    setIncludeDownloadedPhotos(true);
+                  },
+                },
+                {text: 'Cancel', style: 'cancel'},
+              ],
+            );
+          }
+        }}>
+        {includeDownloadedPhotos
+          ? 'EXCLUDE Downloaded Photos'
+          : 'INCLUDE Downloaded Photos'}
+      </Text>
+      <Divider title={'Location'} />
       <Text
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
@@ -58,7 +448,8 @@ export default SettingsView = ({route, navigation}) => {
                 text: 'Confirm',
                 style: 'default',
                 onPress: () => {
-                  deleteTable('Visits');
+                  resetTable('Visits');
+                  // createVisitsTable();
                 },
               },
               {text: 'Cancel', style: 'cancel'},
@@ -67,6 +458,14 @@ export default SettingsView = ({route, navigation}) => {
         }}>
         Delete Location History
       </Text>
+      <Text
+        style={{color: 'red', fontWeight: 600}}
+        onPress={() => {
+          navigation.navigate('Locations');
+        }}>
+        Add Location Aliases
+      </Text>
+      <Divider title={'Calendar'} />
       <Text
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
@@ -81,6 +480,28 @@ export default SettingsView = ({route, navigation}) => {
         }}>
         Change Connected Calendars
       </Text>
+      <Divider title={'Other'} />
+      <Text
+        style={{color: 'red', fontWeight: 600}}
+        onPress={() => {
+          Alert.alert(
+            'Delete Entries',
+            'Are you sure you want to delete all of your entries?\nThis action is irreversible.',
+            [
+              {
+                text: 'Confirm',
+                style: 'default',
+                onPress: () => {
+                  resetTable('Entries');
+                  setEntries([]);
+                },
+              },
+              {text: 'Cancel', style: 'cancel'},
+            ],
+          );
+        }}>
+        Delete Entries
+      </Text>
       <Text
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
@@ -92,10 +513,11 @@ export default SettingsView = ({route, navigation}) => {
                 text: 'Confirm',
                 style: 'default',
                 onPress: () => {
-                  deleteTable('Visits');
-                  deleteTable('Entries');
+                  resetTable('Visits');
+                  resetTable('Entries');
                   setEntries([]);
                   setOnBoarding(true);
+                  notifee.cancelAllNotifications();
                   navigation.navigate({
                     name: 'Home',
                   });
@@ -107,6 +529,6 @@ export default SettingsView = ({route, navigation}) => {
         }}>
         Reset All Data
       </Text>
-    </View>
+    </ScrollView>
   );
 };

@@ -4,5 +4,6 @@
 RCT_EXPORT_VIEW_PROPERTY(isOn , BOOL)
 RCT_EXPORT_VIEW_PROPERTY(initalTxtString , NSString)
 RCT_EXPORT_VIEW_PROPERTY(onTxtChange , RCTDirectEventBlock)
+//RCT_EXPORT_VIEW_PROPERTY(onFocus , RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onEventMenu , RCTDirectEventBlock)
 @end
