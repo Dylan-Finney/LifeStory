@@ -40,12 +40,12 @@ import Location from './NativeFuncs';
 
 import useSettingsHooks from './useSettingsHooks';
 import Config from 'react-native-config';
-import CreateEntryButton from './src/components/CreateEntryButton';
+import CreateEntryButton from './src/modules/entries/components/CreateEntryButton';
 import {theme} from './Styling';
 import Onboarding from './src/components/Onboarding';
 import HomeTop from './src/components/HomeTop';
 import HomeHeading from './src/components/HomeHeading';
-import EntryList from './src/components/EntryList';
+import EntryList from './src/modules/entries/components/EntryList';
 import * as RNLocalize from 'react-native-localize';
 import {NativeModules} from 'react-native';
 import {

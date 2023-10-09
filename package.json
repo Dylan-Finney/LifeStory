@@ -5,6 +5,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
+    "ios-2": "react-native run-ios --simulator='iPhone 14 Pro'",
     "lint": "eslint .",
     "start": "react-native start",
     "build": "npx react-native run-ios --mode Release",

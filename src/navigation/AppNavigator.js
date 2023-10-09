@@ -3,7 +3,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
 import Home from '../../Home';
-import EntryView from '../../EntryView';
+import EntryView from '../modules/entries/views/EntryView';
 import SettingsView from '../../SettingsView';
 import LocationAliases from '../../LocationAliases';
 import AppContext from '../../Context';

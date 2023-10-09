@@ -1,6 +1,11 @@
 import {TouchableOpacity, Text} from 'react-native';
-import {theme} from '../../Styling';
-import {horizontalScale, moderateScale, verticalScale} from '../utils/Metrics';
+import {theme} from '../../../../Styling';
+
+import {
+  horizontalScale,
+  moderateScale,
+  verticalScale,
+} from '../../../utils/Metrics';
 
 const CreateEntryButton = ({onPress, text}) => {
   return (
