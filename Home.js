@@ -59,6 +59,7 @@ import {
   verticalScale,
 } from './src/utils/Metrics';
 import DatePicker from 'react-native-date-picker';
+
 import {decode, encode} from 'base-64';
 import {useAppState} from '@react-native-community/hooks';
 import onCreateTriggerNotification from './src/utils/CreateNotification';
@@ -171,6 +172,7 @@ export default FullHomeView = ({route, navigation}) => {
     READ: 1,
     RICH: 2,
   };
+  const [loadingMessage, setLoadingMessage] = useState('');
 
   const [screen, setScreen] = useState(screenValues.READ);
 
@@ -219,6 +221,7 @@ export default FullHomeView = ({route, navigation}) => {
     if (onBoarding === false) {
       setGeneratingEntry(true);
     }
+
     console.log('Get Permissions and Data');
     // setGettingData(true);
     // setLoading(true);
@@ -243,6 +246,7 @@ export default FullHomeView = ({route, navigation}) => {
     Location.setDateRange(startOfUnixTime, endOfUnixTime);
     try {
       console.log('events', {startOfUnixTime, endOfUnixTime});
+      setLoadingMessage('Getting Calendar Events');
       events = await Location.getCalendarEvents(startOfUnixTime, endOfUnixTime);
       console.log({events});
     } catch (e) {
@@ -253,6 +257,8 @@ export default FullHomeView = ({route, navigation}) => {
       }
     }
     console.log('locations');
+    setLoadingMessage('Getting Location Events');
+
     // GET LOCATIONS
     retrieveSpecificData(startOfUnixTime * 1000, endOfUnixTime * 1000, res => {
       (locations = res.map(obj => {
@@ -265,10 +271,11 @@ export default FullHomeView = ({route, navigation}) => {
     });
     //GET PHOTOS
     console.log('photos');
+    setLoadingMessage('Getting Photo Events');
     var includeDownloadedPhotosCheck = includeDownloadedPhotos || false;
     try {
       photos = await Location.getPhotosFromNative();
-      console.log({photos});
+      // console.log({photos});
       if (onBoarding === true) {
         await new Promise((resolve, reject) => {
           Alert.alert(
@@ -327,9 +334,11 @@ export default FullHomeView = ({route, navigation}) => {
     } catch (e) {
       console.error({e});
     }
-    console.log({photos});
+    // console.log({photos});
     console.log({includeDownloadedPhotosCheck});
+
     if (includeDownloadedPhotosCheck !== true) {
+      setLoadingMessage('Filtering out downloaded Photos');
       photos = photos.filter(photo => photo.lat !== 'null');
     }
 
@@ -348,7 +357,7 @@ export default FullHomeView = ({route, navigation}) => {
     console.log('Generate');
     var {locations, events, photos} = data;
 
-    console.log({photos});
+    // console.log({photos});
 
     var entryCreationTime = new Date(Date.now());
     entryCreationTime.setHours(createEntryTime);
@@ -386,6 +395,7 @@ export default FullHomeView = ({route, navigation}) => {
         ? false
         : true;
     if (photos.length > 0 && photoAnalysis === true) {
+      setLoadingMessage('Getting Photo Labels');
       await Promise.all(
         photos.map(async photo => {
           const image = decode(photo.data);
@@ -616,6 +626,7 @@ export default FullHomeView = ({route, navigation}) => {
             return photo;
           }
           const labels = response.Labels;
+          setLoadingMessage('Filtering Photo Labels');
           const labelsFiltered = labels.filter(label => label.Confidence >= 80);
           const labelsWithTitle = labelsFiltered.map(label => {
             if (
@@ -648,6 +659,7 @@ export default FullHomeView = ({route, navigation}) => {
             labelsWithTitle,
             response: JSON.stringify(labels),
           });
+          setLoadingMessage('Getting Photo Captions');
           try {
             const completion = await openai.createChatCompletion({
               // model: 'gpt-3.5-turbo',
@@ -673,6 +685,7 @@ export default FullHomeView = ({route, navigation}) => {
       });
     }
     var locationAliasesArray = JSON.parse(locationAliases);
+    setLoadingMessage('Getting Location Aliases');
     const getAddressName = address => {
       var aliasObj = locationAliasesArray.find(
         locationAliasObj => locationAliasObj.address === address,
@@ -685,6 +698,7 @@ export default FullHomeView = ({route, navigation}) => {
     };
     var response = '';
     if (autoGenerate === true) {
+      setLoadingMessage('Preparing Entry');
       locations = locations.map(location => {
         var address = location.description.split(',')[0];
         var alias = getAddressName(address);
@@ -737,7 +751,7 @@ export default FullHomeView = ({route, navigation}) => {
           labels: photo.labels || 'null',
         };
       });
-      console.log({photos});
+      // console.log({photos});
       var eventListStr = `${
         locations.length > 0
           ? `Locations Visited:
@@ -790,6 +804,7 @@ export default FullHomeView = ({route, navigation}) => {
       console.log('EVENTS', {photos, locations, events});
 
       try {
+        setLoadingMessage('Creating Entry');
         const completion = await openai.createChatCompletion({
           // model: 'gpt-3.5-turbo',
           model: 'gpt-4',
@@ -822,6 +837,7 @@ export default FullHomeView = ({route, navigation}) => {
         title: 'New Entry',
       });
     } else {
+      setLoadingMessage('Creating Empty Entry');
       entriesCopy.push({
         ...baseEntry,
         time: entryCreationTime.getTime(),
@@ -838,6 +854,7 @@ export default FullHomeView = ({route, navigation}) => {
       entry: entriesCopy[entriesCopy.length - 1],
     });
     try {
+      setLoadingMessage('Saving Entry');
       createEntryTable();
       saveEntryData({
         tags: '',
@@ -860,7 +877,7 @@ export default FullHomeView = ({route, navigation}) => {
     } catch (e) {
       console.error(e);
     }
-
+    setLoadingMessage('Finished');
     setEntries(entriesCopy);
     setGeneratingEntry(false);
     // setLoading(false);
@@ -925,10 +942,13 @@ export default FullHomeView = ({route, navigation}) => {
 
   const checkIfReadyToGenerate = async () => {
     var now = new Date(Date.now());
-    if (entries.length > 0) {
+    console.log({entries});
+    const filteredEntries = entries.filter(entry => entry.generated === true);
+    if (filteredEntries.length > 0) {
       if (
-        new Date(entries.sort((a, b) => b.time - a.time)[0].time).getDate() <
-          now.getDate() &&
+        new Date(
+          filteredEntries.sort((a, b) => b.time - a.time)[0].time,
+        ).getDate() < now.getDate() &&
         now.getHours() >= createEntryTime
       ) {
         console.log('Time to generate entry');
@@ -1060,7 +1080,7 @@ export default FullHomeView = ({route, navigation}) => {
       }
     }
 
-    console.log({val, entryHeaderList});
+    // console.log({val, entryHeaderList});
     // if (val.value > H_SCROLL_DISTANCE) {
     //   setShowNewHeader(true);
     // } else {
@@ -1254,6 +1274,26 @@ export default FullHomeView = ({route, navigation}) => {
                 softText={''}
               />
               <ModalItem
+                icon={<AIRewriteIcon stroke={'black'} />}
+                boldText={'Entry View'}
+                softText={''}
+                onPress={() => {
+                  const currentEntry =
+                    entries.length > 0
+                      ? entries.sort((a, b) => b.time - a.time)[
+                          currentRichModeEntryIndex
+                        ]
+                      : {};
+                  navigation.navigate('Entry', {
+                    baseEntry: {
+                      ...currentEntry,
+                      index: currentRichModeEntryIndex,
+                    },
+                  });
+                  setShowModal(false);
+                }}
+              />
+              <ModalItem
                 icon={<SettingsIcon />}
                 boldText={'Settings'}
                 softText={''}
@@ -1437,21 +1477,21 @@ export default FullHomeView = ({route, navigation}) => {
           <Swipeable
             // dragOffsetFromRightEdge={100}
             onBegan={() => {
-              console.log('allonsy');
+              // console.log('allonsy');
             }}
             onSwipeableOpen={() => {
-              console.log('open');
+              // console.log('open');
             }}
             onSwipeableClose={() => {
-              console.log('close');
+              // console.log('close');
             }}
             onSwipeableWillOpen={() => {
-              console.log('will open');
+              // console.log('will open');
               setDrag(false);
               setScreen(screenValues.RICH);
             }}
             onSwipeableWillClose={() => {
-              console.log('will close');
+              // console.log('will close');
               setDrag(false);
               setScreen(screenValues.READ);
             }}
@@ -1472,7 +1512,7 @@ export default FullHomeView = ({route, navigation}) => {
               // useEffect(() => {
               //   console.log({trans});
               // }, [trans]);
-              console.log({trans});
+              // console.log({trans});
               const currentEntry =
                 entries.length > 0
                   ? entries.sort((a, b) => b.time - a.time)[
@@ -1490,7 +1530,7 @@ export default FullHomeView = ({route, navigation}) => {
                 currentEntry?.entry,
               ).flat();
 
-              console.log({entry: currentEntry?.entry, matches2, matches});
+              // console.log({entry: currentEntry?.entry, matches2, matches});
               // console.log({matches, matches2, events: currentEntry?.events.find((event)=>{event.id})});
 
               return (
@@ -1504,7 +1544,10 @@ export default FullHomeView = ({route, navigation}) => {
                     //Dimensions.get('screen').width
                     transform: [{translateX: trans}],
                   }}>
-                  <ScrollView>
+                  <ScrollView
+                    contentContainerStyle={{
+                      width: Dimensions.get('screen').width,
+                    }}>
                     {entries.length > 0 && currentEntry !== undefined && (
                       <View style={{padding: 10}}>
                         <View style={{gap: 10}}>
@@ -1550,7 +1593,7 @@ export default FullHomeView = ({route, navigation}) => {
                             //     )
                             //   : null,
                             // );
-                            console.log({matches2, textIndex, text});
+                            // console.log({matches2, textIndex, text});
                             const eventLookFor =
                               matches2 !== null &&
                               (matches.length === matches2.length ||
@@ -1567,8 +1610,8 @@ export default FullHomeView = ({route, navigation}) => {
                                       event.id === parseInt(eventLookFor),
                                   )
                                 : null;
-                            console.log(parseInt(eventLookFor));
-                            console.log(eventData);
+                            // console.log(parseInt(eventLookFor));
+                            // console.log(eventData);
                             const getFormatedTimeString = (
                               time1,
                               time2 = null,
@@ -1695,6 +1738,8 @@ export default FullHomeView = ({route, navigation}) => {
               );
             }}>
             <View>
+              {generatingEntry && <Text>Loading...{loadingMessage}</Text>}
+
               <ScrollView
                 // pagingEnabled
                 contentContainerStyle={{
@@ -1711,11 +1756,11 @@ export default FullHomeView = ({route, navigation}) => {
                 // ONsCROLL
                 scrollEnabled={!drag}
                 onScrollBeginDrag={() => {
-                  console.log('start');
+                  // console.log('start');
                   setScroll(true);
                 }}
                 onScrollEndDrag={() => {
-                  console.log('end');
+                  // console.log('end');
                   setScroll(false);
                 }}
                 scrollEventThrottle={16}>
@@ -1804,12 +1849,12 @@ export default FullHomeView = ({route, navigation}) => {
                             return (
                               <View
                                 onTouchStart={() => {
-                                  console.log('yee-haw');
+                                  // console.log('yee-haw');
                                   setCurrentRichModeEntryIndex(currEntryIndex);
                                 }}
                                 onTouchEndCapture={() => {
                                   if (!scroll && !drag) {
-                                    console.log('TOUCH END');
+                                    // console.log('TOUCH END');
                                     setShowModal(true);
                                   }
                                 }}
@@ -1958,7 +2003,7 @@ export default FullHomeView = ({route, navigation}) => {
             <TouchableOpacity
               onPress={async () => {
                 const date = new Date(Date.now());
-                const mode = 'generate';
+                const mode = 'manual';
                 if (mode === 'generate') {
                   await generateEntry({
                     data: await getPermissionsAndData(date.getTime()),
