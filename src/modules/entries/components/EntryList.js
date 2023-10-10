@@ -33,6 +33,7 @@ const EntryList = ({entries, navigation}) => {
                     justifyContent: 'center',
                   }}>
                   <Text
+                    allowFontScaling={false}
                     style={{
                       fontWeight: 700,
                       color: theme.general.timeText,
@@ -40,6 +41,7 @@ const EntryList = ({entries, navigation}) => {
                     {moment(currEntry.time).startOf('week').format('MMMM')}{' '}
                   </Text>
                   <Text
+                    allowFontScaling={false}
                     style={{
                       fontWeight: 700,
                       color: theme.general.timeText,

@@ -72,6 +72,7 @@ class ImageAssetView: UIView {
            self.imageView.image = image
           print("hello")
          }
+
       }
   }
 

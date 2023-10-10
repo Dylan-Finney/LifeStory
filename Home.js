@@ -12,8 +12,11 @@ import {
   Image,
   Button,
   NativeEventEmitter,
+  Animated,
+  // Modal,
 } from 'react-native';
 
+import Modal from 'react-native-modal';
 import {
   Colors,
   DebugInstructions,
@@ -24,6 +27,8 @@ import {
 import Svg, {Defs, Rect, LinearGradient, Stop} from 'react-native-svg';
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
+import AIRewriteIcon from './src/assets/ai-rewrite-icon.svg';
+
 import notifee, {
   EventType,
   TimestampTrigger,
@@ -57,6 +62,22 @@ import DatePicker from 'react-native-date-picker';
 import {decode, encode} from 'base-64';
 import {useAppState} from '@react-native-community/hooks';
 import onCreateTriggerNotification from './src/utils/CreateNotification';
+import {Swipeable} from 'react-native-gesture-handler';
+import toDateString from './src/utils/toDateString';
+import DownvoteIcon from './src/assets/ModalDownvote.svg';
+import UpvoteIcon from './src/assets/ModalUpvote.svg';
+import NewEntryIcon from './src/assets/NewEntry.svg';
+import SettingsIcon from './src/assets/Settings.svg';
+import CalendarEventIcon from './src/assets/calendar-event.svg';
+import LabelIcon from './src/assets/Labelling.svg';
+import DaysMenuIcon from './src/assets/days-menu.svg';
+import MomentsMenuIcon from './src/assets/moments-menu.svg';
+import SearchMenuIcon from './src/assets/search-menu.svg';
+import LocationEventIcon from './src/assets/event-location.svg';
+import PhotoEventIcon from './src/assets/event-photo.svg';
+
+import {emotions} from './Utils';
+import {ImageAsset} from './NativeImage';
 // const {
 //   DetectFacesCommand,
 //   DetectLabelsCommand,
@@ -130,16 +151,32 @@ export default FullHomeView = ({route, navigation}) => {
     generated: false,
     entry: '',
   };
-  const {entries, setEntries, loadingEntries} = useContext(AppContext);
+  const {loadingEntries, entries, setEntries} = useContext(AppContext);
+
   const [loading, setLoading] = useState(false);
+
   const [generatingEntry, setGeneratingEntry] = useState(false);
   const [clickedNotification, setClickedNotification] = useState(null);
-  // const CalendarEvents = new NativeEventEmitter(NativeModules.Location);
+  const rangeViewValues = {
+    DAYS: 0,
+    WEEKS: 1,
+    MONTHS: 2,
+  };
+  const [rangeView, setRangeView] = useState(rangeViewValues.DAYS);
 
-  // const [onBoarding, setOnBoarding] = useState(false);
-  // console.log('TIMEZONE', RNLocalize.getTimeZone());
+  const [scroll, setScroll] = useState(false);
+  const [drag, setDrag] = useState(false);
+  const screenValues = {
+    SEARCH: 0,
+    READ: 1,
+    RICH: 2,
+  };
 
-  const [onBoardingStep, setOnBoardingStep] = useState(0);
+  const [screen, setScreen] = useState(screenValues.READ);
+
+  const [showModal, setShowModal] = useState(false);
+  const [currentRichModeEntryIndex, setCurrentRichModeEntryIndex] = useState();
+
   const [date, setDate] = useState(new Date());
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState(false);
@@ -177,9 +214,6 @@ export default FullHomeView = ({route, navigation}) => {
   useEffect(() => {
     console.log('home entries useEffect', {entries});
   }, [entries]);
-  useEffect(() => {
-    setOnBoardingStep(0);
-  }, [onBoarding]);
 
   const getPermissionsAndData = async date => {
     if (onBoarding === false) {
@@ -210,13 +244,6 @@ export default FullHomeView = ({route, navigation}) => {
     try {
       console.log('events', {startOfUnixTime, endOfUnixTime});
       events = await Location.getCalendarEvents(startOfUnixTime, endOfUnixTime);
-      // CalendarEvents.addListener('calendarChange', event => {
-      //   console.log('calendarChange EVENT', {event});
-      //   if (event !== 'null') {
-      //     setCalendars(JSON.stringify(event));
-      //   }
-      //   CalendarEvents.removeAllListeners('calendarChange');
-      // });
       console.log({events});
     } catch (e) {
       if (e.message === 'DENIED') {
@@ -710,7 +737,7 @@ export default FullHomeView = ({route, navigation}) => {
           labels: photo.labels || 'null',
         };
       });
-
+      console.log({photos});
       var eventListStr = `${
         locations.length > 0
           ? `Locations Visited:
@@ -769,7 +796,7 @@ export default FullHomeView = ({route, navigation}) => {
           messages: [
             {
               role: 'system',
-              content: `You are to act as my journal writer. I will give you a list of events that took place today and you are to generate a journal entry based on that. The diary entry should be a transcription of the events that you are told. Do not add superfluous details that you are unsure if they actually happened as this will be not useful to me. Add a [[X]] every time one of the events has been completed, e.g. I went to a meeting [[X]] then I went to the beach [[X]]. Replace X with the number assigned to the event. There is no need for sign ins (Dear Diary) or send offs (Yours sincerely). Do not introduce any details, events, etc not supplied by the user. Keep it short. Each photo will be described by a series of tags. Write the entry in the ${language} language. ${
+              content: `You are to act as my journal writer. I will give you a list of events that took place today and you are to generate a journal entry based on that. The diary entry should be a transcription of the events that you are told. Do not add superfluous details that you are unsure if they actually happened as this will be not useful to me. Add a [[X]] every time one of the events has been completed, e.g. I went to a meeting [[X]] then I went to the beach. [[X]] Replace X with the number assigned to the event. If at the end of a sentence, add after the closing punctuation. There is no need for sign ins (Dear Diary) or send offs (Yours sincerely). Do not introduce any details, events, etc not supplied by the user. Keep it short. Each photo will be described by a series of tags. Write the entry in the ${language} language. ${
                 JSON.parse(globalWritingSettings).generate
               }`,
             },
@@ -883,6 +910,17 @@ export default FullHomeView = ({route, navigation}) => {
     setGeneratingEntry(false);
   };
 
+  const getEventIcon = type => {
+    switch (type) {
+      case 'location':
+        return <LocationEventIcon />;
+      case 'photo':
+        return <PhotoEventIcon />;
+      case 'calendar':
+        return <CalendarEventIcon />;
+    }
+  };
+
   console.log(Dimensions.get('window'));
 
   const checkIfReadyToGenerate = async () => {
@@ -955,6 +993,7 @@ export default FullHomeView = ({route, navigation}) => {
       inital = true;
     }
   };
+
   useEffect(() => {
     bootStrap();
     return notifee.onForegroundEvent(({type, detail}) => {
@@ -978,9 +1017,112 @@ export default FullHomeView = ({route, navigation}) => {
       }
     });
   }, []);
+  const H_MAX_HEIGHT = 150;
+  const H_MIN_HEIGHT = 0;
+  const H_SCROLL_DISTANCE = H_MAX_HEIGHT - H_MIN_HEIGHT;
+
+  const scrollOffsetY = useRef(new Animated.Value(0)).current;
+  const headerNew = createRef();
+  const headerScrollHeight = scrollOffsetY.interpolate({
+    inputRange: [0, H_SCROLL_DISTANCE],
+    outputRange: [H_MAX_HEIGHT * 2, H_MIN_HEIGHT],
+    extrapolate: 'clamp',
+  });
+
+  function findMatches(regex, str, matches = []) {
+    const res = regex.exec(str);
+    res && matches.push(res) && findMatches(regex, str, matches);
+    return matches;
+  }
+
+  // const headerScrollHeight = scrollOffsetY.interpolate({
+  //   inputRange: [0, H_SCROLL_DISTANCE],
+  //   outputRange: [H_MAX_HEIGHT * 2, H_MIN_HEIGHT],
+  //   extrapolate: 'clamp',
+  // });
+  const [showNewHeader, setShowNewHeader] = useState(false);
+  const [entryHeaderList, setEntryHeaderList] = useState([]);
+  const [entryHeaderIndex, setEntryHeaderIndex] = useState(0);
+  scrollOffsetY.removeAllListeners();
+  scrollOffsetY.addListener(val => {
+    if (val.value <= 0) {
+      setEntryHeaderIndex(0);
+    } else {
+      for (var i = 0; i < entryHeaderList.length; i++) {
+        if (entryHeaderList[i].y > val.value) {
+          setEntryHeaderIndex(i - 1);
+          break;
+        } else {
+          if (i === entryHeaderList.length - 1) {
+            setEntryHeaderIndex(i);
+          }
+        }
+      }
+    }
+
+    console.log({val, entryHeaderList});
+    // if (val.value > H_SCROLL_DISTANCE) {
+    //   setShowNewHeader(true);
+    // } else {
+    //   setShowNewHeader(false);
+    // }
+  });
+  const color = scrollOffsetY.interpolate({
+    inputRange: [0, H_SCROLL_DISTANCE],
+    outputRange: ['#06609E', 'white'],
+    extrapolate: 'identity',
+  });
+  const rangeViewHeight = scrollOffsetY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [75, 0],
+    extrapolate: 'clamp',
+  });
+  const rangeViewPadding = scrollOffsetY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [20, 0],
+    extrapolate: 'clamp',
+  });
+  const headerHeight = scrollOffsetY.interpolate({
+    inputRange: [100, 150],
+    outputRange: [0, 100],
+    extrapolate: 'clamp',
+  });
+  const headerPadding = scrollOffsetY.interpolate({
+    inputRange: [100, 150],
+    outputRange: [0, 10],
+    extrapolate: 'clamp',
+  });
+  const footerHeight = scrollOffsetY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [75, 0],
+    extrapolate: 'clamp',
+  });
+
+  const floatingButtonBottom = scrollOffsetY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [100, 25],
+    extrapolate: 'clamp',
+  });
+
+  const ModalItem = ({icon, boldText, softText, onPress}) => {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
+        <View style={{padding: 10, backgroundColor: 'gray'}}>{icon}</View>
+        <Text>
+          <Text style={{fontWeight: 600}}>{boldText}</Text> {softText}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
-    <SafeAreaView style={{flexGrow: 1}}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        // backgroundColor: 'red'
+      }}>
       <StatusBar
         barStyle={'dark-content'}
         // backgroundColor={onBoarding === true ? 'white' : '#F9F9F9'}
@@ -1012,15 +1154,117 @@ export default FullHomeView = ({route, navigation}) => {
             }}
             generateEntry={generateEntry}
             getPermissionsAndData={getPermissionsAndData}
-            // onPress={async () => {
-            //   await generateEntry(await getPermissionsAndData());
-            //   // setOnBoarding(false);
-            // }}
           />
         </>
       ) : (
-        <>
-          <DatePicker
+        <View
+          style={{
+            // backgroundColor: 'green',
+            flex: 1,
+            // height: Dimensions.get('screen').height,
+          }}>
+          <Modal
+            coverScreen
+            animationInTiming={200}
+            animationIn={'slideInUp'}
+            isVisible={showModal}
+            // presentationStyle={'pageSheet'}
+            // transparent={true}
+            onRequestClose={() => {
+              setShowModal(false);
+            }}
+            onBackdropPress={() => {
+              setShowModal(false);
+            }}
+            onSwipeComplete={() => {
+              setShowModal(false);
+            }}
+            swipeDirection={['down']}
+            style={{justifyContent: 'flex-end', margin: 0}}>
+            <View style={{backgroundColor: 'white'}}>
+              <View
+                style={{
+                  alignSelf: 'center',
+                  width: 100,
+                  height: 5,
+                  backgroundColor: 'gray',
+                }}></View>
+            </View>
+            <View style={{backgroundColor: 'white', padding: 20, gap: 10}}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  gap: 10,
+                }}>
+                {emotions.map((emotion, i) => {
+                  return (
+                    <TouchableOpacity
+                      key={i}
+                      onPress={() => {
+                        // changeEmotion(i);
+                      }}>
+                      <View
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          paddingVertical: verticalScale(3),
+                          paddingHorizontal: horizontalScale(3),
+                          gap: horizontalScale(2),
+                          backgroundColor:
+                            theme.entry.buttons.toggle.background.inactive,
+                          borderColor:
+                            theme.entry.buttons.toggle.border.inactive,
+                          borderWidth: 1,
+                          borderRadius: 5,
+                        }}>
+                        {emotion.icon(false)}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <ModalItem
+                icon={
+                  <UpvoteIcon
+                    stroke={theme.entry.buttons.toggle.icon.inactive}
+                  />
+                }
+                boldText={'Upvote'}
+                softText={'as more meaningful'}
+              />
+              <ModalItem
+                icon={
+                  <DownvoteIcon
+                    stroke={theme.entry.buttons.toggle.icon.inactive}
+                  />
+                }
+                boldText={'Downvote'}
+                softText={'as less meaningful'}
+              />
+              <ModalItem
+                icon={<LabelIcon />}
+                boldText={'Add labels'}
+                softText={'for addtional meaning'}
+              />
+              <ModalItem
+                icon={<AIRewriteIcon stroke={'black'} />}
+                boldText={'AI Rewrite'}
+                softText={''}
+              />
+              <ModalItem
+                icon={<SettingsIcon />}
+                boldText={'Settings'}
+                softText={''}
+                onPress={() => {
+                  navigation.navigate('Settings');
+                  setShowModal(false);
+                }}
+              />
+            </View>
+          </Modal>
+          {/* <DatePicker
             modal
             mode="date"
             open={open}
@@ -1041,10 +1285,10 @@ export default FullHomeView = ({route, navigation}) => {
             onCancel={() => {
               setOpen(false);
             }}
-          />
+          /> */}
 
-          <HomeTop navigation={navigation} />
-          <HomeHeading
+          {/* <HomeTop navigation={navigation} /> */}
+          {/* <HomeHeading
             entries={entries.length}
             manual={entries.filter(entry => entry.generated !== true).length}
             events={
@@ -1059,14 +1303,423 @@ export default FullHomeView = ({route, navigation}) => {
                 .flat()
                 .filter(event => event.type === 'photo').length
             }
-          />
-          <ScrollView
-            contentContainerStyle={{
-              paddingVertical: verticalScale(10),
-              paddingHorizontal: horizontalScale(10),
-            }}
-            style={{height: '70%'}}>
+          /> */}
+          {/* {showNewHeader === true ? (
+            <View>
+              <Text></Text>
+            </View>
+          ) : ( */}
+          <Animated.View
+            style={{
+              // backgroundColor: screen === screenValues.RICH ? '#06609E' : color,
+              backgroundColor: '#06609E',
+
+              padding: screen === screenValues.RICH ? 20 : rangeViewPadding,
+              // flexShrink: 1,
+              height: screen === screenValues.RICH ? 75 : rangeViewHeight,
+              overflow: 'hidden',
+              // height: headerScrollHeight,
+            }}>
             <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-evenly',
+                backgroundColor: '#0A5487',
+                borderRadius: 5,
+              }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setRangeView(rangeViewValues.DAYS);
+                }}
+                style={{
+                  paddingVertical: 5,
+                  paddingHorizontal: '10%',
+                  marginVertical: 5,
+                  marginHorizontal: '1%',
+                  borderRadius: 5,
+                  backgroundColor:
+                    rangeView === rangeViewValues.DAYS ? '#06609E' : '#0A5487',
+                }}>
+                <Text allowFontScaling={false} style={{color: 'white'}}>
+                  Days
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setRangeView(rangeViewValues.WEEKS);
+                }}
+                style={{
+                  paddingVertical: 5,
+                  paddingHorizontal: '10%',
+                  marginVertical: 5,
+                  marginHorizontal: '1%',
+                  borderRadius: 5,
+                  backgroundColor:
+                    rangeView === rangeViewValues.WEEKS ? '#06609E' : '#0A5487',
+                }}>
+                <Text allowFontScaling={false} style={{color: 'white'}}>
+                  Weeks
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setRangeView(rangeViewValues.MONTHS);
+                }}
+                style={{
+                  paddingVertical: 5,
+                  paddingHorizontal: '10%',
+                  marginVertical: 5,
+                  marginHorizontal: '1%',
+                  borderRadius: 5,
+                  backgroundColor:
+                    rangeView === rangeViewValues.MONTHS
+                      ? '#06609E'
+                      : '#0A5487',
+                }}>
+                <Text allowFontScaling={false} style={{color: 'white'}}>
+                  Months
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+
+          <Animated.View
+            pointerEvents={'box-none'}
+            style={{
+              overflow: 'hidden',
+              backgroundColor: 'rgba(0,0,0,0)',
+              paddingBottom: 500,
+              position: 'absolute',
+              width: '100%',
+              zIndex: 999,
+            }}>
+            <Animated.View
+              style={{
+                backgroundColor: 'white',
+                padding: screen === screenValues.RICH ? 0 : headerPadding,
+                width: '100%',
+                height: screen === screenValues.RICH ? 0 : headerHeight,
+                shadowColor: '#000',
+                shadowOffset: {
+                  width: 0,
+                  height: 12,
+                },
+                gap: 10,
+                shadowOpacity: 0.58,
+                shadowRadius: 16.0,
+
+                elevation: 24,
+              }}>
+              {entryHeaderList.length > 0 && (
+                <>
+                  {/* {console.log({entryHeaderList, entryHeaderIndex})} */}
+                  <Text
+                    allowFontScaling={false}
+                    style={{fontWeight: '600', fontSize: 20}}>
+                    {entryHeaderList[entryHeaderIndex].time}
+                  </Text>
+                  <Text
+                    allowFontScaling={false}
+                    style={{
+                      fontStyle: 'italic',
+                      fontWeight: '600',
+                      fontSize: 20,
+                    }}>
+                    {entryHeaderList[entryHeaderIndex].title}
+                  </Text>
+                </>
+              )}
+            </Animated.View>
+          </Animated.View>
+
+          <Swipeable
+            // dragOffsetFromRightEdge={100}
+            onBegan={() => {
+              console.log('allonsy');
+            }}
+            onSwipeableOpen={() => {
+              console.log('open');
+            }}
+            onSwipeableClose={() => {
+              console.log('close');
+            }}
+            onSwipeableWillOpen={() => {
+              console.log('will open');
+              setDrag(false);
+              setScreen(screenValues.RICH);
+            }}
+            onSwipeableWillClose={() => {
+              console.log('will close');
+              setDrag(false);
+              setScreen(screenValues.READ);
+            }}
+            enabled={!scroll}
+            containerStyle={{flex: 1}}
+            onActivated={() => {
+              setDrag(true);
+              console.log('activate');
+            }}
+            // ON
+            renderRightActions={(val1, val2) => {
+              console.log({val1, val2});
+              const trans = val2.interpolate({
+                inputRange: [-Dimensions.get('screen').width, -150],
+                outputRange: [0, Dimensions.get('screen').width],
+                extrapolate: 'clamp',
+              });
+              // useEffect(() => {
+              //   console.log({trans});
+              // }, [trans]);
+              console.log({trans});
+              const currentEntry =
+                entries.length > 0
+                  ? entries.sort((a, b) => b.time - a.time)[
+                      currentRichModeEntryIndex
+                    ]
+                  : {};
+              let pattern = /\[\[\d+\]\]/g;
+
+              let matches = currentEntry?.entry
+                ?.split(pattern)
+                .filter(text => text !== '' && text.split(' ').length > 0);
+              // const matches2 = pattern.exec(currentEntry?.entry);
+              const matches2 = findMatches(
+                /\[\[\d+\]\]/g,
+                currentEntry?.entry,
+              ).flat();
+
+              console.log({entry: currentEntry?.entry, matches2, matches});
+              // console.log({matches, matches2, events: currentEntry?.events.find((event)=>{event.id})});
+
+              return (
+                <Animated.View
+                  style={{
+                    backgroundColor: 'white',
+                    justifyContent: 'center',
+                    alignItems: 'flex-start',
+                    flexGrow: 1,
+                    // transform: val1,
+                    //Dimensions.get('screen').width
+                    transform: [{translateX: trans}],
+                  }}>
+                  <ScrollView>
+                    {entries.length > 0 && currentEntry !== undefined && (
+                      <View style={{padding: 10}}>
+                        <View style={{gap: 10}}>
+                          <Text
+                            allowFontScaling={false}
+                            style={{
+                              fontSize: 18,
+                              fontWeight: 600,
+                              color: '#8A888A',
+                            }}>
+                            {toDateString(currentEntry.time)}
+                          </Text>
+                          <Text
+                            allowFontScaling={false}
+                            style={{fontSize: 20, fontWeight: 600}}>
+                            {currentEntry.title}
+                          </Text>
+                          {/* <Text allowFontScaling={false} style={{fontSize: 16}}> */}
+                          {matches.map((text, textIndex) => {
+                            // const eventData =
+                            //   matches2?.length > 0
+                            //     ? currentEntry?.events.find(
+                            //         event =>
+                            //           event.id ===
+                            //           matches2[textIndex].substring(
+                            //             2,
+                            //             matches2[textIndex].length - 1,
+                            //           ),
+                            //       )
+                            //     : {};
+                            // console.log(
+                            //   matches2[textIndex].substring(
+                            //     2,
+                            //     matches2[textIndex].length - 2,
+                            //   ),
+                            // );
+                            // console.log({matches2, text, textIndex});
+                            // console.log(
+                            // matches2 !== null
+                            //   ? matches2[textIndex].substring(
+                            //       2,
+                            //       matches2[textIndex].length - 2,
+                            //     )
+                            //   : null,
+                            // );
+                            console.log({matches2, textIndex, text});
+                            const eventLookFor =
+                              matches2 !== null &&
+                              (matches.length === matches2.length ||
+                                textIndex < matches2.length)
+                                ? matches2[textIndex].substring(
+                                    2,
+                                    matches2[textIndex].length - 2,
+                                  )
+                                : null;
+                            const eventData =
+                              eventLookFor !== null
+                                ? currentEntry?.events.find(
+                                    event =>
+                                      event.id === parseInt(eventLookFor),
+                                  )
+                                : null;
+                            console.log(parseInt(eventLookFor));
+                            console.log(eventData);
+                            const getFormatedTimeString = (
+                              time1,
+                              time2 = null,
+                            ) => {
+                              const date = new Date(time1);
+                              var hours = date.getHours();
+                              // Minutes part from the timestamp
+                              var minutes = '0' + date.getMinutes();
+
+                              const ampm = hours >= 12 ? 'PM' : 'AM';
+                              hours = hours % 12;
+                              hours = hours ? '0' + hours : 12;
+                              // Seconds part from the timestamp
+                              var formattedTime =
+                                hours.substr(-2) +
+                                ':' +
+                                minutes.substr(-2) +
+                                ' ' +
+                                ampm;
+                              if (time2 === null) {
+                                return formattedTime;
+                              } else {
+                                return `${formattedTime}-${getFormatedTimeString(
+                                  time2,
+                                )}`;
+                              }
+                            };
+
+                            var formattedTime;
+                            if (eventData !== null) {
+                              var time2 = eventData.endTime || null;
+                              formattedTime = getFormatedTimeString(
+                                eventData.time,
+                                time2,
+                              );
+                            }
+
+                            return (
+                              text.split(' ').length > 0 && (
+                                <View key={textIndex}>
+                                  <Text
+                                    allowFontScaling={false}
+                                    style={{fontSize: 16}}>
+                                    {text}
+                                  </Text>
+                                  {eventData !== null && (
+                                    <View>
+                                      <View
+                                        style={{
+                                          flexDirection: 'row',
+                                          alignItems: 'center',
+                                          gap: 10,
+                                        }}>
+                                        <View
+                                          style={{
+                                            padding: 5,
+                                            borderRadius: 30,
+                                            borderWidth: 2,
+                                            borderColor: '#EAEAEA',
+                                          }}>
+                                          {getEventIcon(eventData.type)}
+                                        </View>
+                                        <View>
+                                          <Text
+                                            style={{
+                                              color: 'rgba(11, 11, 11, 0.8)',
+                                              fontWeight: 600,
+                                            }}>
+                                            {eventData.title}
+                                          </Text>
+                                          <Text
+                                            style={{
+                                              color: 'rgba(11, 11, 11, 0.6)',
+                                            }}>
+                                            {formattedTime}
+                                          </Text>
+                                        </View>
+                                      </View>
+                                      {eventData.type === 'photo' ? (
+                                        <ImageAsset
+                                          localIdentifier={
+                                            eventData.localIdentifier
+                                          }
+                                          // setHeight={200}
+                                          // setWidth={100}
+                                          // height={1}
+                                          style={{
+                                            flex: 1,
+                                            // height: '100%',
+                                            // width: '100%',
+                                            height: 200,
+                                          }}
+                                        />
+                                      ) : (
+                                        <View
+                                          style={{
+                                            backgroundColor: 'red',
+                                            width: '90%',
+                                            height: 200,
+                                          }}
+                                        />
+                                      )}
+                                    </View>
+                                  )}
+                                  {textIndex !== matches.length - 1 && (
+                                    <View
+                                      style={{
+                                        height: 1,
+                                        width: '100%',
+                                        backgroundColor:
+                                          'rgba(11, 11, 11, 0.1)',
+                                      }}></View>
+                                  )}
+                                </View>
+                              )
+                            );
+                          })}
+                          {/* </Text> */}
+                        </View>
+                      </View>
+                    )}
+                  </ScrollView>
+                </Animated.View>
+              );
+            }}>
+            <View>
+              <ScrollView
+                // pagingEnabled
+                contentContainerStyle={{
+                  paddingVertical: verticalScale(10),
+                  paddingHorizontal: horizontalScale(10),
+                  // flexGrow: 1,
+                  backgroundColor:
+                    headerScrollHeight < H_MAX_HEIGHT / 2 ? 'black' : 'white',
+                }}
+                onScroll={Animated.event(
+                  [{nativeEvent: {contentOffset: {y: scrollOffsetY}}}],
+                  {useNativeDriver: false},
+                )}
+                // ONsCROLL
+                scrollEnabled={!drag}
+                onScrollBeginDrag={() => {
+                  console.log('start');
+                  setScroll(true);
+                }}
+                onScrollEndDrag={() => {
+                  console.log('end');
+                  setScroll(false);
+                }}
+                scrollEventThrottle={16}>
+                {/* <View
               style={{
                 display: 'flex',
                 flexDirection: 'row',
@@ -1074,7 +1727,11 @@ export default FullHomeView = ({route, navigation}) => {
                 marginBottom: 10,
               }}>
               {generatingEntry ? (
-                <Text style={{fontSize: moderateScale(14)}}>Loading...</Text>
+                <Text
+                  allowFontScaling={false}
+                  style={{fontSize: moderateScale(14)}}>
+                  Loading...
+                </Text>
               ) : (
                 <>
                   <CreateEntryButton
@@ -1092,72 +1749,296 @@ export default FullHomeView = ({route, navigation}) => {
                     }}
                     text={'Create new entry (Manual)'}
                   />
-                  {/* <Button
-                    title="Create Trigger Notification"
-                    onPress={() => onCreateTriggerNotification()}
-                  /> */}
                 </>
               )}
+            </View> */}
+
+                {!loading && !loadingEntries ? (
+                  <>
+                    {entries.length === 0 ? (
+                      <View style={{gap: 20}}>
+                        <Image
+                          source={
+                            createEntryTime === 8
+                              ? require('./src/assets/AMImage.png')
+                              : require('./src/assets/PMImage.png')
+                          }
+                          resizeMode="contain"
+                          style={{
+                            alignSelf: 'center',
+                            display: 'flex',
+                            marginTop: 50,
+                            width: horizontalScale(250),
+                            height: verticalScale(250),
+                            justifyContent: 'center',
+                          }}
+                        />
+                        <Text
+                          allowFontScaling={false}
+                          style={{
+                            fontWeight: 600,
+                            textAlign: 'center',
+                            fontSize: 23,
+                          }}>
+                          Please wait till 8
+                          {createEntryTime === 8 ? 'AM' : 'PM'}
+                        </Text>
+                        <Text
+                          allowFontScaling={false}
+                          style={{
+                            fontWeight: 400,
+                            textAlign: 'center',
+                            fontSize: 18,
+                          }}>
+                          We will notify you as soon as your first daily summary
+                          will be ready
+                        </Text>
+                      </View>
+                    ) : (
+                      // <EntryList entries={entries} navigation={navigation} />
+                      <View style={{gap: 10}}>
+                        {entries
+                          .sort((a, b) => b.time - a.time)
+                          .map((currEntry, currEntryIndex) => {
+                            const dateText = toDateString(currEntry.time);
+                            return (
+                              <View
+                                onTouchStart={() => {
+                                  console.log('yee-haw');
+                                  setCurrentRichModeEntryIndex(currEntryIndex);
+                                }}
+                                onTouchEndCapture={() => {
+                                  if (!scroll && !drag) {
+                                    console.log('TOUCH END');
+                                    setShowModal(true);
+                                  }
+                                }}
+                                onLayout={event => {
+                                  // console.log(event.nativeEvent.layout);
+                                  // console.log({
+                                  //   entries: entries.length,
+                                  //   entryHeaderList: entryHeaderList.length,
+                                  // });
+                                  if (
+                                    entryHeaderList.length ===
+                                    entries.length - 1
+                                  ) {
+                                    var newList = [
+                                      ...entryHeaderList,
+                                      {
+                                        y: event.nativeEvent.layout.y,
+                                        title: currEntry.title,
+                                        time: dateText,
+                                        height: event.nativeEvent.layout.height,
+                                      },
+                                    ];
+                                    setEntryHeaderList(
+                                      newList.sort((a, b) => a.y - b.y),
+                                    );
+                                  } else if (
+                                    entryHeaderList.length < entries.length
+                                  ) {
+                                    setEntryHeaderList([
+                                      ...entryHeaderList,
+                                      {
+                                        y: event.nativeEvent.layout.y,
+                                        title: currEntry.title,
+                                        time: dateText,
+                                        height: event.nativeEvent.layout.height,
+                                      },
+                                    ]);
+                                  }
+                                }}
+                                key={currEntryIndex}>
+                                <View style={{gap: 10}}>
+                                  <Text
+                                    allowFontScaling={false}
+                                    style={{
+                                      fontSize: 18,
+                                      fontWeight: 600,
+                                      color: '#8A888A',
+                                    }}>
+                                    {dateText}
+                                  </Text>
+                                  <Text
+                                    allowFontScaling={false}
+                                    style={{fontSize: 20, fontWeight: 600}}>
+                                    {currEntry.title}
+                                  </Text>
+                                  <Text
+                                    allowFontScaling={false}
+                                    style={{fontSize: 16}}>
+                                    {currEntry.entry}
+                                  </Text>
+                                </View>
+
+                                {currEntryIndex !== entries.length - 1 ? (
+                                  <View
+                                    style={{
+                                      backgroundColor: 'black',
+                                      width: '100%',
+                                      height: 1,
+                                      marginTop: 10,
+                                    }}
+                                  />
+                                ) : (
+                                  <>
+                                    {/* {console.log('entryHeaderList', {
+                                      entryHeaderList: entryHeaderList,
+                                      entryHeaderList2:
+                                        entryHeaderList[currEntryIndex],
+                                      currEntryIndex,
+                                    })} */}
+                                    {entryHeaderList.length ===
+                                      entries.length && (
+                                      <>
+                                        {/* {console.log('VIEW')}
+                                        {console.log({entryHeaderList})}
+                                        {console.log({currEntryIndex})}
+                                        {console.log(
+                                          entryHeaderList[currEntryIndex],
+                                        )} */}
+                                        {/* 
+                                    {console.log('entryHeaderList', {
+                                      entryHeaderList: entryHeaderList,
+                                      entryHeaderList2:
+                                        entryHeaderList[currEntryIndex],
+                                      currEntryIndex,
+                                    })} */}
+                                        <View
+                                          style={{
+                                            width: '100%',
+                                            height:
+                                              Dimensions.get('window').height -
+                                              entryHeaderList[currEntryIndex]
+                                                .height,
+                                          }}
+                                        />
+                                      </>
+                                    )}
+                                  </>
+                                )}
+                              </View>
+                            );
+                          })}
+                      </View>
+                    )}
+                  </>
+                ) : (
+                  //
+                  <>
+                    {console.log({loading, loadingEntries})}
+                    <Text allowFontScaling={false}>Loading Entries...</Text>
+                  </>
+                )}
+              </ScrollView>
+            </View>
+          </Swipeable>
+          <Animated.View
+            style={{
+              position: 'absolute',
+              right: 30,
+              bottom: screen === screenValues.RICH ? 100 : floatingButtonBottom,
+              backgroundColor: 'white',
+              padding: 15,
+              borderRadius: 50,
+              borderWidth: 1,
+              borderColor: 'rgba(11, 11, 11, 0.1)',
+              shadowOffset: {
+                width: 0,
+                height: 8,
+              },
+              shadowOpacity: 0.44,
+              shadowRadius: 10.32,
+
+              elevation: 16,
+
+              shadowColor: '#000',
+            }}>
+            <TouchableOpacity
+              onPress={async () => {
+                const date = new Date(Date.now());
+                const mode = 'generate';
+                if (mode === 'generate') {
+                  await generateEntry({
+                    data: await getPermissionsAndData(date.getTime()),
+                    date: date.getTime(),
+                  });
+                } else if (mode === 'manual') {
+                  createManualEntry(date.getTime());
+                }
+              }}>
+              <NewEntryIcon />
+            </TouchableOpacity>
+          </Animated.View>
+
+          <Animated.View
+            style={{
+              justifyContent: 'space-evenly',
+              flexDirection: 'row',
+              backgroundColor: '#DAD9DD',
+              // flexGrow: 1,
+              // justifyContent: 'flex-end',
+              // alignSelf: 'flex-end',
+              // bottom: 0,
+
+              height: screen === screenValues.RICH ? 75 : footerHeight,
+            }}>
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}>
+              <SearchMenuIcon
+                fill={screen === screenValues.SEARCH ? '#3286B3' : '#68696A'}
+              />
+              <Text
+                style={{
+                  color: screen === screenValues.SEARCH ? '#3286B3' : '#68696A',
+                }}
+                allowFontScaling={false}>
+                Search
+              </Text>
             </View>
 
-            {/* <Image
-              style={{width: 200, height: 300}}
-              source={{
-                uri: `lifestory://asset?id=0DBB35F8-FF65-4AB4-BE03-5D68535A5474/L0/001`,
-              }}
-            /> */}
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}>
+              <DaysMenuIcon
+                fill={screen === screenValues.READ ? '#3286B3' : '#68696A'}
+              />
+              <Text
+                style={{
+                  color: screen === screenValues.READ ? '#3286B3' : '#68696A',
+                }}
+                allowFontScaling={false}>
+                Read View
+              </Text>
+            </View>
 
-            {!loading && !loadingEntries ? (
-              <>
-                {entries.length === 0 ? (
-                  <View style={{gap: 20}}>
-                    <Image
-                      source={
-                        createEntryTime === 8
-                          ? require('./src/assets/AMImage.png')
-                          : require('./src/assets/PMImage.png')
-                      }
-                      resizeMode="contain"
-                      style={{
-                        alignSelf: 'center',
-                        display: 'flex',
-                        marginTop: 50,
-                        width: horizontalScale(250),
-                        height: verticalScale(250),
-                        justifyContent: 'center',
-                      }}
-                    />
-                    <Text
-                      style={{
-                        fontWeight: 600,
-                        textAlign: 'center',
-                        fontSize: 23,
-                      }}>
-                      Please wait till 8{createEntryTime === 8 ? 'AM' : 'PM'}
-                    </Text>
-                    <Text
-                      style={{
-                        fontWeight: 400,
-                        textAlign: 'center',
-                        fontSize: 18,
-                      }}>
-                      We will notify you as soon as your first daily summary
-                      will be ready
-                    </Text>
-                  </View>
-                ) : (
-                  <EntryList entries={entries} navigation={navigation} />
-                )}
-              </>
-            ) : (
-              //
-              <>
-                {console.log({loading, loadingEntries})}
-                <Text>Loading Entries...</Text>
-              </>
-            )}
-          </ScrollView>
-        </>
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}>
+              <MomentsMenuIcon
+                fill={screen === screenValues.RICH ? '#3286B3' : '#68696A'}
+              />
+              <Text
+                style={{
+                  color: screen === screenValues.RICH ? '#3286B3' : '#68696A',
+                }}
+                allowFontScaling={false}>
+                Rich View
+              </Text>
+            </View>
+          </Animated.View>
+        </View>
       )}
     </SafeAreaView>
   );
