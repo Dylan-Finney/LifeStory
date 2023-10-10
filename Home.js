@@ -1615,7 +1615,7 @@ export default FullHomeView = ({route, navigation}) => {
                                     {text}
                                   </Text>
                                   {eventData !== null && (
-                                    <View>
+                                    <View style={{marginTop: 20}}>
                                       <View
                                         style={{
                                           flexDirection: 'row',
@@ -1652,14 +1652,13 @@ export default FullHomeView = ({route, navigation}) => {
                                           localIdentifier={
                                             eventData.localIdentifier
                                           }
-                                          // setHeight={200}
-                                          // setWidth={100}
+                                          setHeight={100}
+                                          setWidth={100}
                                           // height={1}
                                           style={{
                                             flex: 1,
-                                            // height: '100%',
-                                            // width: '100%',
-                                            height: 200,
+                                            height: 100,
+                                            width: 100,
                                           }}
                                         />
                                       ) : (
@@ -1678,6 +1677,7 @@ export default FullHomeView = ({route, navigation}) => {
                                       style={{
                                         height: 1,
                                         width: '100%',
+                                        marginTop: 20,
                                         backgroundColor:
                                           'rgba(11, 11, 11, 0.1)',
                                       }}></View>

@@ -7,6 +7,7 @@ import EntryView from '../modules/entries/views/EntryView';
 import SettingsView from '../../SettingsView';
 import LocationAliases from '../../LocationAliases';
 import AppContext from '../../Context';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
 const RootStack = createNativeStackNavigator();
 
@@ -24,9 +25,11 @@ const AppNavigator = ({entries, setEntries, loadingEntries}) => {
       <RootStack.Screen
         name="Home"
         children={params => (
-          <AppContext.Provider value={contextValues}>
-            <Home {...params} />
-          </AppContext.Provider>
+          <GestureHandlerRootView style={{flex: 1}}>
+            <AppContext.Provider value={contextValues}>
+              <Home {...params} />
+            </AppContext.Provider>
+          </GestureHandlerRootView>
         )}
       />
       <RootStack.Screen
