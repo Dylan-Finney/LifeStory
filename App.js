@@ -26,7 +26,6 @@ import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import Home from './Home';
 import AppContext from './Context';
-
 import useDatabaseHooks from './useDatabaseHooks';
 import useSettingsHooks from './useSettingsHooks.js';
 import SettingsView from './SettingsView';
@@ -35,6 +34,7 @@ import notifee, {
   TriggerType,
   EventType,
 } from '@notifee/react-native';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 const {createVisitsTable, insertData, retrieveData} = useDatabaseHooks();
 // const {calendars} = useSettingsHooks();
 export default App = () => {
@@ -136,9 +136,11 @@ export default App = () => {
         <RootStack.Screen
           name="Home"
           children={params => (
-            <AppContext.Provider value={contextValues}>
-              <Home {...params} />
-            </AppContext.Provider>
+            <GestureHandlerRootView style={{flex: 1}}>
+              <AppContext.Provider value={contextValues}>
+                <Home {...params} />
+              </AppContext.Provider>
+            </GestureHandlerRootView>
           )}
         />
         <RootStack.Screen

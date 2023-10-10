@@ -34,11 +34,14 @@ const EntryListItem = ({entry, index, startOfWeek, endOfWeek, open}) => {
           flexDirection: 'row',
           justifyContent: 'space-between',
         }}>
-        <Text>
-          <Text style={{fontWeight: 700, fontSize: moderateScale(18)}}>
+        <Text allowFontScaling={false}>
+          <Text
+            allowFontScaling={false}
+            style={{fontWeight: 700, fontSize: moderateScale(18)}}>
             {moment(entry.time).format('dddd')}
           </Text>{' '}
           <Text
+            allowFontScaling={false}
             style={{
               fontWeight: 700,
               fontSize: moderateScale(18),
@@ -62,10 +65,13 @@ const EntryListItem = ({entry, index, startOfWeek, endOfWeek, open}) => {
         </TouchableOpacity>
       </View>
 
-      <Text style={{fontSize: moderateScale(16), fontWeight: 500}}>
+      <Text
+        allowFontScaling={false}
+        style={{fontSize: moderateScale(16), fontWeight: 500}}>
         {entry.title}
       </Text>
       <Text
+        allowFontScaling={false}
         style={{fontSize: moderateScale(14)}}
         ellipsizeMode="tail"
         numberOfLines={10}

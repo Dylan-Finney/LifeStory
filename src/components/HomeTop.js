@@ -28,6 +28,7 @@ const HomeTop = ({navigation}) => {
         <SettingsIcon />
       </TouchableOpacity>
       <Text
+        allowFontScaling={false}
         style={{
           color: 'white',
           fontSize: moderateScale(30),

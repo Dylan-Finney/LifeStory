@@ -54,6 +54,7 @@ export default SettingsView = ({route, navigation}) => {
     return (
       <>
         <Text
+          allowFontScaling={false}
           style={{
             fontWeight: 700,
             color: theme.general.strongText,
@@ -204,16 +205,20 @@ export default SettingsView = ({route, navigation}) => {
             // backgroundColor: 'black',
           }}>
           <Text
+            allowFontScaling={false}
             onPress={() => {
               setModalVisible(false);
             }}>
             Cancel
           </Text>
-          <Text style={{fontSize: moderateScale(20), fontWeight: 600}}>
+          <Text
+            allowFontScaling={false}
+            style={{fontSize: moderateScale(20), fontWeight: 600}}>
             {modalScreen === 'language' && 'Set Languages'}
             {modalScreen === 'writing' && 'Writings Settings'}
           </Text>
           <Text
+            allowFontScaling={false}
             onPress={() => {
               switch (modalScreen) {
                 case 'language':
@@ -254,6 +259,7 @@ export default SettingsView = ({route, navigation}) => {
                   }}>
                   <View style={{display: 'flex', flexDirection: 'column'}}>
                     <Text
+                      allowFontScaling={false}
                       style={{
                         color: theme.general.strongText,
                         fontWeight: 600,
@@ -261,7 +267,9 @@ export default SettingsView = ({route, navigation}) => {
                       }}>
                       {lang.englishName}
                     </Text>
-                    <Text style={{color: theme.general.timeText, fontSize: 16}}>
+                    <Text
+                      allowFontScaling={false}
+                      style={{color: theme.general.timeText, fontSize: 16}}>
                       {lang.nativeName}
                     </Text>
                   </View>
@@ -284,13 +292,15 @@ export default SettingsView = ({route, navigation}) => {
           )}
           {modalScreen === 'writing' && (
             <>
-              <Text>
+              <Text allowFontScaling={false}>
                 These settings allow you to append to the prompts that are used
                 in LifeStory for greater customization and power over your data.
               </Text>
               <View>
-                <Text>Generate</Text>
-                <TextInput
+                <Text allowFontScaling={false}>Generate</Text>
+                <Text
+                  allowFontScaling={false}
+                  Input
                   multiline
                   value={tempWritingSettings.generate}
                   onChangeText={text => {
@@ -302,9 +312,13 @@ export default SettingsView = ({route, navigation}) => {
                     }
                   }}
                 />
-                <Text>{tempWritingSettings.generate.length}/200</Text>
-                <Text>Title Rewrite</Text>
-                <TextInput
+                <Text allowFontScaling={false}>
+                  {tempWritingSettings.generate.length}/200
+                </Text>
+                <Text allowFontScaling={false}>Title Rewrite</Text>
+                <Text
+                  allowFontScaling={false}
+                  Input
                   multiline
                   value={tempWritingSettings.title}
                   onChangeText={text => {
@@ -316,9 +330,13 @@ export default SettingsView = ({route, navigation}) => {
                     }
                   }}
                 />
-                <Text>{tempWritingSettings.title.length}/200</Text>
-                <Text>Body Rewrite</Text>
-                <TextInput
+                <Text allowFontScaling={false}>
+                  {tempWritingSettings.title.length}/200
+                </Text>
+                <Text allowFontScaling={false}>Body Rewrite</Text>
+                <Text
+                  allowFontScaling={false}
+                  Input
                   multiline
                   value={tempWritingSettings.body}
                   onChangeText={text => {
@@ -330,7 +348,9 @@ export default SettingsView = ({route, navigation}) => {
                     }
                   }}
                 />
-                <Text>{tempWritingSettings.body.length}/200</Text>
+                <Text allowFontScaling={false}>
+                  {tempWritingSettings.body.length}/200
+                </Text>
               </View>
             </>
           )}
@@ -338,6 +358,7 @@ export default SettingsView = ({route, navigation}) => {
       </Modal>
       <Divider title={'Prompt'} />
       <Text
+        allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
           setTempLanguage(language);
@@ -347,6 +368,7 @@ export default SettingsView = ({route, navigation}) => {
         Set Language
       </Text>
       <Text
+        allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
           setTempWritingSettings(JSON.parse(globalWritingSettings));
@@ -357,6 +379,7 @@ export default SettingsView = ({route, navigation}) => {
       </Text>
       <Divider title={'Photo'} />
       <Text
+        allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
           if (photoAnalysis === true) {
@@ -397,6 +420,7 @@ export default SettingsView = ({route, navigation}) => {
           : 'Allow photos to be analyzed'}
       </Text>
       <Text
+        allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
           if (includeDownloadedPhotos === true) {
@@ -438,6 +462,7 @@ export default SettingsView = ({route, navigation}) => {
       </Text>
       <Divider title={'Location'} />
       <Text
+        allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
           Alert.alert(
@@ -459,6 +484,7 @@ export default SettingsView = ({route, navigation}) => {
         Delete Location History
       </Text>
       <Text
+        allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
           navigation.navigate('Locations');
@@ -467,6 +493,7 @@ export default SettingsView = ({route, navigation}) => {
       </Text>
       <Divider title={'Calendar'} />
       <Text
+        allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
           NativeModules.Location.chooserOpen();
@@ -482,6 +509,7 @@ export default SettingsView = ({route, navigation}) => {
       </Text>
       <Divider title={'Other'} />
       <Text
+        allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
           Alert.alert(
@@ -503,6 +531,7 @@ export default SettingsView = ({route, navigation}) => {
         Delete Entries
       </Text>
       <Text
+        allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
           Alert.alert(

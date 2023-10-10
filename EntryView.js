@@ -774,6 +774,7 @@ export default FullEntryView = ({route, navigation}) => {
                     gap: verticalScale(5),
                   }}>
                   <Text
+                    allowFontScaling={false}
                     style={{
                       color: theme.general.strongText,
                       fontSize: moderateScale(16),
@@ -782,6 +783,7 @@ export default FullEntryView = ({route, navigation}) => {
                     Writing settings
                   </Text>
                   <Text
+                    allowFontScaling={false}
                     style={{
                       color: theme.general.strongText,
                       fontSize: moderateScale(12),
@@ -804,6 +806,7 @@ export default FullEntryView = ({route, navigation}) => {
                       borderRadius: 5,
                     }}>
                     <Text
+                      allowFontScaling={false}
                       style={{
                         paddingHorizontal: horizontalScale(2),
                         paddingVertical: verticalScale(2),
@@ -846,6 +849,7 @@ export default FullEntryView = ({route, navigation}) => {
                                 borderRadius: 5,
                               }}>
                               <Text
+                                allowFontScaling={false}
                                 key={i}
                                 style={{
                                   paddingHorizontal: horizontalScale(5),
@@ -873,6 +877,7 @@ export default FullEntryView = ({route, navigation}) => {
                       borderRadius: 5,
                     }}>
                     <Text
+                      allowFontScaling={false}
                       style={{
                         paddingHorizontal: horizontalScale(2),
                         paddingVertical: verticalScale(2),
@@ -915,6 +920,7 @@ export default FullEntryView = ({route, navigation}) => {
                                 borderRadius: 5,
                               }}>
                               <Text
+                                allowFontScaling={false}
                                 key={i}
                                 style={{
                                   paddingHorizontal: horizontalScale(5),
@@ -975,6 +981,7 @@ export default FullEntryView = ({route, navigation}) => {
                       alignItems: 'center',
                     }}>
                     <Text
+                      allowFontScaling={false}
                       style={{
                         color: theme.general.strongText,
                         fontSize: moderateScale(16),
@@ -983,6 +990,7 @@ export default FullEntryView = ({route, navigation}) => {
                       {entry.title}
                     </Text>
                     <Text
+                      allowFontScaling={false}
                       style={{
                         color: theme.entry.tags.text,
                         fontSize: moderateScale(14),
@@ -997,6 +1005,7 @@ export default FullEntryView = ({route, navigation}) => {
                   </View>
 
                   <Text
+                    allowFontScaling={false}
                     style={{
                       color: theme.general.strongText,
                       fontSize: moderateScale(16),
@@ -1017,6 +1026,7 @@ export default FullEntryView = ({route, navigation}) => {
                       alignItems: 'center',
                     }}>
                     <TextInput
+                      allowFontScaling={false}
                       style={{
                         backgroundColor: 'white',
                         paddingHorizontal: horizontalScale(10),
@@ -1051,7 +1061,9 @@ export default FullEntryView = ({route, navigation}) => {
                         borderRadius: 5,
                       }}>
                       {/* <View> */}
-                      <Text style={{color: theme.general.strongText}}>
+                      <Text
+                        allowFontScaling={false}
+                        style={{color: theme.general.strongText}}>
                         ↵Submit
                       </Text>
                       {/* </View> */}
@@ -1098,6 +1110,7 @@ export default FullEntryView = ({route, navigation}) => {
                               borderRadius: 5,
                             }}>
                             <Text
+                              allowFontScaling={false}
                               key={i}
                               style={{
                                 paddingHorizontal: horizontalScale(5),
@@ -1200,7 +1213,7 @@ export default FullEntryView = ({route, navigation}) => {
                                     alignItems: 'center',
                                   }}>
                                   <FileIcon />
-                                  <Text>Item</Text>
+                                  <Text allowFontScaling={false}>Item</Text>
                                 </View>
                                 <View
                                   style={{
@@ -1288,6 +1301,7 @@ export default FullEntryView = ({route, navigation}) => {
                                   width: '100%',
                                 }}>
                                 <Text
+                                  allowFontScaling={false}
                                   style={{
                                     color: theme.general.strongText,
                                     fontSize: moderateScale(15),
@@ -1364,6 +1378,7 @@ export default FullEntryView = ({route, navigation}) => {
                     }}>
                     <EmotionCalendarIcon />
                     <Text
+                      allowFontScaling={false}
                       style={{
                         color: theme.general.strongText,
                         fontSize: moderateScale(16),
@@ -1382,6 +1397,7 @@ export default FullEntryView = ({route, navigation}) => {
                     }}>
                     <HelpIcon />
                     <Text
+                      allowFontScaling={false}
                       style={{
                         color: theme.general.strongText,
                         fontSize: moderateScale(12),
@@ -1432,6 +1448,7 @@ export default FullEntryView = ({route, navigation}) => {
                             }}>
                             {emotion.icon(tempEmotions.emotion === i)}
                             <Text
+                              allowFontScaling={false}
                               key={i}
                               style={{
                                 fontWeight: 500,
@@ -1468,7 +1485,7 @@ export default FullEntryView = ({route, navigation}) => {
                           alignItems: 'center',
                         }}>
                         <FileIcon />
-                        <Text>Detailed Breakdown</Text>
+                        <Text allowFontScaling={false}>Detailed Breakdown</Text>
                       </View>
                       <View
                         style={{
@@ -1478,6 +1495,7 @@ export default FullEntryView = ({route, navigation}) => {
                           paddingVertical: verticalScale(5),
                         }}>
                         <Text
+                          allowFontScaling={false}
                           style={{
                             color: theme.entry.tags.text,
                             fontWeight: 500,
@@ -1498,7 +1516,9 @@ export default FullEntryView = ({route, navigation}) => {
                         alignItems: 'center',
                       }}>
                       <HelpIcon />
-                      <Text>Emotions added to individual journal items.</Text>
+                      <Text allowFontScaling={false}>
+                        Emotions added to individual journal items.
+                      </Text>
                     </View>
                   </View>
                   {tempEmotions.emotions
@@ -1602,7 +1622,7 @@ export default FullEntryView = ({route, navigation}) => {
                           paddingHorizontal: horizontalScale(5),
                           paddingVertical: verticalScale(5),
                         }}>
-                        <Text>{event.id}</Text>
+                        <Text allowFontScaling={false}>{event.id}</Text>
                       </View>
                       <View
                         style={{
@@ -1617,17 +1637,23 @@ export default FullEntryView = ({route, navigation}) => {
                             flexDirection: 'row',
                             justifyContent: 'space-between',
                           }}>
-                          <Text>{moment(event.time).format('LLL')}</Text>
+                          <Text allowFontScaling={false}>
+                            {moment(event.time).format('LLL')}
+                          </Text>
                           <View style={{display: 'flex', flexDirection: 'row'}}>
                             {event.type === 'location' && <LocationIcon />}
                             {event.type === 'calendar' && <CalendarIcon />}
-                            <Text>
+                            <Text allowFontScaling={false}>
                               {event.type.charAt(0).toUpperCase() +
                                 event.type.slice(1)}
                             </Text>
                           </View>
                         </View>
-                        <Text style={{fontWeight: 600}}>{event.title}</Text>
+                        <Text
+                          allowFontScaling={false}
+                          style={{fontWeight: 600}}>
+                          {event.title}
+                        </Text>
                         {event.type === 'calendar' && (
                           <View
                             style={{
@@ -1644,7 +1670,9 @@ export default FullEntryView = ({route, navigation}) => {
                                 backgroundColor: event.calendar.color,
                               }}
                             />
-                            <Text>{event.calendar.title}</Text>
+                            <Text allowFontScaling={false}>
+                              {event.calendar.title}
+                            </Text>
                           </View>
                         )}
                         {console.log(event)}
@@ -1663,20 +1691,28 @@ export default FullEntryView = ({route, navigation}) => {
                                 style={{flex: 1, height: '100%', width: '100%'}}
                               />
                             </View>
-                            <Text>{event.description}</Text>
+                            <Text allowFontScaling={false}>
+                              {event.description}
+                            </Text>
                             {event.lat ? (
                               <>
-                                <Text>{event.loc}</Text>
+                                <Text allowFontScaling={false}>
+                                  {event.loc}
+                                </Text>
                               </>
                             ) : (
                               <>
-                                <Text>No location or Photo was downloaded</Text>
+                                <Text allowFontScaling={false}>
+                                  No location or Photo was downloaded
+                                </Text>
                               </>
                             )}
                           </>
                         ) : (
                           <>
-                            <Text>{event.additionalNotes}</Text>
+                            <Text allowFontScaling={false}>
+                              {event.additionalNotes}
+                            </Text>
                           </>
                         )}
                       </View>
@@ -1685,7 +1721,9 @@ export default FullEntryView = ({route, navigation}) => {
                 </ScrollView>
               ) : (
                 <View>
-                  <Text>There are no events for this entry</Text>
+                  <Text allowFontScaling={false}>
+                    There are no events for this entry
+                  </Text>
                 </View>
               )}
             </View>
@@ -1718,7 +1756,7 @@ export default FullEntryView = ({route, navigation}) => {
         }}
         isKeyboardVisible={isKeyboardVisible}
       />
-      {/* <TextInput placeholder="Hey" /> */}
+      {/* <Text allowFontScaling={false}Input placeholder="Hey" /> */}
       <EntryFooter
         openModalScreen={screen => {
           setModalScreen(screen);
@@ -1776,6 +1814,7 @@ const EntryInput = ({
         // backgroundColor: 'red',
       }}>
       <TextInput
+        allowFontScaling={false}
         style={{
           paddingTop: verticalScale(3),
           paddingHorizontal: horizontalScale(3),
@@ -1862,7 +1901,7 @@ const EntryFooter = ({
           onPress={() => {
             openModalScreen(5);
           }}>
-          <Text>Events</Text>
+          <Text allowFontScaling={false}>Events</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
@@ -1908,9 +1947,15 @@ const EntryHeader = ({
         }}>
         <View style={{display: 'flex', flexDirection: 'row'}}>
           <WordCountIcon></WordCountIcon>
-          <Text style={{color: 'white'}}>{countedWords}</Text>
+          <Text allowFontScaling={false} style={{color: 'white'}}>
+            {countedWords}
+          </Text>
         </View>
-        <Text style={{color: 'white', fontSize: moderateScale(13)}}>Words</Text>
+        <Text
+          allowFontScaling={false}
+          style={{color: 'white', fontSize: moderateScale(13)}}>
+          Words
+        </Text>
       </View>
       <View
         style={{
@@ -1921,9 +1966,15 @@ const EntryHeader = ({
         }}>
         <View style={{display: 'flex', flexDirection: 'row'}}>
           <ContentTaggingIcon width={17} height={16} fill={'white'} />
-          <Text style={{color: 'white'}}>{tagsLength}</Text>
+          <Text allowFontScaling={false} style={{color: 'white'}}>
+            {tagsLength}
+          </Text>
         </View>
-        <Text style={{color: 'white', fontSize: moderateScale(13)}}>Tags</Text>
+        <Text
+          allowFontScaling={false}
+          style={{color: 'white', fontSize: moderateScale(13)}}>
+          Tags
+        </Text>
       </View>
       <View
         style={{
@@ -1934,9 +1985,13 @@ const EntryHeader = ({
         }}>
         <View style={{display: 'flex', flexDirection: 'row'}}>
           <EmotionTaggingIcon width={17} height={16} stroke={'white'} />
-          <Text style={{color: 'white'}}>{emotionsLength}</Text>
+          <Text allowFontScaling={false} style={{color: 'white'}}>
+            {emotionsLength}
+          </Text>
         </View>
-        <Text style={{color: 'white', fontSize: moderateScale(13)}}>
+        <Text
+          allowFontScaling={false}
+          style={{color: 'white', fontSize: moderateScale(13)}}>
           Emotions
         </Text>
       </View>
@@ -1949,9 +2004,15 @@ const EntryHeader = ({
         }}>
         <View style={{display: 'flex', flexDirection: 'row'}}>
           <UpvoteIcon stroke={'white'} />
-          <Text style={{color: 'white'}}>{votesLength}</Text>
+          <Text allowFontScaling={false} style={{color: 'white'}}>
+            {votesLength}
+          </Text>
         </View>
-        <Text style={{color: 'white', fontSize: moderateScale(13)}}>Votes</Text>
+        <Text
+          allowFontScaling={false}
+          style={{color: 'white', fontSize: moderateScale(13)}}>
+          Votes
+        </Text>
       </View>
     </View>
   );
@@ -1964,7 +2025,7 @@ const ModalScreenClose = ({close}) => {
         close();
       }}
       style={{flexGrow: 1, flexBasis: 0, alignItems: 'flex-start'}}>
-      <Text>Cancel</Text>
+      <Text allowFontScaling={false}>Cancel</Text>
     </TouchableOpacity>
   );
 };
@@ -1982,6 +2043,7 @@ const ModalScreenUpdate = ({update, updateable}) => {
         alignItems: 'flex-end',
       }}>
       <Text
+        allowFontScaling={false}
         style={{
           color: updateable
             ? theme.entry.modal.header.updateText.active
@@ -2095,6 +2157,7 @@ const AIRewriteAttr = ({
         gap: verticalScale(5),
       }}>
       <Text
+        allowFontScaling={false}
         style={{
           color: theme.general.strongText,
           fontSize: 16,
@@ -2131,6 +2194,7 @@ const AIRewriteAttr = ({
               stroke={theme.entry.buttons.toggle.icon.active}
             />
             <Text
+              allowFontScaling={false}
               style={{
                 color: theme.entry.tags.text,
                 fontWeight: 500,
@@ -2143,7 +2207,7 @@ const AIRewriteAttr = ({
           </View>
         ) : (
           <View>
-            <Text>Manual</Text>
+            <Text allowFontScaling={false}>Manual</Text>
           </View>
         )}
         <AIRewriteOptions
@@ -2158,10 +2222,12 @@ const AIRewriteAttr = ({
       </View>
       {attribute === 'entry' ? (
         <ScrollView style={{height: verticalScale(200)}}>
-          <Text>{tempValue}</Text>
+          <Text allowFontScaling={false}>{tempValue}</Text>
         </ScrollView>
       ) : (
-        <Text style={{fontSize: moderateScale(18), fontWeight: 600}}>
+        <Text
+          allowFontScaling={false}
+          style={{fontSize: moderateScale(18), fontWeight: 600}}>
           {tempValue}
         </Text>
       )}
@@ -2173,7 +2239,9 @@ const ModalScreenTitle = ({icon, title}) => {
   return (
     <View style={{display: 'flex', flexDirection: 'row'}}>
       {icon}
-      <Text style={{fontSize: moderateScale(20), fontWeight: 600}}>
+      <Text
+        allowFontScaling={false}
+        style={{fontSize: moderateScale(20), fontWeight: 600}}>
         {title}
       </Text>
     </View>
@@ -2364,6 +2432,7 @@ const TimeDivider = ({previousTime, currentTime, index}) => {
           <>
             <DividerLine height={20} />
             <Text
+              allowFontScaling={false}
               style={{
                 color: theme.general.timeText,
                 paddingLeft: horizontalScale(3),
@@ -2380,7 +2449,9 @@ const TimeDivider = ({previousTime, currentTime, index}) => {
                 gap: horizontalScale(5),
               }}>
               <ClockIcon />
-              <Text style={{color: theme.general.timeText}}>
+              <Text
+                allowFontScaling={false}
+                style={{color: theme.general.timeText}}>
                 {new Date(currentTime).getHours()}:00
               </Text>
             </View>
@@ -2392,6 +2463,7 @@ const TimeDivider = ({previousTime, currentTime, index}) => {
               <>
                 <DividerLine height={isDifferentHour ? 20 : 10} />
                 <Text
+                  allowFontScaling={false}
                   style={{
                     color: theme.general.timeText,
                     paddingLeft: horizontalScale(3),
@@ -2412,7 +2484,9 @@ const TimeDivider = ({previousTime, currentTime, index}) => {
                     gap: horizontalScale(5),
                   }}>
                   <ClockIcon />
-                  <Text style={{color: theme.general.timeText}}>
+                  <Text
+                    allowFontScaling={false}
+                    style={{color: theme.general.timeText}}>
                     {new Date(currentTime).getHours()}:00
                   </Text>
                 </View>
@@ -2462,7 +2536,11 @@ const EmotionItem = ({extract, changeEmotion}) => {
               alignItems: 'center',
             }}>
             <FileIcon />
-            <Text style={{fontSize: moderateScale(14)}}>Item</Text>
+            <Text
+              allowFontScaling={false}
+              style={{fontSize: moderateScale(14)}}>
+              Item
+            </Text>
           </View>
           {extract.emotion > -1 ? (
             <View
@@ -2477,6 +2555,7 @@ const EmotionItem = ({extract, changeEmotion}) => {
               }}>
               {emotions[extract.emotion].icon(true)}
               <Text
+                allowFontScaling={false}
                 style={{
                   color: theme.entry.tags.text,
                   fontWeight: 500,
@@ -2506,6 +2585,7 @@ const EmotionItem = ({extract, changeEmotion}) => {
             }}
           />
           <Text
+            allowFontScaling={false}
             style={{
               color: theme.general.strongText,
               fontSize: moderateScale(15),

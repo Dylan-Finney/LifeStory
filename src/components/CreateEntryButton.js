@@ -14,7 +14,9 @@ const CreateEntryButton = ({onPress, text}) => {
         borderRadius: 5,
       }}
       onPress={onPress}>
-      <Text style={{fontSize: moderateScale(14)}}>{text}</Text>
+      <Text allowFontScaling={false} style={{fontSize: moderateScale(14)}}>
+        {text}
+      </Text>
     </TouchableOpacity>
   );
 };

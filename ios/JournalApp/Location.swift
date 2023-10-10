@@ -10,7 +10,6 @@ import CoreLocation
 import EventKit
 import Photos
 import Dispatch
-import UserNotifications
 import EventKitUI
 @objc(Location)
 class Location: RCTEventEmitter, CLLocationManagerDelegate, EKCalendarChooserDelegate {
@@ -231,8 +230,8 @@ for localIdentifier in calendarIdentifiers {
     locationManager.desiredAccuracy = kCLLocationAccuracyBest
     locationManager.distanceFilter = kCLDistanceFilterNone
     locationManager.allowsBackgroundLocationUpdates = true
-     locationManager.startMonitoringVisits() //Make Sure this is active for release
-  //  locationManager.startUpdatingLocation() //Simulator Debug as Visits doesn't work
+    //  locationManager.startMonitoringVisits() //Make Sure this is active for release
+   locationManager.startUpdatingLocation() //Simulator Debug as Visits doesn't work
     resolve(true)
 
   }
@@ -243,7 +242,7 @@ for localIdentifier in calendarIdentifiers {
     geoCoder.reverseGeocodeLocation(locations.last!) { placemarks, _ in
       if let place = placemarks?.first {
         let description = "\(place)"
-        self.sendEvent(withName: "locationChange", body: ["lat": locations.last?.coordinate.latitude as Any, "lon": locations.last?.coordinate.longitude as Any, "description": description] as [String : Any])
+        self.sendEvent(withName: "locationChange", body: ["lat": locations.last?.coordinate.latitude as Any, "lon": locations.last?.coordinate.longitude as Any, "description": description, "arrivalTime": String(locations.last?.timestamp.timeIntervalSince1970 ?? 0), "departureTime" : ""] as [String : Any])
 
       }
     }
@@ -257,7 +256,7 @@ for localIdentifier in calendarIdentifiers {
     geoCoder.reverseGeocodeLocation(clLocation) { placemarks, _ in
       if let place = placemarks?.first {
         let description = "\(place)"
-        self.sendEvent(withName: "locationChange", body: ["lat": clLocation.coordinate.latitude as Any, "lon": clLocation.coordinate.longitude as Any, "description": description] as [String : Any])
+        self.sendEvent(withName: "locationChange", body: ["lat": clLocation.coordinate.latitude as Any, "lon": clLocation.coordinate.longitude as Any, "description": description, "arrivalTime": String(visit.arrivalDate.timeIntervalSince1970 ?? 0), "departureTime" : String(visit.departureDate.timeIntervalSince1970 ?? 0)] as [String : Any])
 
       }
     }
@@ -402,64 +401,6 @@ Other Functions
 
 
       }
-//  
-//  @objc func createNotifications() -> Void {
-//    checkForNotificationsPermissions()
-//  }
-//  func checkForNotificationsPermissions() {
-//    let notificationCenter = UNUserNotificationCenter.current()
-//    notificationCenter.getNotificationSettings { settings in
-//      switch settings.authorizationStatus {
-//      case .authorized :
-//        self.dispatchNotification()
-//      case .denied:
-//        return
-//      case .notDetermined:
-//        notificationCenter.requestAuthorization(options: [.alert, .sound]) { didAllow, error in
-//          if didAllow {
-//            self.dispatchNotification()
-//          }
-//        }
-//      default:
-//        return
-//      }
-//    }
-//  }
-//  func dispatchNotification() {
-//    let identifier = "story-alert"
-//    let title = "Test Title"
-//    let body = "Test Body"
-//    let hour = 15
-//    let minute = 12
-//    let isDaily = true
-//    let notificationCenter = UNUserNotificationCenter.current()
-//    let content = UNMutableNotificationContent()
-//    content.title = title
-//    content.body = body
-//    content.sound = .default
-//    
-//    let calendar = Calendar.current
-////    let currentDate = Date()
-////    var dateComponentsAdd = DateComponents()
-////    dateComponentsAdd.minute = 1
-////    if let  nextHourDate = calendar.date(byAdding: dateComponentsAdd, to: currentDate) {
-////      let nextHourComponents = calendar.dateComponents([.hour, .minute], from: nextHourDate)
-////      let trigger = UNCalendarNotificationTrigger(dateMatching: nextHourComponents, repeats: isDaily)
-////      let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-////      notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
-////      notificationCenter.add(request)
-////
-////    }
-//        var dateComponents = DateComponents(calendar: calendar, timeZone: TimeZone.current)
-//    dateComponents.hour = hour
-//    dateComponents.minute = minute
-//    let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: isDaily)
-//    let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-//    notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
-//    notificationCenter.add(request)
-//
-//    
-//      }
 
   // we need to override this method and
   // return an array of event names that we can listen to

@@ -29,9 +29,13 @@ const HomeHeading = ({entries, manual, events, photos}) => {
         }}>
         <View style={{display: 'flex', flexDirection: 'row'}}>
           <WordCountIcon></WordCountIcon>
-          <Text style={{color: 'white'}}>{entries || 0}</Text>
+          <Text allowFontScaling={false} style={{color: 'white'}}>
+            {entries || 0}
+          </Text>
         </View>
-        <Text style={{color: 'white', fontSize: moderateScale(13)}}>
+        <Text
+          allowFontScaling={false}
+          style={{color: 'white', fontSize: moderateScale(13)}}>
           Entries
         </Text>
       </View>
@@ -44,9 +48,13 @@ const HomeHeading = ({entries, manual, events, photos}) => {
         }}>
         <View style={{display: 'flex', flexDirection: 'row'}}>
           <ContentTaggingIcon width={17} height={16} fill={'white'} />
-          <Text style={{color: 'white'}}>{manual || 0}</Text>
+          <Text allowFontScaling={false} style={{color: 'white'}}>
+            {manual || 0}
+          </Text>
         </View>
-        <Text style={{color: 'white', fontSize: moderateScale(13)}}>
+        <Text
+          allowFontScaling={false}
+          style={{color: 'white', fontSize: moderateScale(13)}}>
           Manual
         </Text>
       </View>
@@ -59,9 +67,13 @@ const HomeHeading = ({entries, manual, events, photos}) => {
         }}>
         <View style={{display: 'flex', flexDirection: 'row'}}>
           <EmotionTaggingIcon width={17} height={16} stroke={'white'} />
-          <Text style={{color: 'white'}}>{events || 0}</Text>
+          <Text allowFontScaling={false} style={{color: 'white'}}>
+            {events || 0}
+          </Text>
         </View>
-        <Text style={{color: 'white', fontSize: moderateScale(13)}}>
+        <Text
+          allowFontScaling={false}
+          style={{color: 'white', fontSize: moderateScale(13)}}>
           Events
         </Text>
       </View>
@@ -74,9 +86,13 @@ const HomeHeading = ({entries, manual, events, photos}) => {
         }}>
         <View style={{display: 'flex', flexDirection: 'row'}}>
           <UpvoteIcon stroke={'white'} />
-          <Text style={{color: 'white'}}>{photos || 0}</Text>
+          <Text allowFontScaling={false} style={{color: 'white'}}>
+            {photos || 0}
+          </Text>
         </View>
-        <Text style={{color: 'white', fontSize: moderateScale(13)}}>
+        <Text
+          allowFontScaling={false}
+          style={{color: 'white', fontSize: moderateScale(13)}}>
           Photos
         </Text>
       </View>

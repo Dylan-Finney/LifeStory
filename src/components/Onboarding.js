@@ -179,6 +179,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
       {initalScreen === true ? (
         <>
           <Text
+            allowFontScaling={false}
             style={{
               color: theme.onboarding.title,
               fontWeight: '700',
@@ -195,6 +196,8 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
       ) : (
         <>
           <Text
+            // maxFontSizeMultiplier={1}
+            allowFontScaling={false}
             style={{
               color: theme.onboarding.title,
               fontWeight: '700',
@@ -215,6 +218,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
               "You've successfully set up your LifeStory app!"}
           </Text>
           <Text
+            allowFontScaling={false}
             style={{
               color: theme.onboarding.text,
               fontWeight: '400',
@@ -263,6 +267,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
                       }
                     }}>
                     <Text
+                      allowFontScaling={false}
                       style={{
                         color: '#026AA2',
                         textAlign: 'center',
@@ -302,6 +307,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
                       finalStep(8);
                     }}>
                     <Text
+                      allowFontScaling={false}
                       style={{
                         color: 'white',
                         textAlign: 'center',
@@ -324,6 +330,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
                       finalStep(20);
                     }}>
                     <Text
+                      allowFontScaling={false}
                       style={{
                         color: 'white',
                         textAlign: 'center',
