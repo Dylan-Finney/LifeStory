@@ -291,7 +291,7 @@ for localIdentifier in calendarIdentifiers {
       newPhoto["name"] = PHAssetResource.assetResources(for: object).first?.originalFilename
 
       newPhoto["localIdentifier"] = object.localIdentifier
-      PHImageManager.default().requestImage(for: object, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: requestOptions) { image, _ in
+      PHImageManager.default().requestImage(for: object, targetSize: CGSize(width: 1000,height: 1000), contentMode: .aspectFit, options: requestOptions) { image, _ in
         if let pngData = image?.pngData() {
 //          newPhoto["data"] = String(decoding: pngData, as: UTF8.self)
           newPhoto["data"] = pngData.base64EncodedString()

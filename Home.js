@@ -707,6 +707,7 @@ export default FullHomeView = ({route, navigation}) => {
           creation: Math.floor(parseFloat(photo.creation) * 1000),
           id: counter++,
           description: photo.description || 'None',
+          labels: photo.labels || 'null',
         };
       });
 
