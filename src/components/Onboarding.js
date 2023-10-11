@@ -44,8 +44,9 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
   const [onBoardingStep, setOnBoardingStep] = useState(0);
   const [gettingPermissions, setGettingPermissions] = useState(false);
   const {createEntryTable} = useDatabaseHooks();
-  const {setCreateEntryTime, setOnboardingTime, setCalendars} =
-    useSettingsHooks();
+  // const {setCreateEntryTime, setOnboardingTime, setCalendars} =
+  // useSettingsHooks();
+
   const [initalScreen, setInitalScreen] = useState(true);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const CalendarEvents = new NativeEventEmitter(NativeModules.Location);
@@ -70,7 +71,8 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
   };
 
   const finalStep = async hour => {
-    setCreateEntryTime(hour);
+    // setCreateEntryTime(hour);
+    useSettingsHooks.set('settings.createEntryTime', hour);
     var date = new Date(Date.now());
     // date.setSeconds(date.getSeconds() + 10);
 
@@ -81,8 +83,10 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
     date.setMinutes(0);
     date.setSeconds(0);
     date.setMilliseconds(0);
-    setOnboardingTime(date.getTime());
-    setCreateEntryTime(hour);
+    // setOnboardingTime(date.getTime());
+    useSettingsHooks.set('settings.onboardingTime', date.getTime());
+
+    // setCreateEntryTime(hour);
     await onCreateTriggerNotification({
       first: true,
       time: date.getTime(),
@@ -258,7 +262,11 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
                         CalendarEvents.addListener('calendarChange', event => {
                           console.log('calendarChange EVENT', {event});
                           if (event !== 'null') {
-                            setCalendars(JSON.stringify(event));
+                            // setCalendars(JSON.stringify(event));
+                            useSettingsHooks.set(
+                              'settings.calendars',
+                              JSON.stringify(event),
+                            );
                           }
                           CalendarEvents.removeAllListeners('calendarChange');
                         });

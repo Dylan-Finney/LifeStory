@@ -54,6 +54,9 @@ var presentingVC = RCTPresentedViewController()
           switch status {
           case .notDetermined: calendarInital = true; requestAccessToCalendar("Calendar"); semaphore.wait(); calendarInital = false;
           case .authorized: fetchEventsFromCalendar("Calendar")
+          case .fullAccess: fetchEventsFromCalendar("Calendar")
+          case .restricted: fetchEventsFromCalendar("Calendar")
+          case .writeOnly: calendarDenied = true
           case .denied: calendarDenied = true
           default: break
           }
@@ -62,17 +65,33 @@ var presentingVC = RCTPresentedViewController()
 
   
   func requestAccessToCalendar(_ calendarTitle: String) {
-    eventStore.requestAccess(to: EKEntityType.event) { (accessGranted, error) in
-      if accessGranted == true {
-        // self.fetchEventsFromCalendar(calendarTitle)
-        self.chooserOpen()
+    if #available(iOS 17, *) {
+      eventStore.requestFullAccessToEvents { (accessGranted, error) in
+        if accessGranted == true {
+          // self.fetchEventsFromCalendar(calendarTitle)
+          self.chooserOpen()
 
-      } else {
-        self.calendarDenied = true
-      self.semaphore.signal()
+        } else {
+          self.calendarDenied = true
+        self.semaphore.signal()
 
+        }
       }
+    } else if #available(iOS 6, *) {
+      eventStore.requestAccess(to: EKEntityType.event) { (accessGranted, error) in
+        if accessGranted == true {
+          // self.fetchEventsFromCalendar(calendarTitle)
+          self.chooserOpen()
+
+        } else {
+          self.calendarDenied = true
+        self.semaphore.signal()
+
+        }
+      }
+
     }
+    
   }
 
   
@@ -166,7 +185,7 @@ for localIdentifier in calendarIdentifiers {
     presentingVC = RCTPresentedViewController()
     let vc = EKCalendarChooser(selectionStyle: .multiple, displayStyle: .allCalendars, entityType: .event, eventStore: eventStore)
     vc.showsDoneButton = true
-            vc.showsCancelButton = true
+_            vc.showsCancelButton = true
     vc.delegate = self
 
     vc.selectedCalendars = selectedCalendars

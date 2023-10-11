@@ -105,19 +105,19 @@ const openai = new OpenAIApi(configuration);
 const {retrieveSpecificData, saveEntryData, updateEntryData, createEntryTable} =
   useDatabaseHooks();
 export default FullHomeView = ({route, navigation}) => {
-  const {
-    onBoarding,
-    setOnBoarding,
-    photoAnalysis,
-    includeDownloadedPhotos,
-    setIncludeDownloadedPhotos,
-    setPhotoAnalysis,
-    locationAliases,
-    createEntryTime,
-    language,
-    globalWritingSettings,
-    onboardingTime,
-  } = useSettingsHooks();
+  // const {
+  //   onBoarding,
+  //   setOnBoarding,
+  //   photoAnalysis,
+  //   includeDownloadedPhotos,
+  //   setIncludeDownloadedPhotos,
+  //   setPhotoAnalysis,
+  //   locationAliases,
+  //   createEntryTime,
+  //   language,
+  //   globalWritingSettings,
+  //   onboardingTime,
+  // } = useSettingsHooks();
   const baseEntry = {
     tags: [],
     time: Date.now(),
@@ -152,7 +152,8 @@ export default FullHomeView = ({route, navigation}) => {
     generated: false,
     entry: '',
   };
-  const {loadingEntries, entries, setEntries} = useContext(AppContext);
+  const {loadingEntries, entries, setEntries, onBoarding, setOnBoarding} =
+    useContext(AppContext);
 
   const [loading, setLoading] = useState(false);
 
@@ -175,6 +176,9 @@ export default FullHomeView = ({route, navigation}) => {
   const [loadingMessage, setLoadingMessage] = useState('');
 
   const [screen, setScreen] = useState(screenValues.READ);
+  // const [onBoarding, setOnBoarding] = useState(
+  //   useSettingsHooks.getBoolean('onboarding'),
+  // );
 
   const [showModal, setShowModal] = useState(false);
   const [currentRichModeEntryIndex, setCurrentRichModeEntryIndex] = useState();
@@ -182,6 +186,8 @@ export default FullHomeView = ({route, navigation}) => {
   const [date, setDate] = useState(new Date());
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState(false);
+  console.log('useSettingsHooks', useSettingsHooks.getBoolean('onboarding'));
+  console.log('onboarding', onBoarding);
   useEffect(() => {
     console.log(route);
     if (route.params?.entry) {
@@ -218,7 +224,7 @@ export default FullHomeView = ({route, navigation}) => {
   }, [entries]);
 
   const getPermissionsAndData = async date => {
-    if (onBoarding === false) {
+    if (useSettingsHooks.getBoolean('onboarding') === false) {
       setGeneratingEntry(true);
     }
 
@@ -234,7 +240,9 @@ export default FullHomeView = ({route, navigation}) => {
 
     // let endOfUnixTime = moment(date).endOf('day').unix();
     let endOfUnixTime = new Date(date);
-    endOfUnixTime.setHours(createEntryTime);
+    endOfUnixTime.setHours(
+      useSettingsHooks.getNumber('settings.createEntryTime'),
+    );
     endOfUnixTime.setMinutes(0);
     endOfUnixTime.setSeconds(0);
     endOfUnixTime.setMilliseconds(0);
@@ -272,11 +280,12 @@ export default FullHomeView = ({route, navigation}) => {
     //GET PHOTOS
     console.log('photos');
     setLoadingMessage('Getting Photo Events');
-    var includeDownloadedPhotosCheck = includeDownloadedPhotos || false;
+    var includeDownloadedPhotosCheck =
+      useSettingsHooks.getBoolean('settings.includeDownloadedPhotos') || false;
     try {
       photos = await Location.getPhotosFromNative();
       // console.log({photos});
-      if (onBoarding === true) {
+      if (useSettingsHooks.getBoolean('settings.onBoarding') === true) {
         await new Promise((resolve, reject) => {
           Alert.alert(
             'Send Photos for Analysis',
@@ -287,7 +296,8 @@ export default FullHomeView = ({route, navigation}) => {
                 text: 'Yes',
                 style: 'default',
                 onPress: () => {
-                  setPhotoAnalysis(true);
+                  // setPhotoAnalysis(true);
+                  useSettingsHooks.set('settings.photoAnalysis', true);
                   resolve(true);
                 },
               },
@@ -295,7 +305,8 @@ export default FullHomeView = ({route, navigation}) => {
                 text: 'No',
                 style: 'cancel',
                 onPress: () => {
-                  setPhotoAnalysis(false);
+                  // setPhotoAnalysis(false);
+                  useSettingsHooks.set('settings.photoAnalysis', false);
                   resolve(false);
                 },
               },
@@ -313,7 +324,11 @@ export default FullHomeView = ({route, navigation}) => {
                 text: 'Yes',
                 style: 'default',
                 onPress: () => {
-                  setIncludeDownloadedPhotos(true);
+                  // setIncludeDownloadedPhotos(true);
+                  useSettingsHooks.set(
+                    'settings.includeDownloadedPhotos',
+                    true,
+                  );
                   includeDownloadedPhotosCheck = true;
                   resolve(true);
                 },
@@ -322,7 +337,11 @@ export default FullHomeView = ({route, navigation}) => {
                 text: 'No',
                 style: 'cancel',
                 onPress: () => {
-                  setIncludeDownloadedPhotos(false);
+                  // setIncludeDownloadedPhotos(false);
+                  useSettingsHooks.set(
+                    'settings.includeDownloadedPhotos',
+                    false,
+                  );
                   includeDownloadedPhotosCheck = false;
                   resolve(false);
                 },
@@ -360,7 +379,9 @@ export default FullHomeView = ({route, navigation}) => {
     // console.log({photos});
 
     var entryCreationTime = new Date(Date.now());
-    entryCreationTime.setHours(createEntryTime);
+    entryCreationTime.setHours(
+      useSettingsHooks.getNumber('settings.createEntryTime'),
+    );
     entryCreationTime.setMinutes(0);
     entryCreationTime.setSeconds(0);
     entryCreationTime.setMilliseconds(0);
@@ -380,7 +401,9 @@ export default FullHomeView = ({route, navigation}) => {
 
     // let endOfUnixTime = moment(date).endOf('day').unix();
     let endOfUnixTime = new Date(date);
-    endOfUnixTime.setHours(createEntryTime);
+    endOfUnixTime.setHours(
+      useSettingsHooks.getNumber('settings.createEntryTime'),
+    );
     endOfUnixTime.setMinutes(0);
     endOfUnixTime.setSeconds(0);
     endOfUnixTime.setMilliseconds(0);
@@ -394,7 +417,10 @@ export default FullHomeView = ({route, navigation}) => {
       locations.length === 0 && events.length === 0 && photos.length === 0
         ? false
         : true;
-    if (photos.length > 0 && photoAnalysis === true) {
+    if (
+      photos.length > 0 &&
+      useSettingsHooks.getBoolean('settings.photoAnalysis') === true
+    ) {
       setLoadingMessage('Getting Photo Labels');
       await Promise.all(
         photos.map(async photo => {
@@ -684,7 +710,9 @@ export default FullHomeView = ({route, navigation}) => {
         photos = res;
       });
     }
-    var locationAliasesArray = JSON.parse(locationAliases);
+    var locationAliasesArray = JSON.parse(
+      useSettingsHooks.getString('settings.locationAliases'),
+    );
     setLoadingMessage('Getting Location Aliases');
     const getAddressName = address => {
       var aliasObj = locationAliasesArray.find(
@@ -949,7 +977,7 @@ export default FullHomeView = ({route, navigation}) => {
         new Date(
           filteredEntries.sort((a, b) => b.time - a.time)[0].time,
         ).getDate() < now.getDate() &&
-        now.getHours() >= createEntryTime
+        now.getHours() >= useSettingsHooks.getNumber('settings.createEntryTime')
       ) {
         console.log('Time to generate entry');
         await generateEntry({
@@ -958,14 +986,16 @@ export default FullHomeView = ({route, navigation}) => {
         });
         onCreateTriggerNotification({
           first: false,
-          createEntryTime,
+          createEntryTime: useSettingsHooks.getNumber(
+            'settings.createEntryTime',
+          ),
           time: null,
         });
       } else {
         console.log('Not Ready');
       }
     } else {
-      if (onboardingTime < Date.now()) {
+      if (useSettingsHooks.getNumber('settings.onboardingTime') < Date.now()) {
         console.log('Time to generate entry');
         await generateEntry({
           data: await getPermissionsAndData(now.getTime()),
@@ -973,7 +1003,9 @@ export default FullHomeView = ({route, navigation}) => {
         });
         onCreateTriggerNotification({
           first: false,
-          createEntryTime,
+          createEntryTime: useSettingsHooks.getNumber(
+            'settings.createEntryTime',
+          ),
           time: null,
         });
       } else {
@@ -989,7 +1021,7 @@ export default FullHomeView = ({route, navigation}) => {
     if (
       ((!loadingEntries && clickedNotification === null) ||
         (!loadingEntries && clickedNotification === true)) &&
-      !onBoarding
+      !useSettingsHooks.getBoolean('onboarding')
     ) {
       console.log({loadingEntries, clickedNotification});
       checkIfReadyToGenerate();
@@ -1171,6 +1203,8 @@ export default FullHomeView = ({route, navigation}) => {
           <Onboarding
             endOnboarding={() => {
               setOnBoarding(false);
+              useSettingsHooks.set('onboarding', false);
+              console.log('END ONBOARDING');
             }}
             generateEntry={generateEntry}
             getPermissionsAndData={getPermissionsAndData}
@@ -1804,7 +1838,9 @@ export default FullHomeView = ({route, navigation}) => {
                       <View style={{gap: 20}}>
                         <Image
                           source={
-                            createEntryTime === 8
+                            useSettingsHooks.getNumber(
+                              'settings.createEntryTime',
+                            ) === 8
                               ? require('./src/assets/AMImage.png')
                               : require('./src/assets/PMImage.png')
                           }
@@ -1826,7 +1862,11 @@ export default FullHomeView = ({route, navigation}) => {
                             fontSize: 23,
                           }}>
                           Please wait till 8
-                          {createEntryTime === 8 ? 'AM' : 'PM'}
+                          {useSettingsHooks.getNumber(
+                            'settings.createEntryTime',
+                          ) === 8
+                            ? 'AM'
+                            : 'PM'}
                         </Text>
                         <Text
                           allowFontScaling={false}

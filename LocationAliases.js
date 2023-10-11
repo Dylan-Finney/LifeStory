@@ -4,6 +4,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Button,
 } from 'react-native';
 import {verticalScale} from './src/utils/Metrics';
 import {useEffect, useState, createRef, useRef} from 'react';
@@ -12,15 +13,19 @@ export default LocationAliasesView = ({route, navigation}) => {
   //   const [locations, setLocations] = useState(
   //     '[{"address":"17 Hawthorne Lane", "alias": "Home"}]',
   //   );
-  const [dataArr, setDataArr] = useState([]);
+  const [dataArr, setDataArr] = useState(
+    JSON.parse(useSettingsHooks.getString('settings.locationAliases')),
+  );
   const [deleteMode, setDeleteMode] = useState(true);
   const [add, setAdd] = useState(false);
-  const {locationAliases, setLocationAliases} = useSettingsHooks();
+  // const {locationAliases, setLocationAliases} = useSettingsHooks();
   const ScrollViewRef = useRef(null);
-  useEffect(() => {
-    console.log(locationAliases);
-    setDataArr(JSON.parse(locationAliases));
-  }, [locationAliases]);
+  // useEffect(() => {
+  //   console.log(useSettingsHooks.getString('settings.locationAliases'));
+  //   setDataArr(
+  //     JSON.parse(useSettingsHooks.getString('settings.locationAliases')),
+  //   );
+  // }, [useSettingsHooks.getString('settings.locationAliases')]);
   useEffect(() => {
     if (add === true) {
       //   console.log(ScrollViewRef.current);
@@ -29,6 +34,27 @@ export default LocationAliasesView = ({route, navigation}) => {
       //   setAdd(false);
     }
   }, [dataArr.length]);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <Button
+          onPress={() => {
+            useSettingsHooks.set(
+              'settings.locationAliases',
+              JSON.stringify(dataArr),
+            );
+            navigation.navigate({
+              name: 'Settings',
+              merge: true,
+            });
+          }}
+          title="< Settings"
+        />
+      ),
+      headerBackVisible: false,
+    });
+  }, [navigation, dataArr]);
 
   return (
     <View
@@ -118,7 +144,11 @@ export default LocationAliasesView = ({route, navigation}) => {
                     data.address = text;
                     dataArrCopy[i] = dataCopy;
 
-                    setLocationAliases(JSON.stringify(dataArrCopy));
+                    // useSettingsHooks.set(
+                    //   'settings.locationAliases',
+                    //   JSON.stringify(dataArrCopy),
+                    // );
+                    setDataArr([...dataArrCopy]);
                   }}
                   placeholder="662 Timothy Terrace"
                 />
@@ -139,7 +169,11 @@ export default LocationAliasesView = ({route, navigation}) => {
                     data.alias = text;
                     dataArrCopy[i] = dataCopy;
 
-                    setLocationAliases(JSON.stringify(dataArrCopy));
+                    // useSettingsHooks.set(
+                    //   'settings.locationAliases',
+                    //   JSON.stringify(dataArrCopy),
+                    // );
+                    setDataArr([...dataArrCopy]);
                   }}
                   placeholder="Home"
                 />
@@ -159,7 +193,11 @@ export default LocationAliasesView = ({route, navigation}) => {
                       // data.alias = text;
                       dataArrCopy.splice(i, 1);
 
-                      setLocationAliases(JSON.stringify(dataArrCopy));
+                      // useSettingsHooks.set(
+                      //   'settings.locationAliases',
+                      //   JSON.stringify(dataArrCopy),
+                      // );
+                      setDataArr([...dataArrCopy]);
                     }}>
                     <Text style={{textAlign: 'center', color: 'red'}}>X</Text>
                   </TouchableOpacity>
@@ -171,12 +209,15 @@ export default LocationAliasesView = ({route, navigation}) => {
       </ScrollView>
       <TouchableOpacity
         onPress={() => {
-          setLocationAliases(
-            JSON.stringify([
-              ...JSON.parse(locationAliases),
-              {address: '', alias: ''},
-            ]),
-          );
+          setDataArr([...dataArr, {address: '', alias: ''}]);
+          // useSettingsHooks.set(
+          //   'settings.locationAliases',
+          //   JSON.stringify([
+          //     ...JSON.parse(locationAliases),
+          //     {address: '', alias: ''},
+          //   ]),
+          // );
+
           setAdd(true);
           //   ScrollViewRef.current?.scrollToEnd({animated: true});
           //   ScrollViewRef.current?.scrollTo({y: 0});

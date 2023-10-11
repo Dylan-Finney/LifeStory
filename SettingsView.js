@@ -29,22 +29,25 @@ export default SettingsView = ({route, navigation}) => {
 
   const {deleteTable, createEntryTable, createVisitsTable, resetTable} =
     useDatabaseHooks();
-  const {
-    setOnBoarding,
-    calendars,
-    setCalendars,
-    photoAnalysis,
-    setPhotoAnalysis,
-    includeDownloadedPhotos,
-    setIncludeDownloadedPhotos,
-    language,
-    setLanguage,
-    globalWritingSettings,
-    setGlobalWritingSettings,
-  } = useSettingsHooks();
-  const [tempLanguage, setTempLanguage] = useState(language);
+  // const {
+  //   setOnBoarding,
+  //   calendars,
+  //   setCalendars,
+  //   photoAnalysis,
+  //   setPhotoAnalysis,
+  //   includeDownloadedPhotos,
+  //   setIncludeDownloadedPhotos,
+  //   language,
+  //   setLanguage,
+  //   globalWritingSettings,
+  //   setGlobalWritingSettings,
+  // } = useSettingsHooks();
+  // useSettingsHooks;
+  const [tempLanguage, setTempLanguage] = useState(
+    useSettingsHooks.getString('settings.language'),
+  );
   const [tempWritingSettings, setTempWritingSettings] = useState(
-    JSON.parse(globalWritingSettings),
+    JSON.parse(useSettingsHooks.getString('settings.globalWritingSettings')),
   );
   const CalendarEvents = new NativeEventEmitter(NativeModules.Location);
 
@@ -222,19 +225,26 @@ export default SettingsView = ({route, navigation}) => {
             onPress={() => {
               switch (modalScreen) {
                 case 'language':
-                  setLanguage(tempLanguage);
+                  useSettingsHooks.set('settings.language', tempLanguage);
                   break;
                 case 'writing':
-                  setGlobalWritingSettings(JSON.stringify(tempWritingSettings));
+                  useSettingsHooks.set(
+                    'settings.globalWritingSettings',
+                    JSON.stringify(tempWritingSettings),
+                  );
                   break;
               }
 
               setModalVisible(false);
             }}
             disabled={
-              (modalScreen === 'language' && language === tempLanguage) ||
+              (modalScreen === 'language' &&
+                useSettingsHooks.getString('settings.language') ===
+                  tempLanguage) ||
               (modalScreen === 'writing' &&
-                (JSON.parse(globalWritingSettings) === tempWritingSettings ||
+                (JSON.parse(
+                  useSettingsHooks.getString('settings.globalWritingSettings'),
+                ) === tempWritingSettings ||
                   tempWritingSettings.title.length > 200 ||
                   tempWritingSettings.body.length > 200 ||
                   tempWritingSettings.generate.length > 200))
@@ -298,9 +308,8 @@ export default SettingsView = ({route, navigation}) => {
               </Text>
               <View>
                 <Text allowFontScaling={false}>Generate</Text>
-                <Text
+                <TextInput
                   allowFontScaling={false}
-                  Input
                   multiline
                   value={tempWritingSettings.generate}
                   onChangeText={text => {
@@ -316,9 +325,8 @@ export default SettingsView = ({route, navigation}) => {
                   {tempWritingSettings.generate.length}/200
                 </Text>
                 <Text allowFontScaling={false}>Title Rewrite</Text>
-                <Text
+                <TextInput
                   allowFontScaling={false}
-                  Input
                   multiline
                   value={tempWritingSettings.title}
                   onChangeText={text => {
@@ -334,9 +342,8 @@ export default SettingsView = ({route, navigation}) => {
                   {tempWritingSettings.title.length}/200
                 </Text>
                 <Text allowFontScaling={false}>Body Rewrite</Text>
-                <Text
+                <TextInput
                   allowFontScaling={false}
-                  Input
                   multiline
                   value={tempWritingSettings.body}
                   onChangeText={text => {
@@ -361,7 +368,7 @@ export default SettingsView = ({route, navigation}) => {
         allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
-          setTempLanguage(language);
+          setTempLanguage(useSettingsHooks.getString('settings.language'));
           setModalScreen('language');
           setModalVisible(true);
         }}>
@@ -371,7 +378,11 @@ export default SettingsView = ({route, navigation}) => {
         allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
-          setTempWritingSettings(JSON.parse(globalWritingSettings));
+          setTempWritingSettings(
+            JSON.parse(
+              useSettingsHooks.getString('settings.globalWritingSettings'),
+            ),
+          );
           setModalScreen('writing');
           setModalVisible(true);
         }}>
@@ -382,7 +393,7 @@ export default SettingsView = ({route, navigation}) => {
         allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
-          if (photoAnalysis === true) {
+          if (useSettingsHooks.getBoolean('settings.photoAnalysis') === true) {
             Alert.alert(
               'Warning!',
               'Photos taken from the camera will not be analyzed and, as such, no descriptions can be generated about them.\nDo you wish to proceed?',
@@ -391,7 +402,8 @@ export default SettingsView = ({route, navigation}) => {
                   text: 'Confirm',
                   style: 'default',
                   onPress: () => {
-                    setPhotoAnalysis(false);
+                    // setPhotoAnalysis(false);
+                    useSettingsHooks.set('settings.photoAnalysis', false);
                   },
                 },
                 {text: 'Cancel', style: 'cancel'},
@@ -407,7 +419,7 @@ export default SettingsView = ({route, navigation}) => {
                   text: 'Confirm',
                   style: 'default',
                   onPress: () => {
-                    setPhotoAnalysis(true);
+                    useSettingsHooks.set('settings.photoAnalysis', true);
                   },
                 },
                 {text: 'Cancel', style: 'cancel'},
@@ -415,7 +427,7 @@ export default SettingsView = ({route, navigation}) => {
             );
           }
         }}>
-        {photoAnalysis
+        {useSettingsHooks.getBoolean('settings.photoAnalysis')
           ? 'Stop photos being analyzed'
           : 'Allow photos to be analyzed'}
       </Text>
@@ -423,7 +435,10 @@ export default SettingsView = ({route, navigation}) => {
         allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
-          if (includeDownloadedPhotos === true) {
+          if (
+            useSettingsHooks.getBoolean('settings.includeDownloadedPhotos') ===
+            true
+          ) {
             Alert.alert(
               'Warning!',
               'Photos downloaded or from Third Party apps will NOT be included in your entries.\nDo you wish to proceed?',
@@ -432,7 +447,10 @@ export default SettingsView = ({route, navigation}) => {
                   text: 'Confirm',
                   style: 'default',
                   onPress: () => {
-                    setIncludeDownloadedPhotos(false);
+                    useSettingsHooks.set(
+                      'settings.includeDownloadedPhotos',
+                      false,
+                    );
                   },
                 },
                 {text: 'Cancel', style: 'cancel'},
@@ -448,7 +466,10 @@ export default SettingsView = ({route, navigation}) => {
                   text: 'Confirm',
                   style: 'default',
                   onPress: () => {
-                    setIncludeDownloadedPhotos(true);
+                    useSettingsHooks.set(
+                      'settings.includeDownloadedPhotos',
+                      true,
+                    );
                   },
                 },
                 {text: 'Cancel', style: 'cancel'},
@@ -456,7 +477,7 @@ export default SettingsView = ({route, navigation}) => {
             );
           }
         }}>
-        {includeDownloadedPhotos
+        {useSettingsHooks.getBoolean('settings.includeDownloadedPhotos')
           ? 'EXCLUDE Downloaded Photos'
           : 'INCLUDE Downloaded Photos'}
       </Text>
@@ -500,7 +521,8 @@ export default SettingsView = ({route, navigation}) => {
           CalendarEvents.addListener('calendarChange', event => {
             console.log('calendarChange EVENT', {event});
             if (event !== 'null') {
-              setCalendars(JSON.stringify(event));
+              // setCalendars(JSON.stringify(event));
+              useSettingsHooks.set('settings.calendars', JSON.stringify(event));
             }
             CalendarEvents.removeAllListeners('calendarChange');
           });
@@ -545,7 +567,9 @@ export default SettingsView = ({route, navigation}) => {
                   resetTable('Visits');
                   resetTable('Entries');
                   setEntries([]);
-                  setOnBoarding(true);
+                  // setOnBoarding(true);
+                  useSettingsHooks.set('onboarding', true);
+
                   notifee.cancelAllNotifications();
                   navigation.navigate({
                     name: 'Home',

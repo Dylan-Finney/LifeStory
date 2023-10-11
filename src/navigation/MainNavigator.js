@@ -36,7 +36,10 @@ const MainNavigator = () => {
 
   const [entries, setEntries] = useState([]);
   const [loadingEntries, setLoadingEntries] = useState(true);
-  const {onBoarding, calendars} = useSettingsHooks();
+  const [onBoarding, setOnBoarding] = useState(
+    useSettingsHooks.getBoolean('onboarding'),
+  );
+  // const {onBoarding, calendars} = useSettingsHooks();
 
   useEffect(() => {
     const getEntries = async () => {
@@ -80,9 +83,13 @@ const MainNavigator = () => {
     if (onBoarding === false) {
       setLoadingEntries(true);
       getEntries();
-      console.log({calendars});
+      console.log({
+        calendars: useSettingsHooks.getString('settings.calendars'),
+      });
       try {
-        NativeModules.Location.setCalendarIdentifiers(JSON.parse(calendars));
+        NativeModules.Location.setCalendarIdentifiers(
+          JSON.parse(useSettingsHooks.getString('settings.calendars')),
+        );
       } catch (E) {
         console.error(E);
       }
@@ -97,6 +104,8 @@ const MainNavigator = () => {
     entries,
     setEntries,
     loadingEntries,
+    setOnBoarding,
+    onBoarding,
   };
 
   const CounterEvents = new NativeEventEmitter(NativeModules.Location);
@@ -143,6 +152,8 @@ const MainNavigator = () => {
                   entries={entries}
                   setEntries={setEntries}
                   loadingEntries={loadingEntries}
+                  onBoarding={onBoarding}
+                  setOnBoarding={setOnBoarding}
                 />
               ) : (
                 <AuthNavigator />

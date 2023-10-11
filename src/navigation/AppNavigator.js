@@ -11,11 +11,19 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
 const RootStack = createNativeStackNavigator();
 
-const AppNavigator = ({entries, setEntries, loadingEntries}) => {
+const AppNavigator = ({
+  entries,
+  setEntries,
+  loadingEntries,
+  onBoarding,
+  setOnBoarding,
+}) => {
   const contextValues = {
     entries,
     setEntries,
     loadingEntries,
+    onBoarding,
+    setOnBoarding,
   };
 
   console.log('contextValues app navigator', contextValues);

@@ -1,4 +1,42 @@
-import {MMKVLoader, useMMKVStorage} from 'react-native-mmkv-storage';
+import {MMKV} from 'react-native-mmkv';
+
+const storage = new MMKV();
+
+console.log('STORAGE', storage.getBoolean('onboarding'));
+
+if (storage.getBoolean('onboarding') === undefined) {
+  storage.set('onboarding', true);
+}
+if (storage.getBoolean('settings.photoAnalysis') === undefined) {
+  storage.set('settings.photoAnalysis', false);
+}
+if (storage.getBoolean('settings.includeDownloadedPhotos') === undefined) {
+  storage.set('settings.includeDownloadedPhotos', false);
+}
+if (storage.getString('settings.calendars') === undefined) {
+  storage.set('settings.calendars', '[]');
+}
+if (storage.getString('settings.locationAliases') === undefined) {
+  storage.set('settings.locationAliases', '[]');
+}
+if (storage.getNumber('settings.createEntryTime') === undefined) {
+  storage.set('settings.createEntryTime', 0);
+}
+if (storage.getNumber('settings.onboardingTime') === undefined) {
+  storage.set('settings.onboardingTime', 0);
+}
+if (storage.getString('settings.language') === undefined) {
+  storage.set('settings.language', 'English');
+}
+if (storage.getString('settings.globalWritingSettings') === undefined) {
+  storage.set(
+    'settings.globalWritingSettings',
+    '{"title": "", "body": "", "generate": ""}',
+  );
+}
+
+export default storage;
+/*
 const settingsStorage = new MMKVLoader()
   .withInstanceID('settings')
   .initialize();
@@ -77,3 +115,4 @@ const useSettingsHooks = () => {
 };
 
 export default useSettingsHooks;
+*/
