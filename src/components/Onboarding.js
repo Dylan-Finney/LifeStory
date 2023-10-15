@@ -106,7 +106,12 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
         height: '99%',
         marginHorizontal: horizontalScale(20),
       }}>
-      <View style={{flexGrow: initalScreen === true ? 0 : 1, marginTop: 10}}>
+      <View
+        style={{
+          flexGrow: initalScreen === true ? 0 : 1,
+          marginTop: 10,
+          justifyContent: 'center',
+        }}>
         {initalScreen === true ? (
           <>
             <View style={{alignSelf: 'center'}}>
@@ -122,8 +127,8 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
               <LottieView
                 source={require('../assets/OnboardingAnimation1.json')}
                 style={{
-                  width: horizontalScale(500),
-                  height: verticalScale(500),
+                  width: horizontalScale(450),
+                  height: verticalScale(450),
                   alignSelf: 'center',
                 }}
                 autoPlay
@@ -134,8 +139,8 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
               <LottieView
                 source={require('../assets/OnboardingAnimation2.json')}
                 style={{
-                  width: horizontalScale(500),
-                  height: verticalScale(500),
+                  width: horizontalScale(450),
+                  height: verticalScale(450),
                   alignSelf: 'center',
                 }}
                 autoPlay
@@ -146,8 +151,8 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
               <LottieView
                 source={require('../assets/OnboardingAnimation3.json')}
                 style={{
-                  width: horizontalScale(500),
-                  height: verticalScale(500),
+                  width: horizontalScale(450),
+                  height: verticalScale(450),
                   alignSelf: 'center',
                 }}
                 autoPlay

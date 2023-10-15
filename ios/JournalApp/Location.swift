@@ -23,6 +23,8 @@ var presentingVC = RCTPresentedViewController()
   var endDate: Date!
   let semaphore = DispatchSemaphore(value: 0)
   let photoThread = DispatchSemaphore(value: 1)
+  var reverseGeoCodePhoto = DispatchSemaphore(value: 0)
+
   var calendarDenied = false
   var photoAccess = false
   var calendarIdentifiers: [String] = []
@@ -185,7 +187,7 @@ for localIdentifier in calendarIdentifiers {
     presentingVC = RCTPresentedViewController()
     let vc = EKCalendarChooser(selectionStyle: .multiple, displayStyle: .allCalendars, entityType: .event, eventStore: eventStore)
     vc.showsDoneButton = true
-_            vc.showsCancelButton = true
+    vc.showsCancelButton = true
     vc.delegate = self
 
     vc.selectedCalendars = selectedCalendars
@@ -310,6 +312,7 @@ _            vc.showsCancelButton = true
 
       newPhoto["localIdentifier"] = object.localIdentifier
       PHImageManager.default().requestImage(for: object, targetSize: CGSize(width: 1000,height: 1000), contentMode: .aspectFit, options: requestOptions) { image, _ in
+        self.reverseGeoCodePhoto = DispatchSemaphore(value: 0)
         if let pngData = image?.pngData() {
 //          newPhoto["data"] = String(decoding: pngData, as: UTF8.self)
           newPhoto["data"] = pngData.base64EncodedString()
@@ -324,23 +327,39 @@ _            vc.showsCancelButton = true
         newPhoto["creation"] = "null"
       }
       if let location = object.location {
+        print("GETTING PHOTO")
         newPhoto["lat"] = String(location.coordinate.latitude)
         newPhoto["lon"] = String(location.coordinate.longitude)
         let clLocation = CLLocation(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
-        self.geoCoder.reverseGeocodeLocation(clLocation) { placemarks, _ in
-          if let place = placemarks?.first {
+//        let a = CLLocation(latitude: <#T##CLLocationDegrees#>, longitude: <#T##CLLocationDegrees#>)
+        
+        CLGeocoder().reverseGeocodeLocation(location) { placemarks, error in
+          print("GETTING LOCATION")
+          if let error = error as? CLError {
+//            print(error.localizedDescription.debugDescription)
+            newPhoto["error"] = error.localizedDescription.debugDescription
+          } else if let place = placemarks?.first {
             let description = "\(place)"
-            newPhoto["loc"] = description
+//            print(description)
+
+            newPhoto["description"] = description
+//            print(newPhoto["description"] ?? "")
+
           }
+          self.reverseGeoCodePhoto.signal()
         }
       } else {
         newPhoto["lat"] = "null"
         newPhoto["lon"] = "null"
         newPhoto["loc"] = "null"
 
+
       }
+      self.reverseGeoCodePhoto.wait()
       self.testIdentifiers.append(newPhoto)
-      
+      print("SHOW LOCATION")
+      print(newPhoto["description"] ?? "No Desc")
+            
     })
 
   }

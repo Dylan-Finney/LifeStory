@@ -13,6 +13,7 @@ import {
   Button,
   NativeEventEmitter,
   Animated,
+  RefreshControl,
   // Modal,
 } from 'react-native';
 
@@ -79,6 +80,7 @@ import PhotoEventIcon from './src/assets/event-photo.svg';
 
 import {emotions} from './Utils';
 import {ImageAsset} from './NativeImage';
+import MapView, {Marker} from 'react-native-maps';
 // const {
 //   DetectFacesCommand,
 //   DetectLabelsCommand,
@@ -186,6 +188,7 @@ export default FullHomeView = ({route, navigation}) => {
   const [date, setDate] = useState(new Date());
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState(false);
+  const swipeableRef = useRef(null);
   console.log('useSettingsHooks', useSettingsHooks.getBoolean('onboarding'));
   console.log('onboarding', onBoarding);
   useEffect(() => {
@@ -273,6 +276,8 @@ export default FullHomeView = ({route, navigation}) => {
         return {
           description: obj.description.split(',')[0],
           time: obj.date,
+          lat: obj.lat,
+          long: obj.lon,
         };
       })),
         console.log(locations);
@@ -284,8 +289,8 @@ export default FullHomeView = ({route, navigation}) => {
       useSettingsHooks.getBoolean('settings.includeDownloadedPhotos') || false;
     try {
       photos = await Location.getPhotosFromNative();
-      // console.log({photos});
-      if (useSettingsHooks.getBoolean('settings.onBoarding') === true) {
+      console.log({photos});
+      if (useSettingsHooks.getBoolean('onboarding') === true) {
         await new Promise((resolve, reject) => {
           Alert.alert(
             'Send Photos for Analysis',
@@ -374,6 +379,7 @@ export default FullHomeView = ({route, navigation}) => {
   const generateEntry = async ({data, date}) => {
     setGeneratingEntry(true);
     console.log('Generate');
+    // var isGenerated = generated === true ? 1 : 0;
     var {locations, events, photos} = data;
 
     // console.log({photos});
@@ -679,7 +685,9 @@ export default FullHomeView = ({route, navigation}) => {
           });
           const str = `an image has been described through tags, these are the tags used:
                 ${labelsWithTitle.map(label => label.title).toString()}
-          string these tags together into a full ${language} description of the image, do not make up any details not described by those tags. Do not try to describe how the image feels. Keep it short.`;
+          string these tags together into a full ${useSettingsHooks.getString(
+            'language',
+          )} description of the image, do not make up any details not described by those tags. Do not try to describe how the image feels. Keep it short.`;
           console.log({
             str,
             labelsWithTitle,
@@ -687,18 +695,18 @@ export default FullHomeView = ({route, navigation}) => {
           });
           setLoadingMessage('Getting Photo Captions');
           try {
-            const completion = await openai.createChatCompletion({
-              // model: 'gpt-3.5-turbo',
-              model: 'gpt-4',
-              messages: [{role: 'user', content: str}],
-            });
-            console.log({
-              completion: completion.data.choices[0].message?.content,
-            });
+            // const completion = await openai.createChatCompletion({
+            //   // model: 'gpt-3.5-turbo',
+            //   model: 'gpt-4',
+            //   messages: [{role: 'user', content: str}],
+            // });
+            // console.log({
+            //   completion: completion.data.choices[0].message?.content,
+            // });
             return {
               ...photo,
               labels: labelsWithTitle,
-              description: completion.data.choices[0].message?.content,
+              // description: completion.data.choices[0].message?.content,
             };
           } catch (e) {
             console.error('Error with creating photo caption', e);
@@ -728,19 +736,25 @@ export default FullHomeView = ({route, navigation}) => {
     if (autoGenerate === true) {
       setLoadingMessage('Preparing Entry');
       locations = locations.map(location => {
-        var address = location.description.split(',')[0];
-        var alias = getAddressName(address);
+        var address = location.description?.split(',')[0];
+        var alias = getAddressName(address || '');
+        console.log({location});
         entryEvents.push({
           type: 'location',
           id: counter,
           time: location.time,
           title: alias !== '' ? `${alias} (${address})` : address,
           additionalNotes: '',
+          coords: {
+            lat: location.lat,
+            long: location.long,
+          },
         });
         return {
           ...location,
           id: counter++,
           alias,
+          description: location.description || 'None',
         };
       });
       events = events.map(event => {
@@ -763,19 +777,26 @@ export default FullHomeView = ({route, navigation}) => {
         };
       });
       photos = photos.map(photo => {
+        var address = photo.description?.split(',')[0] || '';
+        var alias = address === '' ? '' : getAddressName(address);
+        console.log(photo);
         entryEvents.push({
           type: 'photo',
           id: counter,
           time: Math.floor(parseFloat(photo.creation) * 1000),
           localIdentifier: photo.localIdentifier,
           title: photo.name,
-          description: photo.description,
+          description: alias !== '' ? `${alias} (${address})` : address,
+          coords: {
+            lat: photo.lat,
+            long: photo.lon,
+          },
         });
         return {
           ...photo,
           creation: Math.floor(parseFloat(photo.creation) * 1000),
           id: counter++,
-          description: photo.description || 'None',
+          description: alias !== '' ? alias : address,
           labels: photo.labels || 'null',
         };
       });
@@ -785,10 +806,18 @@ export default FullHomeView = ({route, navigation}) => {
           ? `Locations Visited:
               ${locations.map(
                 location =>
-                  `${
-                    location.alias !== ''
-                      ? location.alias
-                      : location.description
+                  ` ${
+                    location.description !== ''
+                      ? `${
+                          location.alias !== ''
+                            ? location.alias
+                            : location.description
+                        }`
+                      : `${
+                          location.lat !== 'null' ? `Lat: ${location.lat}` : ''
+                        } ${
+                          location.lon !== 'null' ? `Lon: ${location.lon}` : ''
+                        }`
                   } @${moment(location.time).format('LT')} (id:${location.id})`,
               )}`
           : ''
@@ -821,8 +850,12 @@ export default FullHomeView = ({route, navigation}) => {
                           .map(label => label.title)
                           .toString()}`
                       : ''
-                  } ${photo.lat !== 'null' ? `Lat: ${photo.lat}` : ''} ${
-                    photo.lon !== 'null' ? `Lon: ${photo.lon}` : ''
+                  } ${
+                    photo.description !== ''
+                      ? `${photo.description}`
+                      : `${photo.lat !== 'null' ? `Lat: ${photo.lat}` : ''} ${
+                          photo.lon !== 'null' ? `Lon: ${photo.lon}` : ''
+                        }`
                   } @${moment(photo.creation).format('LT')}(id:${photo.id})`,
               )}`
                   : ''
@@ -839,8 +872,12 @@ export default FullHomeView = ({route, navigation}) => {
           messages: [
             {
               role: 'system',
-              content: `You are to act as my journal writer. I will give you a list of events that took place today and you are to generate a journal entry based on that. The diary entry should be a transcription of the events that you are told. Do not add superfluous details that you are unsure if they actually happened as this will be not useful to me. Add a [[X]] every time one of the events has been completed, e.g. I went to a meeting [[X]] then I went to the beach. [[X]] Replace X with the number assigned to the event. If at the end of a sentence, add after the closing punctuation. There is no need for sign ins (Dear Diary) or send offs (Yours sincerely). Do not introduce any details, events, etc not supplied by the user. Keep it short. Each photo will be described by a series of tags. Write the entry in the ${language} language. ${
-                JSON.parse(globalWritingSettings).generate
+              content: `You are to act as my journal writer. I will give you a list of events that took place today and you are to generate a journal entry based on that. The diary entry should be a transcription of the events that you are told. Photos will have labelling content, location and time metadata. Do not add superfluous details that you are unsure if they actually happened as this will be not useful to me. Add a [[X]] every time one of the events has been completed, e.g. 'I went to a meeting [[X]] then I went to the beach. [[X]]' Replace X with the number assigned to the event. If at the end of a sentence, add after the closing punctuation. There is no need for sign ins (Dear Diary) or send offs (Yours sincerely). Do not introduce any details, events, etc not supplied by the user. Keep it short. Each photo will be described by a series of tags. Write the entry in the ${useSettingsHooks.getString(
+                'language',
+              )} language. ${
+                JSON.parse(
+                  useSettingsHooks.getString('settings.globalWritingSettings'),
+                ).generate
               }`,
             },
             {role: 'user', content: eventListStr},
@@ -863,6 +900,7 @@ export default FullHomeView = ({route, navigation}) => {
         events: entryEvents,
         entry: response,
         title: 'New Entry',
+        generated: 1,
       });
     } else {
       setLoadingMessage('Creating Empty Entry');
@@ -873,6 +911,7 @@ export default FullHomeView = ({route, navigation}) => {
         events: [],
         entry: 'No events found.',
         title: 'New Entry',
+        generated: 1,
       });
       console.log('CREATE NEW ENTRY', 'No events found');
     }
@@ -970,8 +1009,23 @@ export default FullHomeView = ({route, navigation}) => {
 
   const checkIfReadyToGenerate = async () => {
     var now = new Date(Date.now());
+    const filteredEntries = entries.filter(
+      entry => entry.generated === true || 1,
+    );
+    console.log('CHECKING IF READY TO GENERATE');
+
     console.log({entries});
-    const filteredEntries = entries.filter(entry => entry.generated === true);
+    console.log(useSettingsHooks.getNumber('settings.createEntryTime'));
+    console.log(now.getDate());
+    console.log(
+      filteredEntries.length > 0
+        ? new Date(
+            filteredEntries.sort((a, b) => b.time - a.time)[0].time,
+          ).getDate()
+        : '',
+    );
+    console.log('FINISHED CHECKING IF READY TO GENERATE');
+
     if (filteredEntries.length > 0) {
       if (
         new Date(
@@ -1510,6 +1564,7 @@ export default FullHomeView = ({route, navigation}) => {
 
           <Swipeable
             // dragOffsetFromRightEdge={100}
+            ref={swipeableRef}
             onBegan={() => {
               // console.log('allonsy');
             }}
@@ -1660,9 +1715,9 @@ export default FullHomeView = ({route, navigation}) => {
                               hours = hours ? '0' + hours : 12;
                               // Seconds part from the timestamp
                               var formattedTime =
-                                hours.substr(-2) +
+                                hours.toString().slice(-2) +
                                 ':' +
-                                minutes.substr(-2) +
+                                minutes.toString().slice(-2) +
                                 ' ' +
                                 ampm;
                               if (time2 === null) {
@@ -1682,6 +1737,7 @@ export default FullHomeView = ({route, navigation}) => {
                                 time2,
                               );
                             }
+                            console.log({eventData});
 
                             return (
                               text.split(' ').length > 0 && (
@@ -1689,7 +1745,7 @@ export default FullHomeView = ({route, navigation}) => {
                                   <Text
                                     allowFontScaling={false}
                                     style={{fontSize: 16}}>
-                                    {text}
+                                    {text.trimStart()}
                                   </Text>
                                   {eventData !== null && (
                                     <View style={{marginTop: 20}}>
@@ -1724,29 +1780,96 @@ export default FullHomeView = ({route, navigation}) => {
                                           </Text>
                                         </View>
                                       </View>
-                                      {eventData.type === 'photo' ? (
-                                        <ImageAsset
-                                          localIdentifier={
-                                            eventData.localIdentifier
-                                          }
-                                          setHeight={100}
-                                          setWidth={100}
-                                          // height={1}
-                                          style={{
-                                            flex: 1,
-                                            height: 100,
-                                            width: 100,
-                                          }}
-                                        />
-                                      ) : (
-                                        <View
-                                          style={{
-                                            backgroundColor: 'red',
-                                            width: '90%',
-                                            height: 200,
-                                          }}
-                                        />
-                                      )}
+                                      {/* <ScrollView
+                                        contentContainerStyle={{padding: 10, backgroundColor: '', borderRadius: ''}}
+
+                                        horizontal
+                                        pagingEnabled> */}
+                                      <View style={{margin: 5, gap: 10}}>
+                                        {eventData.type === 'photo' && (
+                                          <View
+                                            style={{
+                                              height: 200,
+                                              // width: '100%',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              overflow: 'hidden',
+                                              borderRadius: 20,
+                                            }}>
+                                            <View
+                                              style={{
+                                                height: 200,
+                                                width: 200,
+                                                borderRadius: 20,
+                                                overflow: 'hidden',
+                                              }}>
+                                              <ImageAsset
+                                                localIdentifier={
+                                                  eventData.localIdentifier
+                                                }
+                                                setHeight={200}
+                                                setWidth={200}
+                                                // height={1}
+                                                style={{
+                                                  // flex: 1,
+                                                  height: 200,
+                                                  width: 200,
+                                                }}
+                                              />
+                                            </View>
+                                          </View>
+                                        )}
+
+                                        {eventData.type === 'calendar' && (
+                                          <ScrollView style={{height: 200}}>
+                                            <Text
+                                              style={
+                                                {
+                                                  // overflow: 'scroll',
+                                                  // width: '100%',
+                                                  // height: 200,
+                                                }
+                                              }>
+                                              {eventData.additionalNotes}
+                                            </Text>
+                                          </ScrollView>
+                                        )}
+
+                                        {['photo', 'location'].includes(
+                                          eventData.type,
+                                        ) && (
+                                          // <View
+                                          //   style={{
+                                          //     backgroundColor: 'red',
+                                          //     width: '90%',
+                                          //     height: 200,
+                                          //   }}
+                                          // />
+                                          <MapView
+                                            // moveOnMarkerPress={false}
+                                            // scrollEnabled={false}
+                                            initialRegion={{
+                                              latitude: eventData.coords.lat,
+                                              longitude: eventData.coords.long,
+                                              latitudeDelta: 0.0025,
+                                              longitudeDelta: 0.025,
+                                            }}
+                                            style={{
+                                              width: '100%',
+                                              height: 200,
+                                              borderRadius: 20,
+                                            }}>
+                                            <Marker
+                                              coordinate={{
+                                                latitude: eventData.coords.lat,
+                                                longitude:
+                                                  eventData.coords.long,
+                                              }}
+                                            />
+                                          </MapView>
+                                        )}
+                                      </View>
+                                      {/* </ScrollView> */}
                                     </View>
                                   )}
                                   {textIndex !== matches.length - 1 && (
@@ -1772,7 +1895,20 @@ export default FullHomeView = ({route, navigation}) => {
               );
             }}>
             <View>
-              {generatingEntry && <Text>Loading...{loadingMessage}</Text>}
+              {generatingEntry && (
+                <View
+                  style={{
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: '100%',
+                  }}>
+                  <Image
+                    source={require('./src/assets/writing.gif')}
+                    style={{width: 100, height: 100}}
+                  />
+                  <Text>{loadingMessage}</Text>
+                </View>
+              )}
 
               <ScrollView
                 // pagingEnabled
@@ -1797,6 +1933,15 @@ export default FullHomeView = ({route, navigation}) => {
                   // console.log('end');
                   setScroll(false);
                 }}
+                style={{height: '100%', backgroundColor: 'white'}}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={generatingEntry}
+                    onRefresh={() => {
+                      checkIfReadyToGenerate();
+                    }}
+                  />
+                }
                 scrollEventThrottle={16}>
                 {/* <View
               style={{
@@ -2087,7 +2232,12 @@ export default FullHomeView = ({route, navigation}) => {
               </Text>
             </View>
 
-            <View
+            <TouchableOpacity
+              onPress={() => {
+                swipeableRef.current.close();
+
+                setScreen(screenValues.READ);
+              }}
               style={{
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -2103,7 +2253,7 @@ export default FullHomeView = ({route, navigation}) => {
                 allowFontScaling={false}>
                 Read View
               </Text>
-            </View>
+            </TouchableOpacity>
 
             <View
               style={{

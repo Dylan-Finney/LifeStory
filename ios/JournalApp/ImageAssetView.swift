@@ -18,7 +18,7 @@ class ImageAssetView: UIView {
       let integerValue: Int = Int(setHeight)
       let newHeight: CGFloat = CGFloat(Float(integerValue))
       newFrame.size.height = newHeight
-      imageView.frame = newFrame
+      imageView.frame.size.height = newFrame.size.height
       
     }
   }
@@ -30,7 +30,7 @@ class ImageAssetView: UIView {
       let integerValue: Int = Int(setWidth)
       let newWidth: CGFloat = CGFloat(Float(integerValue))
       newFrame.size.width = newWidth
-      imageView.frame = newFrame
+      imageView.frame.size.width = newFrame.size.width
       
     }
   }

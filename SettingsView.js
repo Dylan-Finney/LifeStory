@@ -26,6 +26,7 @@ import notifee from '@notifee/react-native';
 export default SettingsView = ({route, navigation}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalScreen, setModalScreen] = useState('');
+  const {setOnBoarding} = useContext(AppContext);
 
   const {deleteTable, createEntryTable, createVisitsTable, resetTable} =
     useDatabaseHooks();
@@ -569,6 +570,7 @@ export default SettingsView = ({route, navigation}) => {
                   setEntries([]);
                   // setOnBoarding(true);
                   useSettingsHooks.set('onboarding', true);
+                  setOnBoarding(true);
 
                   notifee.cancelAllNotifications();
                   navigation.navigate({
