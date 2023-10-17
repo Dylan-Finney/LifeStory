@@ -63,7 +63,19 @@ var presentingVC = RCTPresentedViewController()
           default: break
           }
       }
+  
+  // @objc func getCalendarPermissions() -> Void {
+
+  // }
+  
   @objc
+  func enableCalendarPermissions(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+          let status = EKEventStore.authorizationStatus(for: EKEntityType.event)
+          switch status {
+          case .notDetermined: calendarInital = true; requestAccessToCalendar("Calendar"); semaphore.wait(); resolve(true);
+          default: resolve(false)
+          }
+      }
 
   
   func requestAccessToCalendar(_ calendarTitle: String) {
@@ -297,7 +309,7 @@ for localIdentifier in calendarIdentifiers {
         - Creation - Time Created
 */
 
-   @objc func fetchPhotos() {
+   @objc func fetchPhotos(_ cameraRollOnly: Bool) {
     testIdentifiers = []
     let fetchOptions = PHFetchOptions()
      let requestOptions = PHImageRequestOptions()
@@ -305,7 +317,18 @@ for localIdentifier in calendarIdentifiers {
 //    let dateOne =  Calendar.current.startOfDay(for: Date())
 //    let dateTwo = Calendar.current.date(byAdding: .day, value: 1, to: dateOne)
     fetchOptions.predicate = NSPredicate(format: "mediaType = %d AND ( creationDate > %@ ) AND ( creationDate < %@ )", PHAssetMediaType.image.rawValue, startDate as NSDate, endDate as NSDate)
-    PHAsset.fetchAssets(with: .image, options: fetchOptions).enumerateObjects({ (object, count, stop) in
+     let cameraRollCollection = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .smartAlbumUserLibrary, options: PHFetchOptions()).firstObject
+     var fetchedAssets: PHFetchResult<PHAsset>;
+     if let cameraRollCollection = cameraRollCollection, cameraRollOnly == true  {
+        fetchedAssets = PHAsset.fetchAssets(in: cameraRollCollection, options: fetchOptions)
+    } else {
+        fetchedAssets = PHAsset.fetchAssets(with: .image, options: fetchOptions)
+        
+    } 
+    // fetchedAssets = PHAsset.fetchAssets(with: .image, options: fetchOptions)
+    self.sendEvent(withName: "photoCount", body: fetchedAssets.count)
+    fetchedAssets.enumerateObjects({ (object, count, stop) in
+      self.sendEvent(withName: "photoChange", body: count)
       var newPhoto = [String: String]()
 
       newPhoto["name"] = PHAssetResource.assetResources(for: object).first?.originalFilename
@@ -365,7 +388,7 @@ for localIdentifier in calendarIdentifiers {
   }
 
   @available(iOS 14, *)
-  func getPhotosAccess() -> Void {
+  @objc func getPhotosAccess() -> Void {
      let status2 = PHPhotoLibrary.authorizationStatus(for: .readWrite)
      switch status2 {
         case .notDetermined: requestPhotosAccess(); photoThread.wait();
@@ -405,12 +428,12 @@ for localIdentifier in calendarIdentifiers {
   }
   
   @available(iOS 14, *)
-  @objc func getPhotosFromNative(_ resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
+  @objc func getPhotosFromNative(_ cameraRollOnly: Bool, withResolver resolve: RCTPromiseResolveBlock, rejecter reject: RCTPromiseRejectBlock) -> Void {
     do {
       photoAccess = false
   getPhotosAccess()
   if photoAccess == true {
-    fetchPhotos()
+    fetchPhotos(cameraRollOnly)
     resolve(testIdentifiers)
 
   } else {
@@ -424,6 +447,7 @@ for localIdentifier in calendarIdentifiers {
 
       }
   
+
 
 
 
@@ -443,7 +467,7 @@ Other Functions
   // we need to override this method and
   // return an array of event names that we can listen to
   override func supportedEvents() -> [String]! {
-    return ["onIncrement", "init", "locationChange", "onCalendar", "calendarChange"]
+    return ["onIncrement", "init", "locationChange", "onCalendar", "calendarChange", "photoCount", "photoChange"]
   }
   // you also need to add the override attribute
   // on these methods

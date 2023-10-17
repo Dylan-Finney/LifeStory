@@ -13,7 +13,8 @@ RCT_EXTERN_METHOD(
                   rejecter: (RCTPromiseRejectBlock)reject
                   )
 RCT_EXTERN_METHOD(
-                  getPhotosFromNative:(RCTPromiseResolveBlock)resolve
+                  getPhotosFromNative:(BOOL) cameraRollOnly
+                  withResolver: (RCTPromiseResolveBlock)resolve
                   rejecter: (RCTPromiseRejectBlock)reject
                   )
 RCT_EXTERN_METHOD(
@@ -22,6 +23,9 @@ RCT_EXTERN_METHOD(
                   )
 RCT_EXTERN_METHOD(
                   chooserOpen
+                  )
+RCT_EXTERN_METHOD(
+                  getPhotosAccess
                   )
 RCT_EXTERN_METHOD(
                   getCalendarIdentifiers: (RCTResponseSenderBlock)callback)

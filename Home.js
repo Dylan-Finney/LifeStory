@@ -29,6 +29,7 @@ import Svg, {Defs, Rect, LinearGradient, Stop} from 'react-native-svg';
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 import AIRewriteIcon from './src/assets/ai-rewrite-icon.svg';
+import FirstEntryIcon from './src/assets/first-entry.svg';
 
 import notifee, {
   EventType,
@@ -81,6 +82,8 @@ import PhotoEventIcon from './src/assets/event-photo.svg';
 import {emotions} from './Utils';
 import {ImageAsset} from './NativeImage';
 import MapView, {Marker} from 'react-native-maps';
+import OnboardingButton from './src/components/OnboardingButton';
+import OnboardingBackground from './src/components/OnboardingBackground';
 // const {
 //   DetectFacesCommand,
 //   DetectLabelsCommand,
@@ -120,6 +123,8 @@ export default FullHomeView = ({route, navigation}) => {
   //   globalWritingSettings,
   //   onboardingTime,
   // } = useSettingsHooks();
+  const CounterEvents = new NativeEventEmitter(NativeModules.Location);
+
   const baseEntry = {
     tags: [],
     time: Date.now(),
@@ -158,6 +163,8 @@ export default FullHomeView = ({route, navigation}) => {
     useContext(AppContext);
 
   const [loading, setLoading] = useState(false);
+
+  const [firstEntryGenerated, setFirstEntryGenerated] = useState(false);
 
   const [generatingEntry, setGeneratingEntry] = useState(false);
   const [clickedNotification, setClickedNotification] = useState(null);
@@ -227,7 +234,8 @@ export default FullHomeView = ({route, navigation}) => {
   }, [entries]);
 
   const getPermissionsAndData = async date => {
-    if (useSettingsHooks.getBoolean('onboarding') === false) {
+    const onboarding = useSettingsHooks.getBoolean('onboarding');
+    if (onboarding === false) {
       setGeneratingEntry(true);
     }
 
@@ -250,7 +258,8 @@ export default FullHomeView = ({route, navigation}) => {
     endOfUnixTime.setSeconds(0);
     endOfUnixTime.setMilliseconds(0);
     let startOfUnixTime = new Date(endOfUnixTime.getTime());
-    startOfUnixTime.setDate(startOfUnixTime.getDate() - 1);
+    // startOfUnixTime.setDate(startOfUnixTime.getDate() - 1);
+    startOfUnixTime.setHours(startOfUnixTime.getHours() - 1);
     endOfUnixTime = Math.floor(endOfUnixTime.getTime() / 1000);
     startOfUnixTime = Math.floor(startOfUnixTime.getTime() / 1000);
 
@@ -258,8 +267,15 @@ export default FullHomeView = ({route, navigation}) => {
     try {
       console.log('events', {startOfUnixTime, endOfUnixTime});
       setLoadingMessage('Getting Calendar Events');
-      events = await Location.getCalendarEvents(startOfUnixTime, endOfUnixTime);
-      console.log({events});
+      if (onboarding === false) {
+        events = await Location.getCalendarEvents(
+          startOfUnixTime,
+          endOfUnixTime,
+        );
+        console.log({events});
+      } else {
+        await Location.enableCalendarPermissions();
+      }
     } catch (e) {
       if (e.message === 'DENIED') {
         console.error('GIVE PERMISSION TO APP FOR CALENDAR USAGE');
@@ -271,26 +287,59 @@ export default FullHomeView = ({route, navigation}) => {
     setLoadingMessage('Getting Location Events');
 
     // GET LOCATIONS
-    retrieveSpecificData(startOfUnixTime * 1000, endOfUnixTime * 1000, res => {
-      (locations = res.map(obj => {
-        return {
-          description: obj.description.split(',')[0],
-          time: obj.date,
-          lat: obj.lat,
-          long: obj.lon,
-        };
-      })),
-        console.log(locations);
-    });
+    if (onboarding === false) {
+      retrieveSpecificData(
+        startOfUnixTime * 1000,
+        endOfUnixTime * 1000,
+        res => {
+          (locations = res.map(obj => {
+            return {
+              description: obj.description.split(',')[0],
+              time: obj.date,
+              lat: obj.lat,
+              long: obj.lon,
+            };
+          })),
+            console.log(locations);
+        },
+      );
+    }
+
     //GET PHOTOS
     console.log('photos');
     setLoadingMessage('Getting Photo Events');
+    var photoLength = 0;
+    var photoIndex = 0;
+
+    CounterEvents.removeAllListeners('photoCount');
+    CounterEvents.addListener('photoCount', res => {
+      console.log(`photoCount ${new Date().toISOString()}`, res);
+      photoLength = res;
+    });
+    CounterEvents.removeAllListeners('photoChange');
+    CounterEvents.addListener('photoChange', res => {
+      console.log(`photoChange ${new Date().toISOString()}`, res);
+      photoIndex = res;
+      setLoadingMessage(`Getting Photo Events - ${photoIndex}/${photoLength}`);
+    });
+
     var includeDownloadedPhotosCheck =
       useSettingsHooks.getBoolean('settings.includeDownloadedPhotos') || false;
+
     try {
-      photos = await Location.getPhotosFromNative();
-      console.log({photos});
-      if (useSettingsHooks.getBoolean('onboarding') === true) {
+      if (onboarding === false) {
+        photos = await Location.getPhotosFromNative(
+          !includeDownloadedPhotosCheck,
+        );
+        console.log({photos});
+        console.log({includeDownloadedPhotosCheck});
+
+        if (includeDownloadedPhotosCheck !== true) {
+          setLoadingMessage('Filtering out downloaded Photos');
+          photos = photos.filter(photo => photo.lat !== 'null');
+        }
+      } else {
+        Location.getPhotosAccess();
         await new Promise((resolve, reject) => {
           Alert.alert(
             'Send Photos for Analysis',
@@ -359,15 +408,11 @@ export default FullHomeView = ({route, navigation}) => {
       console.error({e});
     }
     // console.log({photos});
-    console.log({includeDownloadedPhotosCheck});
-
-    if (includeDownloadedPhotosCheck !== true) {
-      setLoadingMessage('Filtering out downloaded Photos');
-      photos = photos.filter(photo => photo.lat !== 'null');
-    }
 
     // NOTIFICATIONS
     await notifee.requestPermission();
+    CounterEvents.removeAllListeners('photoChange');
+    CounterEvents.removeAllListeners('photoCount');
     //RETURNS
     return {
       photos,
@@ -926,7 +971,10 @@ export default FullHomeView = ({route, navigation}) => {
       saveEntryData({
         tags: '',
         title: 'New Entry',
-        time: entryCreationTime.getTime(),
+        time:
+          useSettingsHooks.getNumber('settings.createEntryTime') > 12
+            ? endOfUnixTime.getTime()
+            : startOfUnixTime.getTime(),
         emotion: -1,
         emotions: '',
         votes: '',
@@ -1051,6 +1099,7 @@ export default FullHomeView = ({route, navigation}) => {
     } else {
       if (useSettingsHooks.getNumber('settings.onboardingTime') < Date.now()) {
         console.log('Time to generate entry');
+        setFirstEntryGenerated(true);
         await generateEntry({
           data: await getPermissionsAndData(now.getTime()),
           date: now.getTime(),
@@ -1234,35 +1283,117 @@ export default FullHomeView = ({route, navigation}) => {
         // backgroundColor={onBoarding === true ? 'white' : '#F9F9F9'}
         backgroundColor={'white'}
       />
-      {onBoarding === true ? (
+      {onBoarding === true || firstEntryGenerated === true ? (
         <>
-          <Svg
-            height={`${Dimensions.get('window').height}`}
-            width={`${Dimensions.get('window').width}`}
-            style={StyleSheet.absoluteFillObject}>
-            <Defs>
-              <LinearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <Stop
-                  offset="0%"
-                  stopColor={theme.onboarding.background.from}
+          <OnboardingBackground />
+          {onBoarding === true && (
+            <Onboarding
+              endOnboarding={() => {
+                setOnBoarding(false);
+                useSettingsHooks.set('onboarding', false);
+                console.log('END ONBOARDING');
+              }}
+              generateEntry={generateEntry}
+              getPermissionsAndData={getPermissionsAndData}
+            />
+          )}
+          {firstEntryGenerated === true && (
+            <View
+              style={{alignItems: 'center', flex: 1, justifyContent: 'center'}}>
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  position: 'absolute',
+                  paddingBottom: 200,
+                  // transform: 'translate(-50%, -50%)',
+                }}>
+                <FirstEntryIcon />
+              </View>
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  width: '100%',
+                }}>
+                <Text
+                  // maxFontSizeMultiplier={1}
+                  allowFontScaling={false}
+                  style={{
+                    color: theme.onboarding.title,
+                    fontWeight: '700',
+                    fontSize: moderateScale(28),
+                    marginBottom: verticalScale(15),
+                    // marginTop: verticalScale(20),
+                  }}>
+                  Congratulations
+                </Text>
+                <Text
+                  allowFontScaling={false}
+                  numberOfLines={1}
+                  style={{
+                    color: theme.onboarding.text,
+                    fontWeight: '400',
+                    fontSize: moderateScale(16),
+                    marginBottom: verticalScale(50),
+                  }}>
+                  Your first story is ready for your reflections
+                </Text>
+                <OnboardingButton
+                  text={
+                    generatingEntry === true ? loadingMessage : 'See the story'
+                  }
+                  onPress={() => {
+                    setFirstEntryGenerated(false);
+                  }}
+                  disabled={generatingEntry}
                 />
-                <Stop
-                  offset="100%"
-                  stopColor={theme.onboarding.background.to}
-                />
-              </LinearGradient>
-            </Defs>
-            <Rect width="100%" height="100%" fill="url(#grad)" />
-          </Svg>
-          <Onboarding
-            endOnboarding={() => {
-              setOnBoarding(false);
-              useSettingsHooks.set('onboarding', false);
-              console.log('END ONBOARDING');
-            }}
-            generateEntry={generateEntry}
-            getPermissionsAndData={getPermissionsAndData}
-          />
+              </View>
+              {/* <Text
+                // maxFontSizeMultiplier={1}
+                allowFontScaling={false}
+                style={{
+                  color: theme.onboarding.title,
+                  fontWeight: '700',
+                  fontSize: moderateScale(28),
+                  marginBottom: verticalScale(20),
+                  marginTop: verticalScale(20),
+                }}>
+                Congratulations
+              </Text>
+              <Text
+                allowFontScaling={false}
+                style={{
+                  color: theme.onboarding.text,
+                  fontWeight: '400',
+                  fontSize: moderateScale(16),
+                  marginBottom: verticalScale(20),
+                }}>
+                Your first story is ready for your reflections
+              </Text>
+              <OnboardingButton
+                text={
+                  generatingEntry === true ? loadingMessage : 'See the story'
+                }
+                onPress={() => {
+                  setFirstEntryGenerated(false);
+                }}
+                disabled={generatingEntry}
+              /> */}
+              {/* <TouchableOpacity
+                style={{}}
+                onPress={() => {
+                  setFirstEntryGenerated(false);
+                }}>
+                <Text>
+                  {generatingEntry === true ? loadingMessage : 'See the story'}
+                </Text>
+              </TouchableOpacity> */}
+            </View>
+          )}
         </>
       ) : (
         <View
@@ -2214,24 +2345,6 @@ export default FullHomeView = ({route, navigation}) => {
 
               height: screen === screenValues.RICH ? 75 : footerHeight,
             }}>
-            <View
-              style={{
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-              }}>
-              <SearchMenuIcon
-                fill={screen === screenValues.SEARCH ? '#3286B3' : '#68696A'}
-              />
-              <Text
-                style={{
-                  color: screen === screenValues.SEARCH ? '#3286B3' : '#68696A',
-                }}
-                allowFontScaling={false}>
-                Search
-              </Text>
-            </View>
-
             <TouchableOpacity
               onPress={() => {
                 swipeableRef.current.close();
@@ -2251,7 +2364,7 @@ export default FullHomeView = ({route, navigation}) => {
                   color: screen === screenValues.READ ? '#3286B3' : '#68696A',
                 }}
                 allowFontScaling={false}>
-                Read View
+                Stories
               </Text>
             </TouchableOpacity>
 
@@ -2269,7 +2382,7 @@ export default FullHomeView = ({route, navigation}) => {
                   color: screen === screenValues.RICH ? '#3286B3' : '#68696A',
                 }}
                 allowFontScaling={false}>
-                Rich View
+                Memories
               </Text>
             </View>
           </Animated.View>
