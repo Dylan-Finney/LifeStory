@@ -18,6 +18,8 @@ import AuthNavigator from './AuthNavigator';
 import useDatabaseHooks from '../../useDatabaseHooks';
 import useSettingsHooks from '../../useSettingsHooks';
 
+import AnimatedLaunchScreen from '../modules/onboarding/views/AnimatedLaunchScreen';
+
 const RootStack = createNativeStackNavigator();
 
 const MainNavigator = () => {
@@ -137,12 +139,13 @@ const MainNavigator = () => {
   return (
     <NavigationContainer>
       <RootStack.Navigator
-        // initialRouteName="AnimatedLaunchScreen"
+        initialRouteName="AnimatedLaunchScreen"
         screenOptions={{headerShown: false}}>
-        {/* <RootStack.Screen
+        <RootStack.Screen
           name="AnimatedLaunchScreen"
           component={AnimatedLaunchScreen}
-        /> */}
+        />
+
         <RootStack.Screen
           name="MainApp"
           children={() => (
