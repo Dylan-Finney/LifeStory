@@ -3,8 +3,8 @@ import {Text, TouchableOpacity, View} from 'react-native';
 
 import 'react-native-url-polyfill/auto';
 import SettingsIcon from '../assets/settings-svgrepo-com.svg';
-import {theme} from '../../Styling';
-import {horizontalScale, moderateScale, verticalScale} from '../utils/Metrics';
+import {theme} from '../theme/styling';
+import {horizontalScale, moderateScale, verticalScale} from '../utils/metrics';
 const HomeTop = ({navigation}) => {
   return (
     <View

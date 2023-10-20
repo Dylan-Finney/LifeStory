@@ -9,9 +9,9 @@ import moment from 'moment';
 
 import _ from 'lodash';
 
-import {theme} from '../../Styling';
+import {theme} from '../theme/styling';
 
-import {horizontalScale, verticalScale} from '../utils/Metrics';
+import {horizontalScale, verticalScale} from '../utils/metrics';
 
 const TimeDivider = ({previousTime, currentTime, index}) => {
   const isSameDay = (first, second) => {

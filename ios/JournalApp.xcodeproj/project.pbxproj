@@ -22,7 +22,7 @@
 		719FC5DC2A65A6F700809A6A /* Journal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 719FC5DB2A65A6F700809A6A /* Journal.swift */; };
 		719FC5DE2A65A75500809A6A /* Journal.m in Sources */ = {isa = PBXBuildFile; fileRef = 719FC5DD2A65A75500809A6A /* Journal.m */; };
 		7699B88040F8A987B510C191 /* libPods-JournalApp-JournalAppTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 19F6CBCC0A4E27FBF8BF4A61 /* libPods-JournalApp-JournalAppTests.a */; };
-		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		BB6449682AE02401004E6FE6 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BB6449672AE02401004E6FE6 /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,8 +60,8 @@
 		719FC5D92A65A6AF00809A6A /* JournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = JournalView.swift; path = JournalApp/JournalView.swift; sourceTree = "<group>"; };
 		719FC5DB2A65A6F700809A6A /* Journal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Journal.swift; path = JournalApp/Journal.swift; sourceTree = "<group>"; };
 		719FC5DD2A65A75500809A6A /* Journal.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = Journal.m; path = JournalApp/Journal.m; sourceTree = "<group>"; };
-		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = JournalApp/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		89C6BE57DB24E9ADA2F236DE /* Pods-JournalApp-JournalAppTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JournalApp-JournalAppTests.release.xcconfig"; path = "Target Support Files/Pods-JournalApp-JournalAppTests/Pods-JournalApp-JournalAppTests.release.xcconfig"; sourceTree = "<group>"; };
+		BB6449672AE02401004E6FE6 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		BB814F9F2AA7C45300ED9B57 /* JournalApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = JournalApp.entitlements; path = JournalApp/JournalApp.entitlements; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -106,13 +106,13 @@
 		13B07FAE1A68108700A75B9A /* JournalApp */ = {
 			isa = PBXGroup;
 			children = (
+				BB6449672AE02401004E6FE6 /* LaunchScreen.storyboard */,
 				BB814F9F2AA7C45300ED9B57 /* JournalApp.entitlements */,
 				7165D3A12A79405400D9E284 /* Inter-Regular.ttf */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
-				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				719FC5D92A65A6AF00809A6A /* JournalView.swift */,
 				719FC5D82A65A6AE00809A6A /* JournalApp-Bridging-Header.h */,
@@ -273,7 +273,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
+				BB6449682AE02401004E6FE6 /* LaunchScreen.storyboard in Resources */,
 				7165D3A22A79405400D9E284 /* Inter-Regular.ttf in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 			);

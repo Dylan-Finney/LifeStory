@@ -7,8 +7,8 @@ import ContentTaggingIcon from '../assets/content-tagging-icon.svg';
 import EmotionTaggingIcon from '../assets/emotion-tagging-icon.svg';
 import WordCountIcon from '../assets/open-book.svg';
 import UpvoteIcon from '../assets/arrow-block-up.svg';
-import {theme} from '../../Styling';
-import {horizontalScale, moderateScale, verticalScale} from '../utils/Metrics';
+import {theme} from '../theme/styling';
+import {horizontalScale, moderateScale, verticalScale} from '../utils/metrics';
 const HomeHeading = ({entries, manual, events, photos}) => {
   return (
     <View

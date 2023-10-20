@@ -11,15 +11,15 @@ import {
   TouchableOpacity,
   TextInput,
 } from 'react-native';
-import useDatabaseHooks from './useDatabaseHooks';
-import AppContext from './Context';
-import useSettingsHooks from './useSettingsHooks';
+import useDatabaseHooks from '../../../utils/hooks/useDatabaseHooks';
+import AppContext from '../../../contexts/AppContext';
+import useSettingsHooks from '../../../utils/hooks/useSettingsHooks';
 import {
   horizontalScale,
   moderateScale,
   verticalScale,
-} from './src/utils/Metrics';
-import {theme} from './Styling';
+} from '../../../utils/metrics';
+import {theme} from '../../../theme/styling';
 import notifee from '@notifee/react-native';
 // var langmap = require('langmap');
 

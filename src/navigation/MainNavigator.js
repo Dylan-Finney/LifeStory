@@ -15,10 +15,11 @@ import notifee from '@notifee/react-native';
 import AppNavigator from './AppNavigator';
 import AuthNavigator from './AuthNavigator';
 
-import useDatabaseHooks from '../../useDatabaseHooks';
-import useSettingsHooks from '../../useSettingsHooks';
+import useDatabaseHooks from '../utils/hooks/useDatabaseHooks';
+import useSettingsHooks from '../utils/hooks/useSettingsHooks';
 
 import AnimatedLaunchScreen from '../modules/onboarding/views/AnimatedLaunchScreen';
+import AppContext from '../contexts/AppContext';
 
 const RootStack = createNativeStackNavigator();
 
@@ -102,14 +103,6 @@ const MainNavigator = () => {
   const {width, height} = Dimensions.get('window');
   console.log({width, height});
 
-  const contextValues = {
-    entries,
-    setEntries,
-    loadingEntries,
-    setOnBoarding,
-    onBoarding,
-  };
-
   const CounterEvents = new NativeEventEmitter(NativeModules.Location);
   CounterEvents.removeAllListeners('onCalendar');
   CounterEvents.addListener('onCalendar', res => {
@@ -136,6 +129,14 @@ const MainNavigator = () => {
 
   console.log('main navigator', entries, loadingEntries);
 
+  const contextValues = {
+    entries,
+    setEntries,
+    loadingEntries,
+    setOnBoarding,
+    onBoarding,
+  };
+
   return (
     <NavigationContainer>
       <RootStack.Navigator
@@ -151,13 +152,9 @@ const MainNavigator = () => {
           children={() => (
             <View style={styles.safeArea}>
               {isAuthenticated ? (
-                <AppNavigator
-                  entries={entries}
-                  setEntries={setEntries}
-                  loadingEntries={loadingEntries}
-                  onBoarding={onBoarding}
-                  setOnBoarding={setOnBoarding}
-                />
+                <AppContext.Provider value={contextValues}>
+                  <AppNavigator />
+                </AppContext.Provider>
               ) : (
                 <AuthNavigator />
               )}
