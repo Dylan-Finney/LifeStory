@@ -46,7 +46,8 @@ const getMemories = async () => {
     // setEntries(updatedEntries);
     // setLoadingEntries(false);
   } catch (e) {
-    console.error(e);
+    console.error('get memory error', e);
+    return [];
   }
 };
 

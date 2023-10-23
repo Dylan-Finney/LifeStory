@@ -87,7 +87,7 @@ import {ImageAsset} from './src/utils/native-modules/NativeImage';
 import MapView, {Marker} from 'react-native-maps';
 import OnboardingButton from './src/components/OnboardingButton';
 import OnboardingBackground from './src/components/OnboardingBackground';
-import onCreateTriggerReminder from './src/utils/CreateOpenReminder';
+import onCreateTriggerReminder from './src/utils/createOpenReminder';
 import SingleMapMemo from './src/components/SingleMapMemo';
 import generateMemories from './src/utils/generateMemories';
 import generateEntry from './src/utils/generateEntry';
@@ -206,7 +206,8 @@ export default FullHomeView = ({route, navigation}) => {
     MEMORIES: 2,
   };
   const [loadingMessage, setLoadingMessage] = useState('');
-  const [memoryLoadingMessage, setMemoryLoadingMessage] = useState('');
+  const [memoryLoadingMessage, setMemoryLoadingMessage] =
+    useState('Not Needed');
   const [storyLoadingMessage, setStoryLoadingMessage] = useState('Busy');
 
   const [screen, setScreen] = useState(screenValues.MEMORIES);
@@ -602,7 +603,7 @@ export default FullHomeView = ({route, navigation}) => {
       setMemoryLoadingMessage('Generating');
       const eventData = await getPermissionsAndData({start, end});
       console.log('Event Data For Memory Generation', eventData);
-      const newMemories = generateMemories({
+      const newMemories = await generateMemories({
         data: eventData,
         date: date.getTime(),
       });
@@ -655,7 +656,7 @@ export default FullHomeView = ({route, navigation}) => {
           const end = new Date(start.getTime());
           end.setHours(22);
           end.setMilliseconds(end.getMilliseconds() - 1);
-          readyToGenerateMemory({start, end});
+          await readyToGenerateMemory({start, end});
         }
       }
       //If current time between 08:00:00 and 14:59:59
@@ -676,7 +677,7 @@ export default FullHomeView = ({route, navigation}) => {
         start.setDate(start.getDate() - 1);
         end.setHours(8);
         end.setMilliseconds(end.getMilliseconds() - 1);
-        readyToGenerateMemory({start, end});
+        await readyToGenerateMemory({start, end});
       }
       //If current time between 15:00:00 and 21:59:59
       else if (
@@ -695,7 +696,7 @@ export default FullHomeView = ({route, navigation}) => {
         const end = new Date(start.getTime());
         end.setHours(15);
         end.setMilliseconds(end.getMilliseconds() - 1);
-        readyToGenerateMemory({start, end});
+        await readyToGenerateMemory({start, end});
       } else {
         console.log('Not Ready To Generate Memory');
       }
@@ -774,7 +775,7 @@ export default FullHomeView = ({route, navigation}) => {
     };
     console.log(memories.length);
 
-    checkIfMemoryReadyToGenerate();
+    await checkIfMemoryReadyToGenerate();
     //Create Local Notifications to go off at 08:00, 15:00 && 22:0
     try {
       onCreateTriggerReminder({remindTime: 8});
@@ -783,7 +784,7 @@ export default FullHomeView = ({route, navigation}) => {
     } catch (e) {
       console.error({e});
     }
-    checkIfStoryReadyToGenerate();
+    await checkIfStoryReadyToGenerate();
   };
 
   useEffect(() => {
@@ -968,6 +969,7 @@ export default FullHomeView = ({route, navigation}) => {
                 } catch (e) {
                   console.error({e});
                 }
+                checkIfReadyToGenerate();
               }}
               generateEntry={generateEntry}
               getPermissionsAndData={getPermissionsAndData}
@@ -1184,18 +1186,19 @@ export default FullHomeView = ({route, navigation}) => {
               <TouchableOpacity
                 onPress={async () => {
                   const newEntry = await generateEntry({
-                    memories: [
-                      {
-                        id: 1,
-                        time: 1697994699000,
-                        body: 'At 3:00 PM, I had a driving test. After my third attempt, I finally passed.',
-                      },
-                      {
-                        id: 2,
-                        time: 1698023499000,
-                        body: 'At 6:00 PM, I had a wonderful meal at a resturant. The buffet was a let down but was cheap enough',
-                      },
-                    ],
+                    // memories: [
+                    //   {
+                    //     id: 1,
+                    //     time: 1697994699000,
+                    //     body: 'At 3:00 PM, I had a driving test. After my third attempt, I finally passed.',
+                    //   },
+                    //   {
+                    //     id: 2,
+                    //     time: 1698023499000,
+                    //     body: 'At 6:00 PM, I had a wonderful meal at a resturant. The buffet was a let down but was cheap enough',
+                    //   },
+                    // ],
+                    memories,
                   });
                   setEntries([newEntry, ...entries]);
                 }}>
@@ -1262,7 +1265,7 @@ export default FullHomeView = ({route, navigation}) => {
           {screenValues.MEMORIES === screen && (
             <>
               <Text>Next Memory Creation: {getNextMemoryTime()}</Text>
-              <Text>Memory Length: {memories.length}</Text>
+              <Text>Memory Length: {memories?.length || 0}</Text>
               <Text>
                 Last Time Memories Generated:{' '}
                 {new Date(
