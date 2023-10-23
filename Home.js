@@ -14,6 +14,7 @@ import {
   NativeEventEmitter,
   Animated,
   RefreshControl,
+  FlatList,
   // Modal,
 } from 'react-native';
 
@@ -84,6 +85,12 @@ import {ImageAsset} from './NativeImage';
 import MapView, {Marker} from 'react-native-maps';
 import OnboardingButton from './src/components/OnboardingButton';
 import OnboardingBackground from './src/components/OnboardingBackground';
+import onCreateTriggerReminder from './src/utils/CreateOpenReminder';
+import SingleMapMemo from './src/components/SingleMapMemo';
+import generateMemories from './src/utils/generateMemories';
+import generateEntry from './src/utils/generateEntry';
+import {EventTypes} from './src/utils/Enums';
+import getMemories from './src/utils/getMemories';
 // const {
 //   DetectFacesCommand,
 //   DetectLabelsCommand,
@@ -107,8 +114,14 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-const {retrieveSpecificData, saveEntryData, updateEntryData, createEntryTable} =
-  useDatabaseHooks();
+const {
+  retrieveSpecificData,
+  saveEntryData,
+  updateEntryData,
+  createEntryTable,
+  createMemoriesTable,
+  saveMemoryData,
+} = useDatabaseHooks();
 export default FullHomeView = ({route, navigation}) => {
   // const {
   //   onBoarding,
@@ -159,8 +172,16 @@ export default FullHomeView = ({route, navigation}) => {
     generated: false,
     entry: '',
   };
-  const {loadingEntries, entries, setEntries, onBoarding, setOnBoarding} =
-    useContext(AppContext);
+  const {
+    loadingEntries,
+    entries,
+    setEntries,
+    onBoarding,
+    setOnBoarding,
+    memories,
+    setMemories,
+  } = useContext(AppContext);
+  // console.log({entries, memories});
 
   const [loading, setLoading] = useState(false);
 
@@ -180,11 +201,13 @@ export default FullHomeView = ({route, navigation}) => {
   const screenValues = {
     SEARCH: 0,
     READ: 1,
-    RICH: 2,
+    MEMORIES: 2,
   };
   const [loadingMessage, setLoadingMessage] = useState('');
+  const [memoryLoadingMessage, setMemoryLoadingMessage] = useState('');
+  const [storyLoadingMessage, setStoryLoadingMessage] = useState('Busy');
 
-  const [screen, setScreen] = useState(screenValues.READ);
+  const [screen, setScreen] = useState(screenValues.MEMORIES);
   // const [onBoarding, setOnBoarding] = useState(
   //   useSettingsHooks.getBoolean('onboarding'),
   // );
@@ -195,6 +218,7 @@ export default FullHomeView = ({route, navigation}) => {
   const [date, setDate] = useState(new Date());
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState(false);
+  const [highlightedMemory, setHighlightedMemory] = useState(-1);
   const swipeableRef = useRef(null);
   console.log('useSettingsHooks', useSettingsHooks.getBoolean('onboarding'));
   console.log('onboarding', onBoarding);
@@ -230,10 +254,24 @@ export default FullHomeView = ({route, navigation}) => {
     }
   }, [route.params]);
   useEffect(() => {
-    console.log('home entries useEffect', {entries});
+    // console.log('home entries useEffect', {entries});
   }, [entries]);
 
-  const getPermissionsAndData = async date => {
+  const getAddressName = address => {
+    var locationAliasesArray = JSON.parse(
+      useSettingsHooks.getString('settings.locationAliases'),
+    );
+    var aliasObj = locationAliasesArray.find(
+      locationAliasObj => locationAliasObj.address === address,
+    );
+    if (aliasObj !== undefined) {
+      return aliasObj.alias;
+    } else {
+      return '';
+    }
+  };
+
+  const getPermissionsAndData = async ({date, start, end}) => {
     const onboarding = useSettingsHooks.getBoolean('onboarding');
     if (onboarding === false) {
       setGeneratingEntry(true);
@@ -250,16 +288,23 @@ export default FullHomeView = ({route, navigation}) => {
     // let startOfUnixTime = moment(date).startOf('day').unix();
 
     // let endOfUnixTime = moment(date).endOf('day').unix();
-    let endOfUnixTime = new Date(date);
-    endOfUnixTime.setHours(
-      useSettingsHooks.getNumber('settings.createEntryTime'),
-    );
-    endOfUnixTime.setMinutes(0);
-    endOfUnixTime.setSeconds(0);
-    endOfUnixTime.setMilliseconds(0);
-    let startOfUnixTime = new Date(endOfUnixTime.getTime());
-    // startOfUnixTime.setDate(startOfUnixTime.getDate() - 1);
-    startOfUnixTime.setHours(startOfUnixTime.getHours() - 1);
+    let endOfUnixTime, startOfUnixTime;
+    if (date !== undefined) {
+      endOfUnixTime = new Date(date);
+      endOfUnixTime.setHours(
+        useSettingsHooks.getNumber('settings.createEntryTime'),
+      );
+      endOfUnixTime.setMinutes(0);
+      endOfUnixTime.setSeconds(0);
+      endOfUnixTime.setMilliseconds(0);
+      startOfUnixTime = new Date(endOfUnixTime.getTime());
+      startOfUnixTime.setDate(startOfUnixTime.getDate() - 1);
+      // startOfUnixTime.setHours(startOfUnixTime.getHours() - 1);
+    } else {
+      endOfUnixTime = end;
+      startOfUnixTime = start;
+    }
+    console.log('endOfUnixTime', endOfUnixTime.toLocaleString());
     endOfUnixTime = Math.floor(endOfUnixTime.getTime() / 1000);
     startOfUnixTime = Math.floor(startOfUnixTime.getTime() / 1000);
 
@@ -267,12 +312,20 @@ export default FullHomeView = ({route, navigation}) => {
     try {
       console.log('events', {startOfUnixTime, endOfUnixTime});
       setLoadingMessage('Getting Calendar Events');
+      console.log('Getting Calendar Events');
       if (onboarding === false) {
         events = await Location.getCalendarEvents(
           startOfUnixTime,
           endOfUnixTime,
         );
         console.log({events});
+        events = events.filter(event => parseInt(event.end) <= endOfUnixTime);
+        console.log(
+          events.map(event =>
+            new Date(parseInt(event.end) * 1000).toLocaleString(),
+          ),
+        );
+        console.log(new Date(endOfUnixTime * 1000).toLocaleString());
       } else {
         await Location.enableCalendarPermissions();
       }
@@ -331,6 +384,7 @@ export default FullHomeView = ({route, navigation}) => {
         photos = await Location.getPhotosFromNative(
           !includeDownloadedPhotosCheck,
         );
+
         console.log({photos});
         console.log({includeDownloadedPhotosCheck});
 
@@ -413,6 +467,13 @@ export default FullHomeView = ({route, navigation}) => {
     await notifee.requestPermission();
     CounterEvents.removeAllListeners('photoChange');
     CounterEvents.removeAllListeners('photoCount');
+    photos = photos.map(photo => {
+      return {
+        ...photo,
+        long: parseFloat(photo.lon),
+        lat: parseFloat(photo.lat),
+      };
+    });
     //RETURNS
     return {
       photos,
@@ -421,589 +482,8 @@ export default FullHomeView = ({route, navigation}) => {
     };
   };
 
-  const generateEntry = async ({data, date}) => {
-    setGeneratingEntry(true);
-    console.log('Generate');
-    // var isGenerated = generated === true ? 1 : 0;
-    var {locations, events, photos} = data;
-
-    // console.log({photos});
-
-    var entryCreationTime = new Date(Date.now());
-    entryCreationTime.setHours(
-      useSettingsHooks.getNumber('settings.createEntryTime'),
-    );
-    entryCreationTime.setMinutes(0);
-    entryCreationTime.setSeconds(0);
-    entryCreationTime.setMilliseconds(0);
-    // console.log({entryCreationTime});
-    // entryCreationTime = entryCreationTime.getTime();
-    // setGettingData(true);
-    // setLoading(true);
-    //DAY
-    // var events = [];
-    // var locations = [];
-    var counter = 1;
-    // var photos = [];
-    var entriesCopy = [...entries];
-    var entryEvents = [];
-    // GET CALENDAR EVENTS
-    // let startOfUnixTime = moment(date).startOf('day').unix();
-
-    // let endOfUnixTime = moment(date).endOf('day').unix();
-    let endOfUnixTime = new Date(date);
-    endOfUnixTime.setHours(
-      useSettingsHooks.getNumber('settings.createEntryTime'),
-    );
-    endOfUnixTime.setMinutes(0);
-    endOfUnixTime.setSeconds(0);
-    endOfUnixTime.setMilliseconds(0);
-    let startOfUnixTime = new Date(endOfUnixTime.getTime());
-    startOfUnixTime.setDate(startOfUnixTime.getDate() - 1);
-    endOfUnixTime = Math.floor(endOfUnixTime.getTime() / 1000);
-    startOfUnixTime = Math.floor(startOfUnixTime.getTime() / 1000);
-    // ASK CHATGPT TO CREATE ENTRY
-
-    var autoGenerate =
-      locations.length === 0 && events.length === 0 && photos.length === 0
-        ? false
-        : true;
-    if (
-      photos.length > 0 &&
-      useSettingsHooks.getBoolean('settings.photoAnalysis') === true
-    ) {
-      setLoadingMessage('Getting Photo Labels');
-      await Promise.all(
-        photos.map(async photo => {
-          const image = decode(photo.data);
-          const length = image.length;
-          const imageBytes = new ArrayBuffer(length);
-          const ua = new Uint8Array(imageBytes);
-          for (var i = 0; i < length; i++) {
-            ua[i] = image.charCodeAt(i);
-          }
-          var response;
-          try {
-            response = await Rekognition.detectLabels({
-              Image: {Bytes: ua},
-            }).promise();
-            console.log('Rekognition.detectLabels Response', response);
-            /*
-            {
-                  Labels: [
-                    {
-                      Name: 'Clothing',
-                      Confidence: 100,
-                      Instances: [],
-                      Parents: [],
-                      Aliases: [{Name: 'Apparel'}],
-                      Categories: [{Name: 'Apparel and Accessories'}],
-                    },
-                    {
-                      Name: 'Coat',
-                      Confidence: 100,
-                      Instances: [],
-                      Parents: [{Name: 'Clothing'}],
-                      Aliases: [],
-                      Categories: [{Name: 'Apparel and Accessories'}],
-                    },
-                    {
-                      Name: 'Plant',
-                      Confidence: 99.12316131591797,
-                      Instances: [],
-                      Parents: [],
-                      Aliases: [],
-                      Categories: [{Name: 'Plants and Flowers'}],
-                    },
-                    {
-                      Name: 'Vegetation',
-                      Confidence: 99.12316131591797,
-                      Instances: [],
-                      Parents: [{Name: 'Plant'}],
-                      Aliases: [],
-                      Categories: [{Name: 'Nature and Outdoors'}],
-                    },
-                    {
-                      Name: 'Adult',
-                      Confidence: 98.13746643066406,
-                      Instances: [
-                        {
-                          BoundingBox: {
-                            Width: 0.33328601717948914,
-                            Height: 0.581555187702179,
-                            Left: 0.3377372920513153,
-                            Top: 0.4164018929004669,
-                          },
-                          Confidence: 98.13746643066406,
-                        },
-                      ],
-                      Parents: [{Name: 'Person'}],
-                      Aliases: [],
-                      Categories: [{Name: 'Person Description'}],
-                    },
-                    {
-                      Name: 'Female',
-                      Confidence: 98.13746643066406,
-                      Instances: [
-                        {
-                          BoundingBox: {
-                            Width: 0.33328601717948914,
-                            Height: 0.581555187702179,
-                            Left: 0.3377372920513153,
-                            Top: 0.4164018929004669,
-                          },
-                          Confidence: 98.13746643066406,
-                        },
-                      ],
-                      Parents: [{Name: 'Person'}],
-                      Aliases: [],
-                      Categories: [{Name: 'Person Description'}],
-                    },
-                    {
-                      Name: 'Person',
-                      Confidence: 98.13746643066406,
-                      Instances: [
-                        {
-                          BoundingBox: {
-                            Width: 0.33328601717948914,
-                            Height: 0.581555187702179,
-                            Left: 0.3377372920513153,
-                            Top: 0.4164018929004669,
-                          },
-                          Confidence: 98.13746643066406,
-                        },
-                      ],
-                      Parents: [],
-                      Aliases: [{Name: 'Human'}],
-                      Categories: [{Name: 'Person Description'}],
-                    },
-                    {
-                      Name: 'Woman',
-                      Confidence: 98.13746643066406,
-                      Instances: [
-                        {
-                          BoundingBox: {
-                            Width: 0.33328601717948914,
-                            Height: 0.581555187702179,
-                            Left: 0.3377372920513153,
-                            Top: 0.4164018929004669,
-                          },
-                          Confidence: 98.13746643066406,
-                        },
-                      ],
-                      Parents: [
-                        {Name: 'Adult'},
-                        {Name: 'Female'},
-                        {Name: 'Person'},
-                      ],
-                      Aliases: [],
-                      Categories: [{Name: 'Person Description'}],
-                    },
-                    {
-                      Name: 'Land',
-                      Confidence: 96.8377685546875,
-                      Instances: [],
-                      Parents: [{Name: 'Nature'}, {Name: 'Outdoors'}],
-                      Aliases: [],
-                      Categories: [{Name: 'Nature and Outdoors'}],
-                    },
-                    {
-                      Name: 'Nature',
-                      Confidence: 96.8377685546875,
-                      Instances: [],
-                      Parents: [{Name: 'Outdoors'}],
-                      Aliases: [],
-                      Categories: [{Name: 'Nature and Outdoors'}],
-                    },
-                    {
-                      Name: 'Outdoors',
-                      Confidence: 96.8377685546875,
-                      Instances: [],
-                      Parents: [],
-                      Aliases: [],
-                      Categories: [{Name: 'Nature and Outdoors'}],
-                    },
-                    {
-                      Name: 'Tree',
-                      Confidence: 96.8377685546875,
-                      Instances: [],
-                      Parents: [{Name: 'Plant'}],
-                      Aliases: [],
-                      Categories: [{Name: 'Nature and Outdoors'}],
-                    },
-                    {
-                      Name: 'Woodland',
-                      Confidence: 96.8377685546875,
-                      Instances: [],
-                      Parents: [
-                        {Name: 'Land'},
-                        {Name: 'Nature'},
-                        {Name: 'Outdoors'},
-                        {Name: 'Plant'},
-                        {Name: 'Tree'},
-                        {Name: 'Vegetation'},
-                      ],
-                      Aliases: [{Name: 'Forest'}],
-                      Categories: [{Name: 'Nature and Outdoors'}],
-                    },
-                    {
-                      Name: 'Jacket',
-                      Confidence: 92.2098159790039,
-                      Instances: [],
-                      Parents: [{Name: 'Clothing'}, {Name: 'Coat'}],
-                      Aliases: [],
-                      Categories: [{Name: 'Apparel and Accessories'}],
-                    },
-                    {
-                      Name: 'Standing',
-                      Confidence: 65.57921600341797,
-                      Instances: [],
-                      Parents: [{Name: 'Person'}],
-                      Aliases: [],
-                      Categories: [{Name: 'Actions'}],
-                    },
-                    {
-                      Name: 'Hair',
-                      Confidence: 63.32209014892578,
-                      Instances: [],
-                      Parents: [{Name: 'Person'}],
-                      Aliases: [],
-                      Categories: [{Name: 'Beauty and Personal Care'}],
-                    },
-                    {
-                      Name: 'Raincoat',
-                      Confidence: 56.83426284790039,
-                      Instances: [],
-                      Parents: [{Name: 'Clothing'}, {Name: 'Coat'}],
-                      Aliases: [],
-                      Categories: [{Name: 'Apparel and Accessories'}],
-                    },
-                    {
-                      Name: 'Walking',
-                      Confidence: 56.17829513549805,
-                      Instances: [],
-                      Parents: [{Name: 'Person'}],
-                      Aliases: [],
-                      Categories: [{Name: 'Actions'}],
-                    },
-                    {
-                      Name: 'Hood',
-                      Confidence: 55.42615509033203,
-                      Instances: [],
-                      Parents: [{Name: 'Clothing'}],
-                      Aliases: [],
-                      Categories: [{Name: 'Apparel and Accessories'}],
-                    },
-                  ],
-                  LabelModelVersion: '3.0',
-                }; 
-            */
-          } catch (e) {
-            console.error('Error with Rekognition.detectLabels', e);
-            return photo;
-          }
-          const labels = response.Labels;
-          setLoadingMessage('Filtering Photo Labels');
-          const labelsFiltered = labels.filter(label => label.Confidence >= 80);
-          const labelsWithTitle = labelsFiltered.map(label => {
-            if (
-              label.Categories.filter(category => category.Name).some(
-                r =>
-                  [
-                    'Person Description',
-                    'Actions',
-                    'Events and Attractions',
-                  ].indexOf(r) >= 0,
-              )
-            ) {
-              return {
-                ...label,
-                title: `${label.Instances.length}x${label.Name}`,
-              };
-            } else {
-              return {
-                ...label,
-                title: label.Name,
-              };
-            }
-            // return `${label.Instances.length}x${label.Name}`;
-          });
-          const str = `an image has been described through tags, these are the tags used:
-                ${labelsWithTitle.map(label => label.title).toString()}
-          string these tags together into a full ${useSettingsHooks.getString(
-            'language',
-          )} description of the image, do not make up any details not described by those tags. Do not try to describe how the image feels. Keep it short.`;
-          console.log({
-            str,
-            labelsWithTitle,
-            response: JSON.stringify(labels),
-          });
-          setLoadingMessage('Getting Photo Captions');
-          try {
-            // const completion = await openai.createChatCompletion({
-            //   // model: 'gpt-3.5-turbo',
-            //   model: 'gpt-4',
-            //   messages: [{role: 'user', content: str}],
-            // });
-            // console.log({
-            //   completion: completion.data.choices[0].message?.content,
-            // });
-            return {
-              ...photo,
-              labels: labelsWithTitle,
-              // description: completion.data.choices[0].message?.content,
-            };
-          } catch (e) {
-            console.error('Error with creating photo caption', e);
-            return {...photo, labels: 'null'};
-          }
-        }),
-      ).then(res => {
-        console.log({res});
-        photos = res;
-      });
-    }
-    var locationAliasesArray = JSON.parse(
-      useSettingsHooks.getString('settings.locationAliases'),
-    );
-    setLoadingMessage('Getting Location Aliases');
-    const getAddressName = address => {
-      var aliasObj = locationAliasesArray.find(
-        locationAliasObj => locationAliasObj.address === address,
-      );
-      if (aliasObj !== undefined) {
-        return aliasObj.alias;
-      } else {
-        return '';
-      }
-    };
-    var response = '';
-    if (autoGenerate === true) {
-      setLoadingMessage('Preparing Entry');
-      locations = locations.map(location => {
-        var address = location.description?.split(',')[0];
-        var alias = getAddressName(address || '');
-        console.log({location});
-        entryEvents.push({
-          type: 'location',
-          id: counter,
-          time: location.time,
-          title: alias !== '' ? `${alias} (${address})` : address,
-          additionalNotes: '',
-          coords: {
-            lat: location.lat,
-            long: location.long,
-          },
-        });
-        return {
-          ...location,
-          id: counter++,
-          alias,
-          description: location.description || 'None',
-        };
-      });
-      events = events.map(event => {
-        entryEvents.push({
-          type: 'calendar',
-          id: counter,
-          time: parseInt(event.start) * 1000,
-          endTime: parseInt(event.end) * 1000,
-          title: event.title,
-          additionalNotes: event.notes,
-          calendar: {
-            title: event.calendar,
-            color: event.calendarColor,
-          },
-        });
-        return {
-          ...event,
-          time: parseInt(event.start) * 1000,
-          id: counter++,
-        };
-      });
-      photos = photos.map(photo => {
-        var address = photo.description?.split(',')[0] || '';
-        var alias = address === '' ? '' : getAddressName(address);
-        console.log(photo);
-        entryEvents.push({
-          type: 'photo',
-          id: counter,
-          time: Math.floor(parseFloat(photo.creation) * 1000),
-          localIdentifier: photo.localIdentifier,
-          title: photo.name,
-          description: alias !== '' ? `${alias} (${address})` : address,
-          coords: {
-            lat: photo.lat,
-            long: photo.lon,
-          },
-        });
-        return {
-          ...photo,
-          creation: Math.floor(parseFloat(photo.creation) * 1000),
-          id: counter++,
-          description: alias !== '' ? alias : address,
-          labels: photo.labels || 'null',
-        };
-      });
-      // console.log({photos});
-      var eventListStr = `${
-        locations.length > 0
-          ? `Locations Visited:
-              ${locations.map(
-                location =>
-                  ` ${
-                    location.description !== ''
-                      ? `${
-                          location.alias !== ''
-                            ? location.alias
-                            : location.description
-                        }`
-                      : `${
-                          location.lat !== 'null' ? `Lat: ${location.lat}` : ''
-                        } ${
-                          location.lon !== 'null' ? `Lon: ${location.lon}` : ''
-                        }`
-                  } @${moment(location.time).format('LT')} (id:${location.id})`,
-              )}`
-          : ''
-      }
-
-              ${
-                events.length > 0
-                  ? `Events:
-              ${events.map(
-                event => `${event.title} @${
-                  event.isAllDay === 'true'
-                    ? `All-Day`
-                    : `${moment(parseInt(event.start) * 1000).format(
-                        'LT',
-                      )}-${moment(parseInt(event.end) * 1000).format('LT')}`
-                } (id:${event.id})
-              `,
-              )}`
-                  : ''
-              }
-
-              ${
-                photos.length > 0
-                  ? `Photos Taken:
-              ${photos.map(
-                photo =>
-                  `${
-                    photo.labels !== 'null'
-                      ? `Labels: ${photo.labels
-                          .map(label => label.title)
-                          .toString()}`
-                      : ''
-                  } ${
-                    photo.description !== ''
-                      ? `${photo.description}`
-                      : `${photo.lat !== 'null' ? `Lat: ${photo.lat}` : ''} ${
-                          photo.lon !== 'null' ? `Lon: ${photo.lon}` : ''
-                        }`
-                  } @${moment(photo.creation).format('LT')}(id:${photo.id})`,
-              )}`
-                  : ''
-              }
-              `;
-      console.log('CREATE NEW ENTRY', eventListStr);
-      console.log('EVENTS', {photos, locations, events});
-
-      try {
-        setLoadingMessage('Creating Entry');
-        const completion = await openai.createChatCompletion({
-          // model: 'gpt-3.5-turbo',
-          model: 'gpt-4',
-          messages: [
-            {
-              role: 'system',
-              content: `You are to act as my journal writer. I will give you a list of events that took place today and you are to generate a journal entry based on that. The diary entry should be a transcription of the events that you are told. Photos will have labelling content, location and time metadata. Do not add superfluous details that you are unsure if they actually happened as this will be not useful to me. Add a [[X]] every time one of the events has been completed, e.g. 'I went to a meeting [[X]] then I went to the beach. [[X]]' Replace X with the number assigned to the event. If at the end of a sentence, add after the closing punctuation. There is no need for sign ins (Dear Diary) or send offs (Yours sincerely). Do not introduce any details, events, etc not supplied by the user. Keep it short. Each photo will be described by a series of tags. Write the entry in the ${useSettingsHooks.getString(
-                'language',
-              )} language. ${
-                JSON.parse(
-                  useSettingsHooks.getString('settings.globalWritingSettings'),
-                ).generate
-              }`,
-            },
-            {role: 'user', content: eventListStr},
-          ],
-        });
-        console.log({completion});
-        response = completion.data.choices[0].message?.content;
-      } catch (e) {
-        console.error({e});
-      }
-
-      // const response =
-      //   'This is a test entry. Please respond. &gt;';
-      console.log(response);
-
-      entriesCopy.push({
-        ...baseEntry,
-        time: entryCreationTime.getTime(),
-        entry: '',
-        events: entryEvents,
-        entry: response,
-        title: 'New Entry',
-        generated: 1,
-      });
-    } else {
-      setLoadingMessage('Creating Empty Entry');
-      entriesCopy.push({
-        ...baseEntry,
-        time: entryCreationTime.getTime(),
-        entry: '',
-        events: [],
-        entry: 'No events found.',
-        title: 'New Entry',
-        generated: 1,
-      });
-      console.log('CREATE NEW ENTRY', 'No events found');
-    }
-    console.log({
-      startOfUnixTime,
-      entryEvents,
-      entry: entriesCopy[entriesCopy.length - 1],
-    });
-    try {
-      setLoadingMessage('Saving Entry');
-      createEntryTable();
-      saveEntryData({
-        tags: '',
-        title: 'New Entry',
-        time:
-          useSettingsHooks.getNumber('settings.createEntryTime') > 12
-            ? endOfUnixTime.getTime()
-            : startOfUnixTime.getTime(),
-        emotion: -1,
-        emotions: '',
-        votes: '',
-        titleModifiedAt: Date.now(),
-        titleModifiedSource: 'auto',
-        bodyModifiedAt: Date.now(),
-        bodyModifiedSource: 'auto',
-        events: entryEvents.length === 0 ? '' : JSON.stringify(entryEvents),
-        body:
-          entryEvents.length === 0
-            ? 'No events found.'
-            : entriesCopy[entriesCopy.length - 1].entry,
-        generated: 1,
-      });
-    } catch (e) {
-      console.error(e);
-    }
-    setLoadingMessage('Finished');
-    setEntries(entriesCopy);
-    setGeneratingEntry(false);
-    // setLoading(false);
-
-    /*
-      GET ALL DATA
-      CHECK TO SEE IF AUTO GENERATE OR NOT
-      CREATE MANUAL
-      CREATE AUTO
-      SAVE
-      */
+  const generateEntry2 = async ({memories}) => {
+    console.log(memories);
   };
 
   const createManualEntry = date => {
@@ -1042,13 +522,48 @@ export default FullHomeView = ({route, navigation}) => {
     setGeneratingEntry(false);
   };
 
+  const getNextMemoryTime = () => {
+    // const now = new Date(Date.now());
+    const lastMemoryCheckTime = new Date(
+      useSettingsHooks.getNumber('settings.lastMemoryCheckTime'),
+      // 0,
+    );
+    var timeStr = '';
+    if (
+      lastMemoryCheckTime.getHours() >= 22 ||
+      lastMemoryCheckTime.getHours() < 8
+    ) {
+      if (lastMemoryCheckTime.getHours() >= 22) {
+        lastMemoryCheckTime.setDate(lastMemoryCheckTime.getDate() + 1);
+      }
+      lastMemoryCheckTime.setHours(8);
+      lastMemoryCheckTime.setMinutes(0);
+      lastMemoryCheckTime.setSeconds(0);
+      lastMemoryCheckTime.setMilliseconds(0);
+      timeStr = lastMemoryCheckTime.toLocaleString();
+    } else if (lastMemoryCheckTime.getHours() < 15) {
+      lastMemoryCheckTime.setHours(15);
+      lastMemoryCheckTime.setMinutes(0);
+      lastMemoryCheckTime.setSeconds(0);
+      lastMemoryCheckTime.setMilliseconds(0);
+      timeStr = lastMemoryCheckTime.toLocaleString();
+    } else {
+      lastMemoryCheckTime.setHours(22);
+      lastMemoryCheckTime.setMinutes(0);
+      lastMemoryCheckTime.setSeconds(0);
+      lastMemoryCheckTime.setMilliseconds(0);
+      timeStr = lastMemoryCheckTime.toLocaleString();
+    }
+    return timeStr;
+  };
+
   const getEventIcon = type => {
     switch (type) {
-      case 'location':
+      case EventTypes.LOCATION:
         return <LocationEventIcon />;
-      case 'photo':
+      case EventTypes.PHOTO:
         return <PhotoEventIcon />;
-      case 'calendar':
+      case EventTypes.CALENDAR_EVENT:
         return <CalendarEventIcon />;
     }
   };
@@ -1056,65 +571,217 @@ export default FullHomeView = ({route, navigation}) => {
   console.log(Dimensions.get('window'));
 
   const checkIfReadyToGenerate = async () => {
-    var now = new Date(Date.now());
-    const filteredEntries = entries.filter(
-      entry => entry.generated === true || 1,
+    const date = new Date(Date.now());
+    const lastMemoryCheckTime = new Date(
+      useSettingsHooks.getNumber('settings.lastMemoryCheckTime'),
+      // 0,
     );
-    console.log('CHECKING IF READY TO GENERATE');
 
-    console.log({entries});
-    console.log(useSettingsHooks.getNumber('settings.createEntryTime'));
-    console.log(now.getDate());
-    console.log(
-      filteredEntries.length > 0
-        ? new Date(
-            filteredEntries.sort((a, b) => b.time - a.time)[0].time,
-          ).getDate()
-        : '',
-    );
-    console.log('FINISHED CHECKING IF READY TO GENERATE');
+    //SAME DAY
 
-    if (filteredEntries.length > 0) {
-      if (
-        new Date(
-          filteredEntries.sort((a, b) => b.time - a.time)[0].time,
-        ).getDate() < now.getDate() &&
-        now.getHours() >= useSettingsHooks.getNumber('settings.createEntryTime')
-      ) {
-        console.log('Time to generate entry');
-        await generateEntry({
-          data: await getPermissionsAndData(now.getTime()),
-          date: now.getTime(),
-        });
-        onCreateTriggerNotification({
-          first: false,
-          createEntryTime: useSettingsHooks.getNumber(
-            'settings.createEntryTime',
-          ),
-          time: null,
-        });
-      } else {
-        console.log('Not Ready');
-      }
+    /*DIFFERENT DAYS
+    if did past 22 night before and time is now above 8{
+
     } else {
-      if (useSettingsHooks.getNumber('settings.onboardingTime') < Date.now()) {
-        console.log('Time to generate entry');
-        setFirstEntryGenerated(true);
-        await generateEntry({
-          data: await getPermissionsAndData(now.getTime()),
-          date: now.getTime(),
-        });
-        onCreateTriggerNotification({
-          first: false,
-          createEntryTime: useSettingsHooks.getNumber(
-            'settings.createEntryTime',
-          ),
-          time: null,
-        });
-      } else {
-        console.log('Not Ready');
-      }
+
     }
+      */
+    // if (lastMemoryCheckTime.toDateString() !== date.toDateString()) {
+    // } else {
+    //   if (lastMemoryCheckTime.getHours() < 8 && date.getHours() >= 8) {
+    //     // 0-8
+    //   } else if (lastMemoryCheckTime.getHours() < 15 && date.getHours() >= 15) {
+    //     //15-22
+    //   } else if (lastMemoryCheckTime.getHours() < 22 && date.getHours() >= 22) {
+    //   }
+    // }
+
+    const readyToGenerateMemory = async ({start, end}) => {
+      setMemoryLoadingMessage('Generating');
+      const eventData = await getPermissionsAndData({start, end});
+      console.log('Event Data For Memory Generation', eventData);
+      const newMemories = generateMemories({
+        data: eventData,
+        date: date.getTime(),
+      });
+      const updatedMemories = await getMemories();
+      setMemories(updatedMemories);
+      useSettingsHooks.set('settings.lastMemoryCheckTime', Date.now());
+    };
+
+    const checkIfMemoryReadyToGenerate = async () => {
+      setMemoryLoadingMessage('Checking');
+      /*
+      MEMORY GENERATION
+    */
+      console.log('Check if memory can be generated');
+      console.log(date.getHours());
+      console.log(lastMemoryCheckTime.getHours());
+      console.log(lastMemoryCheckTime.toDateString());
+      console.log(date.getHours());
+      //If current time between 22:00:00 and 07:59:59
+      if (date.getHours() >= 22 || date.getHours() < 8) {
+        // to generate 15-21:59
+        //check if can
+        console.log('current time between 10:00PM and 08:00AM');
+
+        console.log(lastMemoryCheckTime.toLocaleString());
+        const yesterday = new Date(date.getTime());
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (
+          (date.getHours() >= 22 &&
+            ((lastMemoryCheckTime.getHours() < 22 &&
+              lastMemoryCheckTime.toDateString() === date.toDateString()) ||
+              lastMemoryCheckTime.toDateString() !== date.toDateString())) ||
+          (date.getHours() < 8 &&
+            ((lastMemoryCheckTime.getHours() < 22 &&
+              lastMemoryCheckTime.toDateString() ===
+                yesterday.toDateString()) ||
+              (lastMemoryCheckTime.toDateString() !== date.toDateString() &&
+                lastMemoryCheckTime.toDateString() !==
+                  yesterday.toDateString())))
+        ) {
+          console.log('generate 15-21:59');
+          const start = new Date(Date.now());
+          if (date.getHours() >= 0 && date.getHours() < 22) {
+            start.setDate(start.getDate() - 1);
+          }
+          start.setHours(15);
+          start.setMinutes(0);
+          start.setSeconds(0);
+          start.setMilliseconds(0);
+          const end = new Date(start.getTime());
+          end.setHours(22);
+          end.setMilliseconds(end.getMilliseconds() - 1);
+          readyToGenerateMemory({start, end});
+        }
+      }
+      //If current time between 08:00:00 and 14:59:59
+      else if (
+        date.getHours() < 15 &&
+        ((lastMemoryCheckTime.getHours() < 8 &&
+          lastMemoryCheckTime.toDateString() === date.toDateString()) ||
+          lastMemoryCheckTime.toDateString() !== date.toDateString())
+      ) {
+        // to generate 22-7:59
+        console.log('generate 22-7:59');
+        const start = new Date(Date.now());
+        start.setHours(22);
+        start.setMinutes(0);
+        start.setSeconds(0);
+        start.setMilliseconds(0);
+        const end = new Date(start.getTime());
+        start.setDate(start.getDate() - 1);
+        end.setHours(8);
+        end.setMilliseconds(end.getMilliseconds() - 1);
+        readyToGenerateMemory({start, end});
+      }
+      //If current time between 15:00:00 and 21:59:59
+      else if (
+        date.getHours() >= 15 &&
+        ((lastMemoryCheckTime.getHours() < 15 &&
+          lastMemoryCheckTime.toDateString() === date.toDateString()) ||
+          lastMemoryCheckTime.toDateString() !== date.toDateString())
+      ) {
+        // to generate 8-14:59
+        console.log('generate 8-14:59');
+        const start = new Date(Date.now());
+        start.setHours(8);
+        start.setMinutes(0);
+        start.setSeconds(0);
+        start.setMilliseconds(0);
+        const end = new Date(start.getTime());
+        end.setHours(15);
+        end.setMilliseconds(end.getMilliseconds() - 1);
+        readyToGenerateMemory({start, end});
+      } else {
+        console.log('Not Ready To Generate Memory');
+      }
+      console.log('Finished checking If Memory is Ready');
+      setMemoryLoadingMessage('Finished');
+    };
+
+    const checkIfStoryReadyToGenerate = async () => {
+      setStoryLoadingMessage('Checking');
+      if (entries.length > 0) {
+        /*
+          If today is >8AM, check if last entry is before 8AM today.
+          If today is <8AM, check if last entry is before 8AM previous day.
+          If today is >8PM, check if last entry is before 8PM today
+          if today is <8PM, check if last is before 8PM the previous day. 
+
+
+        */
+        const entriesTest = entries.map(entry =>
+          new Date(entry.time).toLocaleString(),
+        );
+        console.log(entriesTest);
+
+        const lastEntry = entries.sort((a, b) => b.time - a.time)[0];
+        const lastEntryDate = new Date(lastEntry.time);
+        const hourThreshold = useSettingsHooks.getNumber(
+          'settings.createEntryTime',
+        );
+        const todayHour = new Date(Date.now()).getHours();
+        const todayTimeThreshold = new Date(Date.now());
+        todayTimeThreshold.setHours(hourThreshold);
+        todayTimeThreshold.setMinutes(0);
+        todayTimeThreshold.setMinutes(0);
+        todayTimeThreshold.setMinutes(0);
+        console.log(hourThreshold);
+        console.log(lastEntryDate.toLocaleString());
+
+        const yesterdayTimeThreshold = new Date(todayTimeThreshold.getTime());
+        yesterdayTimeThreshold.setDate(yesterdayTimeThreshold.getDate() - 1);
+        if (
+          (todayHour >=
+            useSettingsHooks.getNumber('settings.createEntryTime') &&
+            lastEntryDate.getTime() < todayTimeThreshold.getTime()) ||
+          (todayHour < useSettingsHooks.getNumber('settings.createEntryTime') &&
+            lastEntryDate.getTime() < yesterdayTimeThreshold.getTime())
+        ) {
+          console.log('Ready To Generate Story');
+          setStoryLoadingMessage('Generating');
+          const newEntry = await generateEntry({memories});
+          setEntries([newEntry, ...entries]);
+        } else {
+          console.log('Not Ready To Generate Story');
+        }
+      } else {
+        if (
+          useSettingsHooks.getNumber('settings.onboardingTime') < Date.now()
+        ) {
+          console.log('Time to generate entry');
+          // setFirstEntryGenerated(true);
+          console.log('Ready abc123');
+          setStoryLoadingMessage('Generating');
+          const newEntry = await generateEntry({memories});
+          setEntries([newEntry, ...entries]);
+          onCreateTriggerNotification({
+            first: false,
+            createEntryTime: useSettingsHooks.getNumber(
+              'settings.createEntryTime',
+            ),
+            time: null,
+          });
+        } else {
+          console.log('Not Ready');
+        }
+      }
+      setStoryLoadingMessage('Finished');
+    };
+    console.log(memories.length);
+
+    checkIfMemoryReadyToGenerate();
+    //Create Local Notifications to go off at 08:00, 15:00 && 22:0
+    try {
+      onCreateTriggerReminder({remindTime: 8});
+      onCreateTriggerReminder({remindTime: 15});
+      onCreateTriggerReminder({remindTime: 22});
+    } catch (e) {
+      console.error({e});
+    }
+    checkIfStoryReadyToGenerate();
   };
 
   useEffect(() => {
@@ -1292,6 +959,13 @@ export default FullHomeView = ({route, navigation}) => {
                 setOnBoarding(false);
                 useSettingsHooks.set('onboarding', false);
                 console.log('END ONBOARDING');
+                try {
+                  onCreateTriggerReminder({remindTime: 8});
+                  onCreateTriggerReminder({remindTime: 15});
+                  onCreateTriggerReminder({remindTime: 22});
+                } catch (e) {
+                  console.error({e});
+                }
               }}
               generateEntry={generateEntry}
               getPermissionsAndData={getPermissionsAndData}
@@ -1464,6 +1138,9 @@ export default FullHomeView = ({route, navigation}) => {
                   );
                 })}
               </View>
+              <View
+                style={{height: 2, width: '100%', backgroundColor: 'black'}}
+              />
               <ModalItem
                 icon={
                   <UpvoteIcon
@@ -1492,846 +1169,287 @@ export default FullHomeView = ({route, navigation}) => {
                 boldText={'AI Rewrite'}
                 softText={''}
               />
-              <ModalItem
-                icon={<AIRewriteIcon stroke={'black'} />}
-                boldText={'Entry View'}
-                softText={''}
-                onPress={() => {
-                  const currentEntry =
-                    entries.length > 0
-                      ? entries.sort((a, b) => b.time - a.time)[
-                          currentRichModeEntryIndex
-                        ]
-                      : {};
-                  navigation.navigate('Entry', {
-                    baseEntry: {
-                      ...currentEntry,
-                      index: currentRichModeEntryIndex,
-                    },
-                  });
-                  setShowModal(false);
-                }}
-              />
-              <ModalItem
-                icon={<SettingsIcon />}
-                boldText={'Settings'}
-                softText={''}
-                onPress={() => {
-                  navigation.navigate('Settings');
-                  setShowModal(false);
-                }}
+
+              <View
+                style={{height: 2, width: '100%', backgroundColor: 'black'}}
               />
             </View>
           </Modal>
-          {/* <DatePicker
-            modal
-            mode="date"
-            open={open}
-            date={date}
-            onConfirm={async date => {
-              setOpen(false);
-              // console.log({date: });
-              if (mode === 'generate') {
-                await generateEntry({
-                  data: await getPermissionsAndData(date.getTime()),
-                  date: date.getTime(),
-                });
-              } else if (mode === 'manual') {
-                createManualEntry(date.getTime());
-              }
-              // setDate(date);
-            }}
-            onCancel={() => {
-              setOpen(false);
-            }}
-          /> */}
 
-          {/* <HomeTop navigation={navigation} /> */}
-          {/* <HomeHeading
-            entries={entries.length}
-            manual={entries.filter(entry => entry.generated !== true).length}
-            events={
-              entries
-                .map(entry => entry.events)
-                .flat()
-                .filter(event => event.type !== 'photo').length
-            }
-            photos={
-              entries
-                .map(entry => entry.events)
-                .flat()
-                .filter(event => event.type === 'photo').length
-            }
-          /> */}
-          {/* {showNewHeader === true ? (
-            <View>
-              <Text></Text>
-            </View>
-          ) : ( */}
-          <Animated.View
-            style={{
-              // backgroundColor: screen === screenValues.RICH ? '#06609E' : color,
-              backgroundColor: '#06609E',
-
-              padding: screen === screenValues.RICH ? 20 : rangeViewPadding,
-              // flexShrink: 1,
-              height: screen === screenValues.RICH ? 75 : rangeViewHeight,
-              overflow: 'hidden',
-              // height: headerScrollHeight,
-            }}>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-evenly',
-                backgroundColor: '#0A5487',
-                borderRadius: 5,
-              }}>
+          {/* <ScrollView removeClippedSubviews={true}> */}
+          {screenValues.READ === screen && (
+            <View style={{flex: 1}}>
               <TouchableOpacity
-                onPress={() => {
-                  setRangeView(rangeViewValues.DAYS);
-                }}
-                style={{
-                  paddingVertical: 5,
-                  paddingHorizontal: '10%',
-                  marginVertical: 5,
-                  marginHorizontal: '1%',
-                  borderRadius: 5,
-                  backgroundColor:
-                    rangeView === rangeViewValues.DAYS ? '#06609E' : '#0A5487',
+                onPress={async () => {
+                  const newEntry = await generateEntry({
+                    memories: [
+                      {
+                        id: 1,
+                        time: 1697994699000,
+                        body: 'At 3:00 PM, I had a driving test. After my third attempt, I finally passed.',
+                      },
+                      {
+                        id: 2,
+                        time: 1698023499000,
+                        body: 'At 6:00 PM, I had a wonderful meal at a resturant. The buffet was a let down but was cheap enough',
+                      },
+                    ],
+                  });
+                  setEntries([newEntry, ...entries]);
                 }}>
-                <Text allowFontScaling={false} style={{color: 'white'}}>
-                  Days
-                </Text>
+                <Text>Generate</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
-                onPress={() => {
-                  setRangeView(rangeViewValues.WEEKS);
-                }}
-                style={{
-                  paddingVertical: 5,
-                  paddingHorizontal: '10%',
-                  marginVertical: 5,
-                  marginHorizontal: '1%',
-                  borderRadius: 5,
-                  backgroundColor:
-                    rangeView === rangeViewValues.WEEKS ? '#06609E' : '#0A5487',
+                onPress={async () => {
+                  retrieveSpecificData(0, Date.now(), res => {
+                    var locations;
+                    (locations = res.map(obj => {
+                      return {
+                        description: obj.description.split(',')[0],
+                        time: obj.date,
+                        lat: obj.lat,
+                        long: obj.lon,
+                      };
+                    })),
+                      console.log(locations);
+                  });
                 }}>
-                <Text allowFontScaling={false} style={{color: 'white'}}>
-                  Weeks
-                </Text>
+                <Text>Check Location Data</Text>
               </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => {
-                  setRangeView(rangeViewValues.MONTHS);
-                }}
-                style={{
-                  paddingVertical: 5,
-                  paddingHorizontal: '10%',
-                  marginVertical: 5,
-                  marginHorizontal: '1%',
-                  borderRadius: 5,
-                  backgroundColor:
-                    rangeView === rangeViewValues.MONTHS
-                      ? '#06609E'
-                      : '#0A5487',
-                }}>
-                <Text allowFontScaling={false} style={{color: 'white'}}>
-                  Months
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </Animated.View>
-
-          <Animated.View
-            pointerEvents={'box-none'}
-            style={{
-              overflow: 'hidden',
-              backgroundColor: 'rgba(0,0,0,0)',
-              paddingBottom: 500,
-              position: 'absolute',
-              width: '100%',
-              zIndex: 999,
-            }}>
-            <Animated.View
-              style={{
-                backgroundColor: 'white',
-                padding: screen === screenValues.RICH ? 0 : headerPadding,
-                width: '100%',
-                height: screen === screenValues.RICH ? 0 : headerHeight,
-                shadowColor: '#000',
-                shadowOffset: {
-                  width: 0,
-                  height: 12,
-                },
-                gap: 10,
-                shadowOpacity: 0.58,
-                shadowRadius: 16.0,
-
-                elevation: 24,
-              }}>
-              {entryHeaderList.length > 0 && (
-                <>
-                  {/* {console.log({entryHeaderList, entryHeaderIndex})} */}
-                  <Text
-                    allowFontScaling={false}
-                    style={{fontWeight: '600', fontSize: 20}}>
-                    {entryHeaderList[entryHeaderIndex].time}
-                  </Text>
-                  <Text
-                    allowFontScaling={false}
+              <Text>Generation Status: {storyLoadingMessage}</Text>
+              <Text>
+                Selected Entry Creation Time:{' '}
+                {useSettingsHooks.getNumber('settings.createEntryTime')}
+                {':00'}
+              </Text>
+              <FlatList
+                data={entries}
+                keyExtractor={entry => entry.id}
+                removeClippedSubviews={true}
+                initialNumToRender={2}
+                maxToRenderPerBatch={1}
+                updateCellsBatchingPeriod={100}
+                windowSize={7}
+                style={{flex: 1}}
+                renderItem={({item, index}) => (
+                  <View
+                    key={index}
                     style={{
-                      fontStyle: 'italic',
-                      fontWeight: '600',
-                      fontSize: 20,
+                      marginHorizontal: 20,
+                      padding: 10,
+                      borderRadius: 20,
                     }}>
-                    {entryHeaderList[entryHeaderIndex].title}
-                  </Text>
-                </>
-              )}
-            </Animated.View>
-          </Animated.View>
+                    {/* {console.log({item, index})} */}
+                    {/* <Text>Test</Text> */}
+                    <Text>{item.body}</Text>
 
-          <Swipeable
-            // dragOffsetFromRightEdge={100}
-            ref={swipeableRef}
-            onBegan={() => {
-              // console.log('allonsy');
-            }}
-            onSwipeableOpen={() => {
-              // console.log('open');
-            }}
-            onSwipeableClose={() => {
-              // console.log('close');
-            }}
-            onSwipeableWillOpen={() => {
-              // console.log('will open');
-              setDrag(false);
-              setScreen(screenValues.RICH);
-            }}
-            onSwipeableWillClose={() => {
-              // console.log('will close');
-              setDrag(false);
-              setScreen(screenValues.READ);
-            }}
-            enabled={!scroll}
-            containerStyle={{flex: 1}}
-            onActivated={() => {
-              setDrag(true);
-              console.log('activate');
-            }}
-            // ON
-            renderRightActions={(val1, val2) => {
-              console.log({val1, val2});
-              const trans = val2.interpolate({
-                inputRange: [-Dimensions.get('screen').width, -150],
-                outputRange: [0, Dimensions.get('screen').width],
-                extrapolate: 'clamp',
-              });
-              // useEffect(() => {
-              //   console.log({trans});
-              // }, [trans]);
-              // console.log({trans});
-              const currentEntry =
-                entries.length > 0
-                  ? entries.sort((a, b) => b.time - a.time)[
-                      currentRichModeEntryIndex
-                    ]
-                  : {};
-              let pattern = /\[\[\d+\]\]/g;
-
-              let matches = currentEntry?.entry
-                ?.split(pattern)
-                .filter(text => text !== '' && text.split(' ').length > 0);
-              // const matches2 = pattern.exec(currentEntry?.entry);
-              const matches2 = findMatches(
-                /\[\[\d+\]\]/g,
-                currentEntry?.entry,
-              ).flat();
-
-              // console.log({entry: currentEntry?.entry, matches2, matches});
-              // console.log({matches, matches2, events: currentEntry?.events.find((event)=>{event.id})});
-
-              return (
-                <Animated.View
-                  style={{
-                    backgroundColor: 'white',
-                    justifyContent: 'center',
-                    alignItems: 'flex-start',
-                    flexGrow: 1,
-                    // transform: val1,
-                    //Dimensions.get('screen').width
-                    transform: [{translateX: trans}],
-                  }}>
-                  <ScrollView
-                    contentContainerStyle={{
-                      width: Dimensions.get('screen').width,
+                    <Text>{JSON.stringify(item)}</Text>
+                    {index !== entries.length - 1 && (
+                      <View
+                        style={{
+                          height: 1,
+                          width: '100%',
+                          marginVertical: 20,
+                          backgroundColor: 'rgba(11, 11, 11, 0.1)',
+                        }}></View>
+                    )}
+                  </View>
+                )}></FlatList>
+            </View>
+          )}
+          {screenValues.MEMORIES === screen && (
+            <>
+              <Text>Next Memory Creation: {getNextMemoryTime()}</Text>
+              <Text>Memory Length: {memories.length}</Text>
+              <Text>
+                Last Time Memories Generated:{' '}
+                {new Date(
+                  useSettingsHooks.getNumber('settings.lastMemoryCheckTime'),
+                  // 0,
+                ).toLocaleString()}
+              </Text>
+              <Text>Generation Status: {memoryLoadingMessage}</Text>
+              <FlatList
+                data={memories}
+                keyExtractor={memory => memory.id}
+                removeClippedSubviews={true}
+                initialNumToRender={2}
+                maxToRenderPerBatch={1}
+                updateCellsBatchingPeriod={100}
+                windowSize={7}
+                style={{flex: 1}}
+                // contentContainerStyle={{flex: 1}}
+                renderItem={({item, index}) => (
+                  <View
+                    style={{
+                      marginHorizontal: 20,
+                      padding: 10,
+                      borderRadius: 20,
                     }}>
-                    {entries.length > 0 && currentEntry !== undefined && (
-                      <View style={{padding: 10}}>
-                        <View style={{gap: 10}}>
-                          <Text
-                            allowFontScaling={false}
+                    {console.log({item, index})}
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (highlightedMemory === index) {
+                          setHighlightedMemory(-1);
+                        } else {
+                          setHighlightedMemory(index);
+                          setShowModal(true);
+                        }
+                      }}
+                      style={{
+                        backgroundColor:
+                          highlightedMemory === index ? 'gray' : 'white',
+                      }}>
+                      <Text>{item.body}</Text>
+                      <Text>{JSON.stringify(item)}</Text>
+                      <View style={{marginTop: 20}}>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 10,
+                          }}>
+                          <View
                             style={{
-                              fontSize: 18,
-                              fontWeight: 600,
-                              color: '#8A888A',
+                              padding: 5,
+                              borderRadius: 30,
+                              borderWidth: 2,
+                              borderColor: '#EAEAEA',
+                              backgroundColor: 'white',
                             }}>
-                            {toDateString(currentEntry.time)}
-                          </Text>
-                          <Text
-                            allowFontScaling={false}
-                            style={{fontSize: 20, fontWeight: 600}}>
-                            {currentEntry.title}
-                          </Text>
-                          {/* <Text allowFontScaling={false} style={{fontSize: 16}}> */}
-                          {matches.map((text, textIndex) => {
-                            // const eventData =
-                            //   matches2?.length > 0
-                            //     ? currentEntry?.events.find(
-                            //         event =>
-                            //           event.id ===
-                            //           matches2[textIndex].substring(
-                            //             2,
-                            //             matches2[textIndex].length - 1,
-                            //           ),
-                            //       )
-                            //     : {};
-                            // console.log(
-                            //   matches2[textIndex].substring(
-                            //     2,
-                            //     matches2[textIndex].length - 2,
-                            //   ),
-                            // );
-                            // console.log({matches2, text, textIndex});
-                            // console.log(
-                            // matches2 !== null
-                            //   ? matches2[textIndex].substring(
-                            //       2,
-                            //       matches2[textIndex].length - 2,
-                            //     )
-                            //   : null,
-                            // );
-                            // console.log({matches2, textIndex, text});
-                            const eventLookFor =
-                              matches2 !== null &&
-                              (matches.length === matches2.length ||
-                                textIndex < matches2.length)
-                                ? matches2[textIndex].substring(
-                                    2,
-                                    matches2[textIndex].length - 2,
-                                  )
-                                : null;
-                            const eventData =
-                              eventLookFor !== null
-                                ? currentEntry?.events.find(
-                                    event =>
-                                      event.id === parseInt(eventLookFor),
-                                  )
-                                : null;
-                            // console.log(parseInt(eventLookFor));
-                            // console.log(eventData);
-                            const getFormatedTimeString = (
-                              time1,
-                              time2 = null,
-                            ) => {
-                              const date = new Date(time1);
-                              var hours = date.getHours();
-                              // Minutes part from the timestamp
-                              var minutes = '0' + date.getMinutes();
-
-                              const ampm = hours >= 12 ? 'PM' : 'AM';
-                              hours = hours % 12;
-                              hours = hours ? '0' + hours : 12;
-                              // Seconds part from the timestamp
-                              var formattedTime =
-                                hours.toString().slice(-2) +
-                                ':' +
-                                minutes.toString().slice(-2) +
-                                ' ' +
-                                ampm;
-                              if (time2 === null) {
-                                return formattedTime;
-                              } else {
-                                return `${formattedTime}-${getFormatedTimeString(
-                                  time2,
-                                )}`;
-                              }
-                            };
-
-                            var formattedTime;
-                            if (eventData !== null) {
-                              var time2 = eventData.endTime || null;
-                              formattedTime = getFormatedTimeString(
-                                eventData.time,
-                                time2,
-                              );
-                            }
-                            console.log({eventData});
-
-                            return (
-                              text.split(' ').length > 0 && (
-                                <View key={textIndex}>
-                                  <Text
-                                    allowFontScaling={false}
-                                    style={{fontSize: 16}}>
-                                    {text.trimStart()}
-                                  </Text>
-                                  {eventData !== null && (
-                                    <View style={{marginTop: 20}}>
-                                      <View
-                                        style={{
-                                          flexDirection: 'row',
-                                          alignItems: 'center',
-                                          gap: 10,
-                                        }}>
-                                        <View
-                                          style={{
-                                            padding: 5,
-                                            borderRadius: 30,
-                                            borderWidth: 2,
-                                            borderColor: '#EAEAEA',
-                                          }}>
-                                          {getEventIcon(eventData.type)}
-                                        </View>
-                                        <View>
-                                          <Text
-                                            style={{
-                                              color: 'rgba(11, 11, 11, 0.8)',
-                                              fontWeight: 600,
-                                            }}>
-                                            {eventData.title}
-                                          </Text>
-                                          <Text
-                                            style={{
-                                              color: 'rgba(11, 11, 11, 0.6)',
-                                            }}>
-                                            {formattedTime}
-                                          </Text>
-                                        </View>
-                                      </View>
-                                      {/* <ScrollView
-                                        contentContainerStyle={{padding: 10, backgroundColor: '', borderRadius: ''}}
-
-                                        horizontal
-                                        pagingEnabled> */}
-                                      <View style={{margin: 5, gap: 10}}>
-                                        {eventData.type === 'photo' && (
-                                          <View
-                                            style={{
-                                              height: 200,
-                                              // width: '100%',
-                                              alignItems: 'center',
-                                              justifyContent: 'center',
-                                              overflow: 'hidden',
-                                              borderRadius: 20,
-                                            }}>
-                                            <View
-                                              style={{
-                                                height: 200,
-                                                width: 200,
-                                                borderRadius: 20,
-                                                overflow: 'hidden',
-                                              }}>
-                                              <ImageAsset
-                                                localIdentifier={
-                                                  eventData.localIdentifier
-                                                }
-                                                setHeight={200}
-                                                setWidth={200}
-                                                // height={1}
-                                                style={{
-                                                  // flex: 1,
-                                                  height: 200,
-                                                  width: 200,
-                                                }}
-                                              />
-                                            </View>
-                                          </View>
-                                        )}
-
-                                        {eventData.type === 'calendar' && (
-                                          <ScrollView style={{height: 200}}>
-                                            <Text
-                                              style={
-                                                {
-                                                  // overflow: 'scroll',
-                                                  // width: '100%',
-                                                  // height: 200,
-                                                }
-                                              }>
-                                              {eventData.additionalNotes}
-                                            </Text>
-                                          </ScrollView>
-                                        )}
-
-                                        {['photo', 'location'].includes(
-                                          eventData.type,
-                                        ) && (
-                                          // <View
-                                          //   style={{
-                                          //     backgroundColor: 'red',
-                                          //     width: '90%',
-                                          //     height: 200,
-                                          //   }}
-                                          // />
-                                          <MapView
-                                            // moveOnMarkerPress={false}
-                                            // scrollEnabled={false}
-                                            initialRegion={{
-                                              latitude: eventData.coords.lat,
-                                              longitude: eventData.coords.long,
-                                              latitudeDelta: 0.0025,
-                                              longitudeDelta: 0.025,
-                                            }}
-                                            style={{
-                                              width: '100%',
-                                              height: 200,
-                                              borderRadius: 20,
-                                            }}>
-                                            <Marker
-                                              coordinate={{
-                                                latitude: eventData.coords.lat,
-                                                longitude:
-                                                  eventData.coords.long,
-                                              }}
-                                            />
-                                          </MapView>
-                                        )}
-                                      </View>
-                                      {/* </ScrollView> */}
-                                    </View>
-                                  )}
-                                  {textIndex !== matches.length - 1 && (
-                                    <View
-                                      style={{
-                                        height: 1,
-                                        width: '100%',
-                                        marginTop: 20,
-                                        backgroundColor:
-                                          'rgba(11, 11, 11, 0.1)',
-                                      }}></View>
-                                  )}
-                                </View>
-                              )
-                            );
-                          })}
-                          {/* </Text> */}
+                            {getEventIcon(item.type)}
+                          </View>
+                          <View>
+                            <Text
+                              style={{
+                                color: 'rgba(11, 11, 11, 0.8)',
+                                fontWeight: 600,
+                              }}>
+                              {item.type === EventTypes.LOCATION &&
+                                item.eventsData.description}
+                              {item.type === EventTypes.PHOTO &&
+                                item.eventsData.name}
+                              {item.type === EventTypes.CALENDAR_EVENT &&
+                                item.eventsData.title}
+                            </Text>
+                            <Text
+                              style={{
+                                color: 'rgba(11, 11, 11, 0.6)',
+                              }}>
+                              {item.formattedTime}
+                            </Text>
+                          </View>
                         </View>
                       </View>
-                    )}
-                  </ScrollView>
-                </Animated.View>
-              );
-            }}>
-            <View>
-              {generatingEntry && (
-                <View
-                  style={{
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    width: '100%',
-                  }}>
-                  <Image
-                    source={require('./src/assets/writing.gif')}
-                    style={{width: 100, height: 100}}
-                  />
-                  <Text>{loadingMessage}</Text>
-                </View>
-              )}
-
-              <ScrollView
-                // pagingEnabled
-                contentContainerStyle={{
-                  paddingVertical: verticalScale(10),
-                  paddingHorizontal: horizontalScale(10),
-                  // flexGrow: 1,
-                  backgroundColor:
-                    headerScrollHeight < H_MAX_HEIGHT / 2 ? 'black' : 'white',
-                }}
-                onScroll={Animated.event(
-                  [{nativeEvent: {contentOffset: {y: scrollOffsetY}}}],
-                  {useNativeDriver: false},
-                )}
-                // ONsCROLL
-                scrollEnabled={!drag}
-                onScrollBeginDrag={() => {
-                  // console.log('start');
-                  setScroll(true);
-                }}
-                onScrollEndDrag={() => {
-                  // console.log('end');
-                  setScroll(false);
-                }}
-                style={{height: '100%', backgroundColor: 'white'}}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={generatingEntry}
-                    onRefresh={() => {
-                      checkIfReadyToGenerate();
-                    }}
-                  />
-                }
-                scrollEventThrottle={16}>
-                {/* <View
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'space-evenly',
-                marginBottom: 10,
-              }}>
-              {generatingEntry ? (
-                <Text
-                  allowFontScaling={false}
-                  style={{fontSize: moderateScale(14)}}>
-                  Loading...
-                </Text>
-              ) : (
-                <>
-                  <CreateEntryButton
-                    onPress={async () => {
-                      // await generateEntry(await getPermissionsAndData());
-                      setOpen(true);
-                      setMode('generate');
-                    }}
-                    text={'Generate new entry'}
-                  />
-                  <CreateEntryButton
-                    onPress={() => {
-                      setOpen(true);
-                      setMode('manual');
-                    }}
-                    text={'Create new entry (Manual)'}
-                  />
-                </>
-              )}
-            </View> */}
-
-                {!loading && !loadingEntries ? (
-                  <>
-                    {entries.length === 0 ? (
-                      <View style={{gap: 20}}>
-                        <Image
-                          source={
-                            useSettingsHooks.getNumber(
-                              'settings.createEntryTime',
-                            ) === 8
-                              ? require('./src/assets/AMImage.png')
-                              : require('./src/assets/PMImage.png')
-                          }
-                          resizeMode="contain"
-                          style={{
-                            alignSelf: 'center',
-                            display: 'flex',
-                            marginTop: 50,
-                            width: horizontalScale(250),
-                            height: verticalScale(250),
-                            justifyContent: 'center',
-                          }}
+                      {[EventTypes.PHOTO, EventTypes.LOCATION].includes(
+                        item.type,
+                      ) && (
+                        <SingleMapMemo
+                          lat={item.eventsData.lat}
+                          long={item.eventsData.long}
                         />
-                        <Text
-                          allowFontScaling={false}
+                      )}
+                      {[EventTypes.PHOTO].includes(item.type) && (
+                        <View
                           style={{
-                            fontWeight: 600,
-                            textAlign: 'center',
-                            fontSize: 23,
+                            height: 200,
+                            // width: '100%',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden',
+                            borderRadius: 20,
                           }}>
-                          Please wait till 8
-                          {useSettingsHooks.getNumber(
-                            'settings.createEntryTime',
-                          ) === 8
-                            ? 'AM'
-                            : 'PM'}
-                        </Text>
-                        <Text
-                          allowFontScaling={false}
-                          style={{
-                            fontWeight: 400,
-                            textAlign: 'center',
-                            fontSize: 18,
-                          }}>
-                          We will notify you as soon as your first daily summary
-                          will be ready
-                        </Text>
-                      </View>
-                    ) : (
-                      // <EntryList entries={entries} navigation={navigation} />
-                      <View style={{gap: 10}}>
-                        {entries
-                          .sort((a, b) => b.time - a.time)
-                          .map((currEntry, currEntryIndex) => {
-                            const dateText = toDateString(currEntry.time);
-                            return (
-                              <View
-                                onTouchStart={() => {
-                                  // console.log('yee-haw');
-                                  setCurrentRichModeEntryIndex(currEntryIndex);
-                                }}
-                                onTouchEndCapture={() => {
-                                  if (!scroll && !drag) {
-                                    // console.log('TOUCH END');
-                                    setShowModal(true);
-                                  }
-                                }}
-                                onLayout={event => {
-                                  // console.log(event.nativeEvent.layout);
-                                  // console.log({
-                                  //   entries: entries.length,
-                                  //   entryHeaderList: entryHeaderList.length,
-                                  // });
-                                  if (
-                                    entryHeaderList.length ===
-                                    entries.length - 1
-                                  ) {
-                                    var newList = [
-                                      ...entryHeaderList,
-                                      {
-                                        y: event.nativeEvent.layout.y,
-                                        title: currEntry.title,
-                                        time: dateText,
-                                        height: event.nativeEvent.layout.height,
-                                      },
-                                    ];
-                                    setEntryHeaderList(
-                                      newList.sort((a, b) => a.y - b.y),
-                                    );
-                                  } else if (
-                                    entryHeaderList.length < entries.length
-                                  ) {
-                                    setEntryHeaderList([
-                                      ...entryHeaderList,
-                                      {
-                                        y: event.nativeEvent.layout.y,
-                                        title: currEntry.title,
-                                        time: dateText,
-                                        height: event.nativeEvent.layout.height,
-                                      },
-                                    ]);
-                                  }
-                                }}
-                                key={currEntryIndex}>
-                                <View style={{gap: 10}}>
-                                  <Text
-                                    allowFontScaling={false}
-                                    style={{
-                                      fontSize: 18,
-                                      fontWeight: 600,
-                                      color: '#8A888A',
-                                    }}>
-                                    {dateText}
-                                  </Text>
-                                  <Text
-                                    allowFontScaling={false}
-                                    style={{fontSize: 20, fontWeight: 600}}>
-                                    {currEntry.title}
-                                  </Text>
-                                  <Text
-                                    allowFontScaling={false}
-                                    style={{fontSize: 16}}>
-                                    {currEntry.entry}
-                                  </Text>
-                                </View>
-
-                                {currEntryIndex !== entries.length - 1 ? (
-                                  <View
-                                    style={{
-                                      backgroundColor: 'black',
-                                      width: '100%',
-                                      height: 1,
-                                      marginTop: 10,
-                                    }}
-                                  />
-                                ) : (
-                                  <>
-                                    {/* {console.log('entryHeaderList', {
-                                      entryHeaderList: entryHeaderList,
-                                      entryHeaderList2:
-                                        entryHeaderList[currEntryIndex],
-                                      currEntryIndex,
-                                    })} */}
-                                    {entryHeaderList.length ===
-                                      entries.length && (
-                                      <>
-                                        {/* {console.log('VIEW')}
-                                        {console.log({entryHeaderList})}
-                                        {console.log({currEntryIndex})}
-                                        {console.log(
-                                          entryHeaderList[currEntryIndex],
-                                        )} */}
-                                        {/* 
-                                    {console.log('entryHeaderList', {
-                                      entryHeaderList: entryHeaderList,
-                                      entryHeaderList2:
-                                        entryHeaderList[currEntryIndex],
-                                      currEntryIndex,
-                                    })} */}
-                                        <View
-                                          style={{
-                                            width: '100%',
-                                            height:
-                                              Dimensions.get('window').height -
-                                              entryHeaderList[currEntryIndex]
-                                                .height,
-                                          }}
-                                        />
-                                      </>
-                                    )}
-                                  </>
-                                )}
-                              </View>
-                            );
-                          })}
-                      </View>
+                          <View
+                            style={{
+                              height: 200,
+                              width: 200,
+                              borderRadius: 20,
+                              overflow: 'hidden',
+                            }}>
+                            <ImageAsset
+                              localIdentifier={item.eventsData.localIdentifier}
+                              setHeight={200}
+                              setWidth={200}
+                              // height={1}
+                              style={{
+                                // flex: 1,
+                                height: 200,
+                                width: 200,
+                              }}
+                            />
+                          </View>
+                        </View>
+                      )}
+                      {[EventTypes.CALENDAR_EVENT].includes(item.type) &&
+                        item.eventsData.notes !== undefined && (
+                          <ScrollView style={{height: 200}}>
+                            <Text
+                              style={
+                                {
+                                  // overflow: 'scroll',
+                                  // width: '100%',
+                                  // height: 200,
+                                }
+                              }>
+                              {item.eventsData.notes}
+                            </Text>
+                          </ScrollView>
+                        )}
+                    </TouchableOpacity>
+                    {index !== memories.length - 1 && (
+                      <View
+                        style={{
+                          height: 1,
+                          width: '100%',
+                          marginVertical: 20,
+                          backgroundColor: 'rgba(11, 11, 11, 0.1)',
+                        }}></View>
                     )}
-                  </>
-                ) : (
-                  //
-                  <>
-                    {console.log({loading, loadingEntries})}
-                    <Text allowFontScaling={false}>Loading Entries...</Text>
-                  </>
-                )}
-              </ScrollView>
-            </View>
-          </Swipeable>
-          <Animated.View
-            style={{
-              position: 'absolute',
-              right: 30,
-              bottom: screen === screenValues.RICH ? 100 : floatingButtonBottom,
-              backgroundColor: 'white',
-              padding: 15,
-              borderRadius: 50,
-              borderWidth: 1,
-              borderColor: 'rgba(11, 11, 11, 0.1)',
-              shadowOffset: {
-                width: 0,
-                height: 8,
-              },
-              shadowOpacity: 0.44,
-              shadowRadius: 10.32,
+                  </View>
+                )}></FlatList>
+            </>
+          )}
+          {/* </ScrollView> */}
+          {screen === screenValues.MEMORIES && (
+            <Animated.View
+              style={{
+                position: 'absolute',
+                right: 30,
+                bottom:
+                  screen === screenValues.MEMORIES ? 100 : floatingButtonBottom,
+                backgroundColor: 'white',
+                padding: 15,
+                borderRadius: 50,
+                borderWidth: 1,
+                borderColor: 'rgba(11, 11, 11, 0.1)',
+                shadowOffset: {
+                  width: 0,
+                  height: 8,
+                },
+                shadowOpacity: 0.44,
+                shadowRadius: 10.32,
 
-              elevation: 16,
+                elevation: 16,
 
-              shadowColor: '#000',
-            }}>
-            <TouchableOpacity
-              onPress={async () => {
-                const date = new Date(Date.now());
-                const mode = 'manual';
-                if (mode === 'generate') {
-                  await generateEntry({
-                    data: await getPermissionsAndData(date.getTime()),
-                    date: date.getTime(),
-                  });
-                } else if (mode === 'manual') {
-                  createManualEntry(date.getTime());
-                }
+                shadowColor: '#000',
               }}>
-              <NewEntryIcon />
-            </TouchableOpacity>
-          </Animated.View>
+              <TouchableOpacity
+                onPress={async () => {
+                  const date = new Date(Date.now());
+                  const mode = 'manual';
+                  if (mode === 'generate') {
+                    await generateEntry({
+                      data: await getPermissionsAndData({date: date.getTime()}),
+                      date: date.getTime(),
+                    });
+                  } else if (mode === 'manual') {
+                    createManualEntry(date.getTime());
+                  }
+                }}>
+                <NewEntryIcon />
+              </TouchableOpacity>
+            </Animated.View>
+          )}
 
           <Animated.View
             style={{
@@ -2343,11 +1461,11 @@ export default FullHomeView = ({route, navigation}) => {
               // alignSelf: 'flex-end',
               // bottom: 0,
 
-              height: screen === screenValues.RICH ? 75 : footerHeight,
+              height: screen === screenValues.MEMORIES ? 75 : footerHeight,
             }}>
             <TouchableOpacity
               onPress={() => {
-                swipeableRef.current.close();
+                // swipeableRef.current.close();
 
                 setScreen(screenValues.READ);
               }}
@@ -2368,23 +1486,47 @@ export default FullHomeView = ({route, navigation}) => {
               </Text>
             </TouchableOpacity>
 
-            <View
+            <TouchableOpacity
+              onPress={() => {
+                setScreen(screenValues.MEMORIES);
+              }}
               style={{
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'hidden',
               }}>
               <MomentsMenuIcon
-                fill={screen === screenValues.RICH ? '#3286B3' : '#68696A'}
+                fill={screen === screenValues.MEMORIES ? '#3286B3' : '#68696A'}
               />
               <Text
                 style={{
-                  color: screen === screenValues.RICH ? '#3286B3' : '#68696A',
+                  color:
+                    screen === screenValues.MEMORIES ? '#3286B3' : '#68696A',
                 }}
                 allowFontScaling={false}>
                 Memories
               </Text>
-            </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('Settings');
+              }}
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}>
+              <DaysMenuIcon
+                fill={screen === screenValues.READ ? '#3286B3' : '#68696A'}
+              />
+              <Text
+                style={{
+                  color: screen === screenValues.READ ? '#3286B3' : '#68696A',
+                }}
+                allowFontScaling={false}>
+                Settings
+              </Text>
+            </TouchableOpacity>
           </Animated.View>
         </View>
       )}

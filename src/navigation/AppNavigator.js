@@ -14,6 +14,8 @@ const RootStack = createNativeStackNavigator();
 const AppNavigator = ({
   entries,
   setEntries,
+  memories,
+  setMemories,
   loadingEntries,
   onBoarding,
   setOnBoarding,
@@ -21,12 +23,14 @@ const AppNavigator = ({
   const contextValues = {
     entries,
     setEntries,
+    memories,
+    setMemories,
     loadingEntries,
     onBoarding,
     setOnBoarding,
   };
 
-  console.log('contextValues app navigator', contextValues);
+  // console.log('contextValues app navigator', contextValues);
 
   return (
     <RootStack.Navigator screenOptions={{headerShown: false}}>
