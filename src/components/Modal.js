@@ -5,9 +5,9 @@ import {Text, TouchableOpacity, View} from 'react-native';
 
 import _ from 'lodash';
 
-import {theme} from '../../Styling';
+import {theme} from '../theme/styling';
 
-import {horizontalScale, moderateScale, verticalScale} from '../utils/Metrics';
+import {horizontalScale, moderateScale, verticalScale} from '../utils/metrics';
 
 export const ModalScreenClose = ({close}) => {
   return (

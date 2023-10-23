@@ -42,14 +42,14 @@ import notifee, {
 // import AMImage from './src/assets/AMImage.png';
 
 import moment from 'moment';
-import AppContext from './Context';
-import useDatabaseHooks from './useDatabaseHooks';
-import Location from './NativeFuncs';
+import AppContext from './src/contexts/AppContext';
+import useDatabaseHooks from './src/utils/hooks/useDatabaseHooks';
+import Location from './src/utils/native-modules/NativeFuncs';
 
-import useSettingsHooks from './useSettingsHooks';
+import useSettingsHooks from './src/utils/hooks/useSettingsHooks';
 import Config from 'react-native-config';
 import CreateEntryButton from './src/modules/entries/components/CreateEntryButton';
-import {theme} from './Styling';
+import {theme} from './src/theme/styling';
 import Onboarding from './src/components/Onboarding';
 import HomeTop from './src/components/HomeTop';
 import HomeHeading from './src/components/HomeHeading';
@@ -60,12 +60,12 @@ import {
   horizontalScale,
   moderateScale,
   verticalScale,
-} from './src/utils/Metrics';
+} from './src/utils/metrics';
 import DatePicker from 'react-native-date-picker';
 
 import {decode, encode} from 'base-64';
 import {useAppState} from '@react-native-community/hooks';
-import onCreateTriggerNotification from './src/utils/CreateNotification';
+import onCreateTriggerNotification from './src/utils/createNotification';
 import {Swipeable} from 'react-native-gesture-handler';
 import toDateString from './src/utils/toDateString';
 import DownvoteIcon from './src/assets/ModalDownvote.svg';
@@ -80,8 +80,8 @@ import SearchMenuIcon from './src/assets/search-menu.svg';
 import LocationEventIcon from './src/assets/event-location.svg';
 import PhotoEventIcon from './src/assets/event-photo.svg';
 
-import {emotions} from './Utils';
-import {ImageAsset} from './NativeImage';
+import {emotions} from './src/utils/utils';
+import {ImageAsset} from './src/utils/native-modules/NativeImage';
 import MapView, {Marker} from 'react-native-maps';
 import OnboardingButton from './src/components/OnboardingButton';
 import OnboardingBackground from './src/components/OnboardingBackground';

@@ -15,13 +15,13 @@ import 'react-native-url-polyfill/auto';
 import OnboardStep4Image from '../assets/OnboardStep4.svg';
 import LogoImage from '../assets/logo.svg';
 
-import {theme} from '../../Styling';
+import {theme} from '../theme/styling';
 import Svg, {Defs, Rect, LinearGradient, Stop} from 'react-native-svg';
-import useSettingsHooks from '../../useSettingsHooks';
-import {horizontalScale, moderateScale, verticalScale} from '../utils/Metrics';
+import useSettingsHooks from '../utils/hooks/useSettingsHooks';
+import {horizontalScale, moderateScale, verticalScale} from '../utils/metrics';
 import LottieView from 'lottie-react-native';
-import onCreateTriggerNotification from '../utils/CreateNotification';
-import useDatabaseHooks from '../../useDatabaseHooks';
+import onCreateTriggerNotification from '../utils/createNotification';
+import useDatabaseHooks from '../utils/hooks/useDatabaseHooks';
 const FROM_COLOR = 'rgb(255, 255, 255)';
 const TO_COLOR = 'rgb(0,102,84)';
 

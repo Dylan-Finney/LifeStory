@@ -25,7 +25,7 @@ import {
   days,
   emotionTags,
   toneTags,
-} from '../../../../Utils';
+} from '../../../utils/utils';
 
 import HelpIcon from '../../../assets/help-circle.svg';
 import EmotionCalendarIcon from '../../../assets/calendar-heart-01.svg';
@@ -39,15 +39,15 @@ import CalendarIcon from '../../../assets/event-svgrepo-com.svg';
 import moment from 'moment';
 
 import _ from 'lodash';
-import {ImageAsset} from '../../../../NativeImage';
+import {ImageAsset} from '../../../utils/native-modules/NativeImage';
 import Config from 'react-native-config';
-import {theme} from '../../../../Styling';
-import {textChangeHelperFuncs} from '../../../../Utils';
+import {theme} from '../../../theme/styling';
+import {textChangeHelperFuncs} from '../../../utils/utils';
 import {
   horizontalScale,
   moderateScale,
   verticalScale,
-} from '../../../utils/Metrics';
+} from '../../../utils/metrics';
 
 import EntryInput from '../components/EntryInput';
 import EntryFooter from '../components/EntryFooter';

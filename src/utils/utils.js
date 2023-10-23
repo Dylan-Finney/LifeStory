@@ -1,9 +1,10 @@
-import {theme} from './Styling';
-import FaceFrownIcon from './src/assets/face-frown.svg';
-import FaceHappyIcon from './src/assets/face-happy.svg';
-import FaceNeutralIcon from './src/assets/face-neutral.svg';
-import FaceSadIcon from './src/assets/face-sad.svg';
-import EmotionTaggingIcon from './src/assets/emotion-tagging-icon.svg';
+import {theme} from '../theme/styling';
+
+import FaceFrownIcon from '../assets/face-frown.svg';
+import FaceHappyIcon from '../assets/face-happy.svg';
+import FaceNeutralIcon from '../assets/face-neutral.svg';
+import FaceSadIcon from '../assets/face-sad.svg';
+import EmotionTaggingIcon from '../assets/emotion-tagging-icon.svg';
 
 export const baseContentTags = [
   'Travel',

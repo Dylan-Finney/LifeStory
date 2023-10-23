@@ -22,17 +22,17 @@ import moment from 'moment';
 
 import _ from 'lodash';
 
-import {ImageAsset} from '../../../../NativeImage';
+import {ImageAsset} from '../../../utils/native-modules/NativeImage';
 import Config from 'react-native-config';
-import {theme} from '../../../../Styling';
+import {theme} from '../../../theme/styling';
 
-import {textChangeHelperFuncs} from '../../../../Utils';
+import {textChangeHelperFuncs} from '../../../utils/utils';
 
 import {
   verticalScale,
   moderateScale,
   horizontalScale,
-} from '../../../utils/Metrics';
+} from '../../../utils/metrics';
 
 import {
   emotions,
@@ -40,7 +40,7 @@ import {
   days,
   emotionTags,
   toneTags,
-} from '../../../../Utils';
+} from '../../../utils/utils';
 
 import AIRewriteIcon from '../../../assets/ai-rewrite-icon.svg';
 import ContentTaggingIcon from '../../../assets/content-tagging-icon.svg';
@@ -63,7 +63,7 @@ import CalendarIcon from '../../../assets/event-svgrepo-com.svg';
 import {useKeyboard} from '@react-native-community/hooks';
 import {useHeaderHeight} from '@react-navigation/elements';
 
-import {CustomInput} from '../../../../NativeJournal';
+import {CustomInput} from '../../../utils/native-modules/NativeJournal';
 
 const diff = require('diff');
 const {width, height} = Dimensions.get('window');

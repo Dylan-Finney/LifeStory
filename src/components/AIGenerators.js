@@ -14,9 +14,9 @@ import UndoIcon from '../assets/flip-backward.svg';
 
 import _ from 'lodash';
 
-import {theme} from '../../Styling';
+import {theme} from '../theme/styling';
 
-import {horizontalScale, moderateScale, verticalScale} from '../utils/Metrics';
+import {horizontalScale, moderateScale, verticalScale} from '../utils/metrics';
 
 function getDifferenceUnit(diff) {
   const minute = 60 * 1000;

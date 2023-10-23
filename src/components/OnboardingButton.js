@@ -1,5 +1,5 @@
 import {Text, TouchableOpacity} from 'react-native';
-import {horizontalScale, moderateScale, verticalScale} from '../utils/Metrics';
+import {horizontalScale, moderateScale, verticalScale} from '../utils/metrics';
 
 export default OnboardingButton = ({text, onPress, disabled}) => {
   return (

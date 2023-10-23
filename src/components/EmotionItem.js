@@ -3,15 +3,15 @@ import 'react-native-url-polyfill/auto';
 import React from 'react';
 import {Text, TouchableOpacity, View} from 'react-native';
 
-import {emotions} from '../../Utils';
+import {emotions} from '../utils/utils';
 
 import FileIcon from '../assets/file-heart-03.svg';
 
 import _ from 'lodash';
 
-import {theme} from '../../Styling';
+import {theme} from '../theme/styling';
 
-import {horizontalScale, moderateScale, verticalScale} from '../utils/Metrics';
+import {horizontalScale, moderateScale, verticalScale} from '../utils/metrics';
 
 const EmotionItem = ({extract, changeEmotion}) => {
   return (

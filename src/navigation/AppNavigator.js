@@ -2,68 +2,63 @@ import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+
 import Home from '../../Home';
 import EntryView from '../modules/entries/views/EntryView';
-import SettingsView from '../../SettingsView';
-import LocationAliases from '../../LocationAliases';
-import AppContext from '../../Context';
+
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
-const RootStack = createNativeStackNavigator();
+import {TouchableOpacity, View, StyleSheet} from 'react-native';
+import SettingsIcon from '../assets/icons/SettingsIcon';
+import MemoriesIcon from '../assets/icons/MemoriesIcon';
+import StoriesIcon from '../assets/icons/StoriesIcon';
 
-const AppNavigator = ({
-  entries,
-  setEntries,
-  memories,
-  setMemories,
-  loadingEntries,
-  onBoarding,
-  setOnBoarding,
-}) => {
-  const contextValues = {
-    entries,
-    setEntries,
-    memories,
-    setMemories,
-    loadingEntries,
-    onBoarding,
-    setOnBoarding,
-  };
+import SettingsNavigator from '../modules/settings/SettingsNavigator';
 
-  // console.log('contextValues app navigator', contextValues);
+const Tab = createBottomTabNavigator();
 
+const AppNavigator = ({routes}) => {
   return (
-    <RootStack.Navigator screenOptions={{headerShown: false}}>
-      <RootStack.Screen
+    <Tab.Navigator initialRouteName="Home" screenOptions={{headerShown: false}}>
+      <Tab.Screen
         name="Home"
+        options={{
+          tabBarIcon: ({focused}) => (
+            <TouchableOpacity>
+              {focused ? <StoriesIcon fill="#118ED1CC" /> : <StoriesIcon />}
+            </TouchableOpacity>
+          ),
+        }}
         children={params => (
           <GestureHandlerRootView style={{flex: 1}}>
-            <AppContext.Provider value={contextValues}>
-              <Home {...params} />
-            </AppContext.Provider>
+            <Home {...params} />
           </GestureHandlerRootView>
         )}
       />
-      <RootStack.Screen
+      <Tab.Screen
         name="Entry"
         component={EntryView}
-        options={{headerShown: true, title: ''}}
+        options={{
+          tabBarIcon: ({focused}) => (
+            <TouchableOpacity>
+              {focused ? <MemoriesIcon fill="#118ED1CC" /> : <MemoriesIcon />}
+            </TouchableOpacity>
+          ),
+        }}
       />
-      <RootStack.Screen
+      <Tab.Screen
         name="Settings"
-        options={{headerShown: true, title: ''}}
-        children={params => (
-          <AppContext.Provider value={contextValues}>
-            <SettingsView {...params} />
-          </AppContext.Provider>
-        )}
+        options={{
+          tabBarIcon: ({focused}) => (
+            <TouchableOpacity>
+              {focused ? <SettingsIcon fill="#118ED1CC" /> : <SettingsIcon />}
+            </TouchableOpacity>
+          ),
+        }}
+        children={params => <SettingsNavigator {...params} />}
       />
-      <RootStack.Screen
-        name="Locations"
-        options={{headerShown: true, title: ''}}
-        component={LocationAliases}
-      />
-    </RootStack.Navigator>
+    </Tab.Navigator>
   );
 };
 

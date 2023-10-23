@@ -1,5 +1,5 @@
 import {Text, TouchableOpacity, View} from 'react-native';
-import {theme} from '../../../../Styling';
+import {theme} from '../../../theme/styling';
 import moment from 'moment';
 
 import ExpandIcon from '../../../assets/expand.svg';
@@ -8,7 +8,7 @@ import {
   horizontalScale,
   moderateScale,
   verticalScale,
-} from '../../../utils/Metrics';
+} from '../../../utils/metrics';
 
 const EntryListItem = ({entry, index, startOfWeek, endOfWeek, open}) => {
   return (

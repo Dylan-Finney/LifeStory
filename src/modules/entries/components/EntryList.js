@@ -1,7 +1,7 @@
 import {Text, TouchableOpacity, View} from 'react-native';
 import moment from 'moment';
 import EntryListItem from './EntryListItem';
-import {theme} from '../../../../Styling';
+import {theme} from '../../../theme/styling';
 const EntryList = ({entries, navigation}) => {
   return (
     <>

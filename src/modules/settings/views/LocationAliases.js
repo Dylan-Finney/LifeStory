@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   Button,
 } from 'react-native';
-import {verticalScale} from './src/utils/Metrics';
+import {verticalScale} from '../../../utils/metrics';
 import {useEffect, useState, createRef, useRef} from 'react';
-import useSettingsHooks from './useSettingsHooks';
+import useSettingsHooks from '../../../utils/hooks/useSettingsHooks';
 export default LocationAliasesView = ({route, navigation}) => {
   //   const [locations, setLocations] = useState(
   //     '[{"address":"17 Hawthorne Lane", "alias": "Home"}]',
