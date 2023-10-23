@@ -1,5 +1,5 @@
-import useDatabaseHooks from '../../useDatabaseHooks';
-import useSettingsHooks from '../../useSettingsHooks';
+import useDatabaseHooks from './hooks/useDatabaseHooks';
+import useSettingsHooks from './hooks/useSettingsHooks';
 import Config from 'react-native-config';
 import moment from 'moment';
 import {EventTypes} from './Enums';
