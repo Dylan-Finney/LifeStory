@@ -1,4 +1,4 @@
-import useDatabaseHooks from '../../useDatabaseHooks';
+import useDatabaseHooks from './hooks/useDatabaseHooks';
 import {EventTypes} from './Enums';
 import getFormatedTimeString from './getFormattedTimeString';
 const {createVisitsTable, insertData, retrieveData} = useDatabaseHooks();

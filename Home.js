@@ -56,11 +56,13 @@ import HomeHeading from './src/components/HomeHeading';
 import EntryList from './src/modules/entries/components/EntryList';
 import * as RNLocalize from 'react-native-localize';
 import {NativeModules} from 'react-native';
+
 import {
   horizontalScale,
   moderateScale,
   verticalScale,
 } from './src/utils/metrics';
+
 import DatePicker from 'react-native-date-picker';
 
 import {decode, encode} from 'base-64';
