@@ -275,7 +275,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
                           }
                           CalendarEvents.removeAllListeners('calendarChange');
                         });
-                        await getPermissionsAndData(Date.now());
+                        await getPermissionsAndData({date: Date.now()});
                         setGettingPermissions(false);
                       }
                     }}>
@@ -340,7 +340,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
                       marginBottom: verticalScale(20),
                     }}
                     onPress={async () => {
-                      finalStep(20);
+                      finalStep(22);
                     }}>
                     <Text
                       allowFontScaling={false}
@@ -350,7 +350,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
                         fontWeight: '600',
                         fontSize: moderateScale(18),
                       }}>
-                      8 PM
+                      10 PM
                     </Text>
                   </TouchableOpacity>
                 </>
