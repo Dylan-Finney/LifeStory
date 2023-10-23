@@ -31,21 +31,25 @@ export default async function onCreateTriggerNotification({
     name: 'Default Channel',
   });
 
-  // Create a trigger notification
-  await notifee.createTriggerNotification(
-    {
-      title: '✨ LifeStory AI',
-      ios: {badgeCount: (await notifee.getBadgeCount()) + 1},
-      body:
-        first === true
-          ? 'Your first story is ready!'
-          : 'Your new story is ready!',
-      android: {
-        channelId,
-      },
-    },
-    trigger,
-  );
+  const id = `lifestory.notification.ready`;
+  const ids = await notifee.getTriggerNotificationIds();
 
-  // await notifee.incrementBadgeCount();
+  if (!ids.includes(id)) {
+    // Create a trigger notification
+    await notifee.createTriggerNotification(
+      {
+        id,
+        title: '✨ LifeStory AI',
+        ios: {badgeCount: (await notifee.getBadgeCount()) + 1},
+        body:
+          first === true
+            ? 'Your first story is ready!'
+            : 'Your new story is ready!',
+        android: {
+          channelId,
+        },
+      },
+      trigger,
+    );
+  }
 }

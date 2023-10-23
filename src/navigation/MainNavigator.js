@@ -18,6 +18,9 @@ import AuthNavigator from './AuthNavigator';
 import useDatabaseHooks from '../utils/hooks/useDatabaseHooks';
 import useSettingsHooks from '../utils/hooks/useSettingsHooks';
 
+import {EventTypes} from '../utils/Enums';
+import getMemories from '../utils/getMemories';
+
 import AnimatedLaunchScreen from '../modules/onboarding/views/AnimatedLaunchScreen';
 import AppContext from '../contexts/AppContext';
 
@@ -38,11 +41,35 @@ const MainNavigator = () => {
   }, []);
 
   const [entries, setEntries] = useState([]);
+  const [memories, setMemories] = useState([]);
   const [loadingEntries, setLoadingEntries] = useState(true);
   const [onBoarding, setOnBoarding] = useState(
     useSettingsHooks.getBoolean('onboarding'),
   );
   // const {onBoarding, calendars} = useSettingsHooks();
+
+  const getFormatedTimeString = (time1, time2 = null) => {
+    const date = new Date(time1);
+    var hours = date.getHours();
+    // Minutes part from the timestamp
+    var minutes = '0' + date.getMinutes();
+
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? '0' + hours : 12;
+    // Seconds part from the timestamp
+    var formattedTime =
+      hours.toString().slice(-2) +
+      ':' +
+      minutes.toString().slice(-2) +
+      ' ' +
+      ampm;
+    if (time2 === null) {
+      return formattedTime;
+    } else {
+      return `${formattedTime}-${getFormatedTimeString(time2)}`;
+    }
+  };
 
   useEffect(() => {
     const getEntries = async () => {
@@ -83,9 +110,21 @@ const MainNavigator = () => {
         console.error(e);
       }
     };
+    const refreshMemories = async () => {
+      try {
+        console.log('LOADING MEMORIES DATA');
+        const updatedMemories = await getMemories();
+        setMemories(updatedMemories);
+        // setEntries(updatedEntries);
+        // setLoadingEntries(false);
+      } catch (e) {
+        console.error(e);
+      }
+    };
     if (onBoarding === false) {
       setLoadingEntries(true);
       getEntries();
+      refreshMemories();
       console.log({
         calendars: useSettingsHooks.getString('settings.calendars'),
       });
@@ -115,7 +154,12 @@ const MainNavigator = () => {
       CounterEvents.addListener('locationChange', res => {
         console.log('locationChange event', res);
         createVisitsTable();
-        insertData(res.date || Date.now(), res.lat, res.lon, res.description);
+        insertData(
+          Math.floor(parseInt(res.arrivalTime)) * 1000 || Date.now(),
+          res.lat,
+          res.lon,
+          res.description,
+        );
         retrieveData('Visits', steps => {
           console.log({steps});
         });
@@ -127,14 +171,16 @@ const MainNavigator = () => {
 
   notifee.setBadgeCount(0);
 
-  console.log('main navigator', entries, loadingEntries);
+  // console.log('main navigator', entries, loadingEntries);
 
   const contextValues = {
     entries,
     setEntries,
+    memories,
+    setMemories,
     loadingEntries,
-    setOnBoarding,
     onBoarding,
+    setOnBoarding,
   };
 
   return (

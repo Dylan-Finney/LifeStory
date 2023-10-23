@@ -2,7 +2,7 @@ import {MMKV} from 'react-native-mmkv';
 
 const storage = new MMKV();
 
-console.log('STORAGE', storage.getBoolean('onboarding'));
+// console.log('STORAGE', storage.getBoolean('onboarding'));
 
 if (storage.getBoolean('onboarding') === undefined) {
   storage.set('onboarding', true);
@@ -21,6 +21,9 @@ if (storage.getString('settings.locationAliases') === undefined) {
 }
 if (storage.getNumber('settings.createEntryTime') === undefined) {
   storage.set('settings.createEntryTime', 0);
+}
+if (storage.getNumber('settings.lastMemoryCheckTime') === undefined) {
+  storage.set('settings.lastMemoryCheckTime', 0);
 }
 if (storage.getNumber('settings.onboardingTime') === undefined) {
   storage.set('settings.onboardingTime', 0);

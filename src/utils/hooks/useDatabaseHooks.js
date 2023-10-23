@@ -40,6 +40,14 @@ const useDatabaseHooks = () => {
     });
   };
 
+  const createMemoriesTable = () => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS Memories (id INTEGER PRIMARY KEY AUTOINCREMENT, tags TEXT, type TEXT, time DATE, emotion INTEGER, vote INTEGER, bodyModifiedAt DATE, bodyModifiedSource TEXT, eventsData TEXT, body TEXT);`,
+      );
+    });
+  };
+
   const createSettingsTable = () => {
     db.transaction(tx => {
       tx.executeSql(
@@ -109,6 +117,41 @@ const useDatabaseHooks = () => {
         },
         (_, error) => {
           console.log('Error creating entry:', error);
+        },
+      );
+    });
+  };
+
+  const saveMemoryData = ({
+    tags,
+    time,
+    type,
+    emotion,
+    vote,
+    bodyModifiedAt,
+    bodyModifiedSource,
+    eventsData,
+    body,
+  }) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `INSERT INTO Memories (tags, type, time, emotion, vote, bodyModifiedAt, bodyModifiedSource, eventsData, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          tags,
+          type,
+          time,
+          emotion,
+          vote,
+          bodyModifiedAt,
+          bodyModifiedSource,
+          eventsData,
+          body,
+        ],
+        (_, result) => {
+          console.log('Memory created successfully', result);
+        },
+        (_, error) => {
+          console.log('Error creating memory:', error);
         },
       );
     });
@@ -234,6 +277,8 @@ const useDatabaseHooks = () => {
     insertData,
     retrieveData,
     createEntryTable,
+    createMemoriesTable,
+    saveMemoryData,
     saveEntryData,
     updateEntryData,
     retrieveSpecificData,

@@ -364,6 +364,10 @@ export default SettingsView = ({route, navigation}) => {
           )}
         </ScrollView>
       </Modal>
+      <Text>
+        Selected Entry Creation Time:{' '}
+        {useSettingsHooks.getNumber('settings.createEntryTime')}
+      </Text>
       <Divider title={'Prompt'} />
       <Text
         allowFontScaling={false}
@@ -544,6 +548,9 @@ export default SettingsView = ({route, navigation}) => {
                 style: 'default',
                 onPress: () => {
                   resetTable('Entries');
+                  resetTable('Memories');
+                  // deleteTable('Memories');
+                  useSettingsHooks.set('settings.lastMemoryCheckTime', 0);
                   setEntries([]);
                 },
               },
