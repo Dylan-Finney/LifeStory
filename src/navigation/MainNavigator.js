@@ -114,11 +114,13 @@ const MainNavigator = () => {
       try {
         console.log('LOADING MEMORIES DATA');
         const updatedMemories = await getMemories();
+        // if (updatedMemories === undefined)
+        console.log({updatedMemories});
         setMemories(updatedMemories);
         // setEntries(updatedEntries);
         // setLoadingEntries(false);
       } catch (e) {
-        console.error(e);
+        console.error('initial memory load', e);
       }
     };
     if (onBoarding === false) {
