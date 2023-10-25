@@ -1484,134 +1484,13 @@ export default FullHomeView = ({route, navigation}) => {
           </ScrollView>
         </ActionsheetContent>
       </Actionsheet>
-      {onBoarding === true || firstEntryGenerated === true ? (
-        <>
-          <OnboardingBackground />
-          {onBoarding === true && (
-            <Onboarding
-              endOnboarding={() => {
-                setOnBoarding(false);
-                useSettingsHooks.set('onboarding', false);
-                console.log('END ONBOARDING');
-                try {
-                  onCreateTriggerReminder({remindTime: 8});
-                  onCreateTriggerReminder({remindTime: 15});
-                  onCreateTriggerReminder({remindTime: 22});
-                } catch (e) {
-                  console.error({e});
-                }
-                checkIfReadyToGenerate();
-              }}
-              generateEntry={generateEntry}
-              getPermissionsAndData={getPermissionsAndData}
-            />
-          )}
-          {firstEntryGenerated === true && (
-            <View
-              style={{alignItems: 'center', flex: 1, justifyContent: 'center'}}>
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  position: 'absolute',
-                  paddingBottom: 200,
-                  // transform: 'translate(-50%, -50%)',
-                }}>
-                <FirstEntryIcon />
-              </View>
-              <View
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  width: '100%',
-                }}>
-                <Text
-                  // maxFontSizeMultiplier={1}
-                  allowFontScaling={false}
-                  style={{
-                    color: theme.onboarding.title,
-                    fontWeight: '700',
-                    fontSize: moderateScale(28),
-                    marginBottom: verticalScale(15),
-                    // marginTop: verticalScale(20),
-                  }}>
-                  Congratulations
-                </Text>
-                <Text
-                  allowFontScaling={false}
-                  numberOfLines={1}
-                  style={{
-                    color: theme.onboarding.text,
-                    fontWeight: '400',
-                    fontSize: moderateScale(16),
-                    marginBottom: verticalScale(50),
-                  }}>
-                  Your first story is ready for your reflections
-                </Text>
-                <OnboardingButton
-                  text={
-                    generatingEntry === true ? loadingMessage : 'See the story'
-                  }
-                  onPress={() => {
-                    setFirstEntryGenerated(false);
-                  }}
-                  disabled={generatingEntry}
-                />
-              </View>
-              {/* <Text
-                // maxFontSizeMultiplier={1}
-                allowFontScaling={false}
-                style={{
-                  color: theme.onboarding.title,
-                  fontWeight: '700',
-                  fontSize: moderateScale(28),
-                  marginBottom: verticalScale(20),
-                  marginTop: verticalScale(20),
-                }}>
-                Congratulations
-              </Text>
-              <Text
-                allowFontScaling={false}
-                style={{
-                  color: theme.onboarding.text,
-                  fontWeight: '400',
-                  fontSize: moderateScale(16),
-                  marginBottom: verticalScale(20),
-                }}>
-                Your first story is ready for your reflections
-              </Text>
-              <OnboardingButton
-                text={
-                  generatingEntry === true ? loadingMessage : 'See the story'
-                }
-                onPress={() => {
-                  setFirstEntryGenerated(false);
-                }}
-                disabled={generatingEntry}
-              /> */}
-              {/* <TouchableOpacity
-                style={{}}
-                onPress={() => {
-                  setFirstEntryGenerated(false);
-                }}>
-                <Text>
-                  {generatingEntry === true ? loadingMessage : 'See the story'}
-                </Text>
-              </TouchableOpacity> */}
-            </View>
-          )}
-        </>
-      ) : (
-        <View
-          style={{
-            // backgroundColor: 'green',
-            flex: 1,
-            // height: Dimensions.get('screen').height,
-          }}>
-          {/* <Modal
+      <View
+        style={{
+          // backgroundColor: 'green',
+          flex: 1,
+          // height: Dimensions.get('screen').height,
+        }}>
+        {/* <Modal
             coverScreen
             animationInTiming={200}
             animationIn={'slideInUp'}
@@ -1680,559 +1559,552 @@ export default FullHomeView = ({route, navigation}) => {
             </View>
           </Modal> */}
 
-          {/* <Actionsheet isOpen={showActionSheet}>
+        {/* <Actionsheet isOpen={showActionSheet}>
             <ActionsheetContent></ActionsheetContent>
           </Actionsheet> */}
 
-          {/* <ScrollView removeClippedSubviews={true}> */}
-          {screenValues.READ === screen && (
-            <View style={{flex: 1}}>
-              {devMode === true && (
-                <>
-                  <TouchableOpacity
-                    onPress={async () => {
-                      try {
-                        setStoryLoadingMessage('Generating');
-                        createEntryTable();
-                        const newEntry = await generateEntry({
-                          // memories: [
-                          //   {
-                          //     id: 1,
-                          //     time: 1697994699000,
-                          //     body: 'At 3:00 PM, I had a driving test. After my third attempt, I finally passed.',
-                          //   },
-                          //   {
-                          //     id: 2,
-                          //     time: 1698023499000,
-                          //     body: 'At 6:00 PM, I had a wonderful meal at a resturant. The buffet was a let down but was cheap enough',
-                          //   },
-                          // ],
-                          memories,
-                        });
-                        setEntries([newEntry, ...entries]);
-                        setStoryLoadingMessage('Finished');
-                      } catch (e) {
-                        console.error({e});
-                        setStoryLoadingMessage('Finished with error');
-                      }
-                    }}>
-                    <Text>Generate</Text>
-                  </TouchableOpacity>
-                  <Text>Generation Status: {storyLoadingMessage}</Text>
-                  <Text>
-                    Selected Entry Creation Time:{' '}
-                    {useSettingsHooks.getNumber('settings.createEntryTime')}
-                    {':00'}
-                  </Text>
-                </>
-              )}
-              <FlatList
-                data={entries}
-                keyExtractor={entry => entry.id}
-                removeClippedSubviews={true}
-                initialNumToRender={2}
-                maxToRenderPerBatch={1}
-                updateCellsBatchingPeriod={100}
-                windowSize={7}
-                ListEmptyComponent={() => {
-                  return (
-                    <View>
-                      <Text>No Stories yet</Text>
-                    </View>
-                  );
-                }}
-                style={{flex: 1}}
-                renderItem={({item, index}) => (
-                  <View
-                    key={index}
-                    style={{
-                      marginHorizontal: 20,
-                      padding: 10,
-                      borderRadius: 20,
-                    }}>
-                    {/* {console.log({item, index})} */}
-                    {/* <Text>Test</Text> */}
-                    <Text>{item.body}</Text>
-
-                    <Text>{JSON.stringify(item)}</Text>
-                    {index !== entries.length - 1 && (
-                      <View
-                        style={{
-                          height: 1,
-                          width: '100%',
-                          marginVertical: 20,
-                          backgroundColor: 'rgba(11, 11, 11, 0.1)',
-                        }}></View>
-                    )}
+        {/* <ScrollView removeClippedSubviews={true}> */}
+        {screenValues.READ === screen && (
+          <View style={{flex: 1}}>
+            {devMode === true && (
+              <>
+                <TouchableOpacity
+                  onPress={async () => {
+                    try {
+                      setStoryLoadingMessage('Generating');
+                      createEntryTable();
+                      const newEntry = await generateEntry({
+                        // memories: [
+                        //   {
+                        //     id: 1,
+                        //     time: 1697994699000,
+                        //     body: 'At 3:00 PM, I had a driving test. After my third attempt, I finally passed.',
+                        //   },
+                        //   {
+                        //     id: 2,
+                        //     time: 1698023499000,
+                        //     body: 'At 6:00 PM, I had a wonderful meal at a resturant. The buffet was a let down but was cheap enough',
+                        //   },
+                        // ],
+                        memories,
+                      });
+                      setEntries([newEntry, ...entries]);
+                      setStoryLoadingMessage('Finished');
+                    } catch (e) {
+                      console.error({e});
+                      setStoryLoadingMessage('Finished with error');
+                    }
+                  }}>
+                  <Text>Generate</Text>
+                </TouchableOpacity>
+                <Text>Generation Status: {storyLoadingMessage}</Text>
+                <Text>
+                  Selected Entry Creation Time:{' '}
+                  {useSettingsHooks.getNumber('settings.createEntryTime')}
+                  {':00'}
+                </Text>
+              </>
+            )}
+            <FlatList
+              data={entries}
+              keyExtractor={entry => entry.id}
+              removeClippedSubviews={true}
+              initialNumToRender={2}
+              maxToRenderPerBatch={1}
+              updateCellsBatchingPeriod={100}
+              windowSize={7}
+              ListEmptyComponent={() => {
+                return (
+                  <View>
+                    <Text>No Stories yet</Text>
                   </View>
-                )}></FlatList>
-            </View>
-          )}
-          {screenValues.MEMORIES === screen && (
-            <>
-              {devMode === true && (
-                <>
-                  <Text>Next Memory Creation: {getNextMemoryTime()}</Text>
-                  <Text>Memory Length: {memories?.length || 0}</Text>
-                  <Text>
-                    Last Time Memories Generated:{' '}
-                    {new Date(
-                      useSettingsHooks.getNumber(
-                        'settings.lastMemoryCheckTime',
-                      ),
-                      // 0,
-                    ).toLocaleString()}
-                  </Text>
-                  <Text>Generation Status: {memoryLoadingMessage}</Text>
-                </>
+                );
+              }}
+              style={{flex: 1}}
+              renderItem={({item, index}) => (
+                <View
+                  key={index}
+                  style={{
+                    marginHorizontal: 20,
+                    padding: 10,
+                    borderRadius: 20,
+                  }}>
+                  {/* {console.log({item, index})} */}
+                  {/* <Text>Test</Text> */}
+                  <Text>{item.body}</Text>
+
+                  <Text>{JSON.stringify(item)}</Text>
+                  {index !== entries.length - 1 && (
+                    <View
+                      style={{
+                        height: 1,
+                        width: '100%',
+                        marginVertical: 20,
+                        backgroundColor: 'rgba(11, 11, 11, 0.1)',
+                      }}></View>
+                  )}
+                </View>
+              )}></FlatList>
+          </View>
+        )}
+        {screenValues.MEMORIES === screen && (
+          <>
+            {devMode === true && (
+              <>
+                <Text>Next Memory Creation: {getNextMemoryTime()}</Text>
+                <Text>Memory Length: {memories?.length || 0}</Text>
+                <Text>
+                  Last Time Memories Generated:{' '}
+                  {new Date(
+                    useSettingsHooks.getNumber('settings.lastMemoryCheckTime'),
+                    // 0,
+                  ).toLocaleString()}
+                </Text>
+                <Text>Generation Status: {memoryLoadingMessage}</Text>
+              </>
+            )}
+            {/* <WritingAnimation /> */}
+            <Animated.View
+              style={{
+                // backgroundColor: 'red',
+                justifyContent: 'center',
+                alignItems: 'center',
+                // aspectRatio: 1,
+                height: memoryLoadingState === true ? 75 : gifScale || 0,
+                zIndex: 999,
+                left: 0,
+                right: 0,
+                position: memoryLoadingState === true ? 'relative' : 'absolute',
+                overflow: 'hidden',
+              }}>
+              <Image
+                source={require('./src/assets/writing.gif')}
+                style={{width: 75, height: 75}}
+              />
+            </Animated.View>
+            <FlatList
+              data={memories}
+              keyExtractor={memory => memory.id}
+              ref={scrollRef}
+              removeClippedSubviews={true}
+              initialNumToRender={2}
+              maxToRenderPerBatch={1}
+              updateCellsBatchingPeriod={100}
+              windowSize={7}
+              ListEmptyComponent={() => {
+                return (
+                  <View>
+                    <Text>No Memories yet</Text>
+                  </View>
+                );
+              }}
+              onScroll={Animated.event(
+                [{nativeEvent: {contentOffset: {y: scrollOffsetY}}}],
+                {useNativeDriver: false},
               )}
-              {/* <WritingAnimation /> */}
-              <Animated.View
-                style={{
-                  // backgroundColor: 'red',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  // aspectRatio: 1,
-                  height: memoryLoadingState === true ? 75 : gifScale || 0,
-                  zIndex: 999,
-                  left: 0,
-                  right: 0,
-                  position:
-                    memoryLoadingState === true ? 'relative' : 'absolute',
-                  overflow: 'hidden',
-                }}>
-                <Image
-                  source={require('./src/assets/writing.gif')}
-                  style={{width: 75, height: 75}}
-                />
-              </Animated.View>
-              <FlatList
-                data={memories}
-                keyExtractor={memory => memory.id}
-                ref={scrollRef}
-                removeClippedSubviews={true}
-                initialNumToRender={2}
-                maxToRenderPerBatch={1}
-                updateCellsBatchingPeriod={100}
-                windowSize={7}
-                ListEmptyComponent={() => {
-                  return (
-                    <View>
-                      <Text>No Memories yet</Text>
-                    </View>
-                  );
-                }}
-                onScroll={Animated.event(
-                  [{nativeEvent: {contentOffset: {y: scrollOffsetY}}}],
-                  {useNativeDriver: false},
-                )}
-                scrollEventThrottle={16}
-                // onDra
-                // refreshing={false}
-                // onRefresh={() => {
-                //   console.log(`${Date.now()} test`);
-                // }}
-                // refreshControl={
-                //   <RefreshControl
-                //     colors={['#9Bd35A', '#689F38']}
-                //     refreshing={false}
-                //     onRefresh={() => {
-                //       console.log(`${Date.now()} test`);
-                //     }}
-                //   />
-                // }
-                style={{flex: 1}}
-                // contentContainerStyle={{flex: 1}}
-                renderItem={({item, index}) => (
-                  <View
-                    style={{
-                      padding: 20,
-                      // paddingTop: 5,
-                      borderRadius: 20,
-                      backgroundColor: '#F6F6F6',
-                    }}>
-                    {console.log({item, index})}
-                    <Pressable
-                      onPressIn={() => {
-                        setHighlightedMemory({index, id: item.id});
-                      }}
-                      onPress={() => {
-                        setHighlightedMemory({index, id: item.id});
-                        setShowModal(true);
-                        setActionsheetScreen(ActionSheetScreens.MEMORIES.BASE);
-                      }}
-                      px={10}
-                      py={15}
-                      rounded={'$md'}
-                      backgroundColor={
-                        highlightedMemory.index === index
-                          ? '#E9E9E9'
-                          : '#F6F6F6'
-                      }>
+              scrollEventThrottle={16}
+              // onDra
+              // refreshing={false}
+              // onRefresh={() => {
+              //   console.log(`${Date.now()} test`);
+              // }}
+              // refreshControl={
+              //   <RefreshControl
+              //     colors={['#9Bd35A', '#689F38']}
+              //     refreshing={false}
+              //     onRefresh={() => {
+              //       console.log(`${Date.now()} test`);
+              //     }}
+              //   />
+              // }
+              style={{flex: 1}}
+              // contentContainerStyle={{flex: 1}}
+              renderItem={({item, index}) => (
+                <View
+                  style={{
+                    padding: 20,
+                    // paddingTop: 5,
+                    borderRadius: 20,
+                    backgroundColor: '#F6F6F6',
+                  }}>
+                  {console.log({item, index})}
+                  <Pressable
+                    onPressIn={() => {
+                      setHighlightedMemory({index, id: item.id});
+                    }}
+                    onPress={() => {
+                      setHighlightedMemory({index, id: item.id});
+                      setShowModal(true);
+                      setActionsheetScreen(ActionSheetScreens.MEMORIES.BASE);
+                    }}
+                    px={10}
+                    py={15}
+                    rounded={'$md'}
+                    backgroundColor={
+                      highlightedMemory.index === index ? '#E9E9E9' : '#F6F6F6'
+                    }>
+                    <Text
+                      allowFontScaling={false}
+                      style={{
+                        fontSize: 18,
+                        lineHeight: 24,
+                        fontWeight: 400,
+                        color: '#0b0b0bcc',
+                      }}>
+                      {item.body}
+                    </Text>
+                    {devMode === true && (
                       <Text
                         allowFontScaling={false}
-                        style={{
-                          fontSize: 18,
-                          lineHeight: 24,
-                          fontWeight: 400,
-                          color: '#0b0b0bcc',
-                        }}>
-                        {item.body}
+                        style={{paddingVertical: 5}}>
+                        {JSON.stringify(item)}
                       </Text>
-                      {devMode === true && (
-                        <Text
-                          allowFontScaling={false}
-                          style={{paddingVertical: 5}}>
-                          {JSON.stringify(item)}
-                        </Text>
-                      )}
-                      {item.type > -1 && (
-                        <View style={{marginTop: 20}}>
-                          <View
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              gap: 10,
-                            }}>
-                            <View
-                              style={{
-                                padding: 5,
-                                borderRadius: 30,
-                                borderWidth: 2,
-                                borderColor: '#EAEAEA',
-                                backgroundColor: 'white',
-                              }}>
-                              {getEventIcon(item.type)}
-                            </View>
-                            <View>
-                              <Text
-                                numberOfLines={
-                                  item.type === EventTypes.PHOTO ? 1 : undefined
-                                }
-                                style={{
-                                  color: 'rgba(11, 11, 11, 0.8)',
-                                  fontWeight: 600,
-                                  marginRight: 50,
-                                }}>
-                                {item.type === EventTypes.LOCATION &&
-                                  item.eventsData.description}
-                                {item.type === EventTypes.PHOTO &&
-                                  item.eventsData.name}
-                                {item.type === EventTypes.CALENDAR_EVENT &&
-                                  item.eventsData.title}
-                              </Text>
-                              <Text
-                                style={{
-                                  color: 'rgba(11, 11, 11, 0.6)',
-                                }}>
-                                {item.formattedTime}
-                              </Text>
-                            </View>
-                          </View>
-                        </View>
-                      )}
-
-                      {[EventTypes.PHOTO, EventTypes.LOCATION].includes(
-                        item.type,
-                      ) && (
-                        <SingleMapMemo
-                          lat={item.eventsData.lat}
-                          long={item.eventsData.long}
-                        />
-                      )}
-                      {[EventTypes.PHOTO].includes(item.type) && (
+                    )}
+                    {item.type > -1 && (
+                      <View style={{marginTop: 20}}>
                         <View
                           style={{
-                            height: 200,
-                            // width: '100%',
+                            flexDirection: 'row',
                             alignItems: 'center',
-                            justifyContent: 'center',
-                            overflow: 'hidden',
-                            borderRadius: 20,
+                            gap: 10,
                           }}>
                           <View
                             style={{
-                              height: 200,
-                              width: 200,
-                              borderRadius: 20,
-                              overflow: 'hidden',
+                              padding: 5,
+                              borderRadius: 30,
+                              borderWidth: 2,
+                              borderColor: '#EAEAEA',
+                              backgroundColor: 'white',
                             }}>
-                            <ImageAsset
-                              localIdentifier={item.eventsData.localIdentifier}
-                              setHeight={200}
-                              setWidth={200}
-                              // height={1}
+                            {getEventIcon(item.type)}
+                          </View>
+                          <View>
+                            <Text
+                              numberOfLines={
+                                item.type === EventTypes.PHOTO ? 1 : undefined
+                              }
                               style={{
-                                // flex: 1,
-                                height: 200,
-                                width: 200,
-                              }}
-                            />
+                                color: 'rgba(11, 11, 11, 0.8)',
+                                fontWeight: 600,
+                                marginRight: 50,
+                              }}>
+                              {item.type === EventTypes.LOCATION &&
+                                item.eventsData.description}
+                              {item.type === EventTypes.PHOTO &&
+                                item.eventsData.name}
+                              {item.type === EventTypes.CALENDAR_EVENT &&
+                                item.eventsData.title}
+                            </Text>
+                            <Text
+                              style={{
+                                color: 'rgba(11, 11, 11, 0.6)',
+                              }}>
+                              {item.formattedTime}
+                            </Text>
                           </View>
                         </View>
-                      )}
-                      {[EventTypes.CALENDAR_EVENT].includes(item.type) &&
-                        item.eventsData.notes !== undefined && (
-                          <ScrollView style={{height: 200}}>
-                            <Text
-                              style={
-                                {
-                                  // overflow: 'scroll',
-                                  // width: '100%',
-                                  // height: 200,
-                                }
-                              }>
-                              {item.eventsData.notes}
-                            </Text>
-                          </ScrollView>
-                        )}
-                      <Box flexDirection="row" gap={10} my={20}>
-                        {item.emotion > 0 && (
-                          <Box
-                            px={10}
-                            py={5}
-                            flexDirection="row"
-                            justifyContent="center"
-                            alignItems="center"
-                            gap={5}
-                            rounded={'$full'}
-                            backgroundColor={emotionToColor({
-                              emotion: item.emotion,
-                              need: emotionAttributes.BACKGROUND,
-                            })}>
-                            <Box
-                              aspectRatio={1}
-                              height={30}
-                              width={30}
-                              p={4}
-                              justifyContent="center"
-                              alignItems="center"
-                              rounded={'$md'}
-                              backgroundColor={emotionToColor({
-                                emotion: item.emotion,
-                                need: emotionAttributes.STROKE,
-                              })}>
-                              {emotionToIcon({
-                                emotion: item.emotion,
-                                active: false,
-                                color: '#fff',
-                              })}
-                            </Box>
+                      </View>
+                    )}
 
-                            <Text
-                              style={{
-                                fontWeight: 600,
-                                color: emotionToColor({
-                                  emotion: item.emotion,
-                                  need: emotionAttributes.STROKE,
-                                }),
-                              }}>
-                              {emotionToString(item.emotion)}
-                            </Text>
-                          </Box>
-                        )}
-                        {item.vote !== 0 && (
-                          <Box
-                            px={10}
-                            py={5}
-                            backgroundColor={
-                              item.vote > 0 ? '#DFECF2' : '#E7E7E7'
-                            }
-                            justifyContent="center"
-                            flexDirection="row"
-                            rounded={'$full'}
-                            gap={5}
-                            alignItems="center">
-                            <Box
-                              aspectRatio={1}
-                              height={30}
-                              width={30}
-                              p={4}
-                              justifyContent="center"
-                              alignItems="center"
-                              rounded={'$md'}
-                              backgroundColor={
-                                item.vote > 0 ? '#118ED1' : '#6D6D6D'
-                              }>
-                              {item.vote > 0 ? (
-                                <UpvoteIcon primaryColor={'white'} />
-                              ) : (
-                                <DownvoteIcon primaryColor={'white'} />
-                              )}
-                            </Box>
-                            <Text
-                              style={{
-                                color: item.vote > 0 ? '#118ED1' : '#6D6D6D',
-                                fontWeight: 600,
-                              }}>
-                              {item.vote}
-                            </Text>
-                          </Box>
-                        )}
-                        {Object.values(item.tags).flat().length > 0 && (
-                          <Box
-                            px={10}
-                            py={5}
-                            backgroundColor={'#DFECF2'}
-                            justifyContent="center"
-                            flexDirection="row"
-                            rounded={'$full'}
-                            gap={5}
-                            alignItems="center">
-                            <Box
-                              aspectRatio={1}
-                              height={30}
-                              width={30}
-                              p={4}
-                              justifyContent="center"
-                              alignItems="center"
-                              rounded={'$md'}
-                              backgroundColor={'#118ED1'}>
-                              <LabelIcon primaryColor={'white'} />
-                            </Box>
-                            <Text style={{color: '#118ED1', fontWeight: 600}}>
-                              {Object.values(item.tags).flat().length}
-                            </Text>
-                          </Box>
-                        )}
-                      </Box>
-                    </Pressable>
-                    {index !== memories.length - 1 && (
+                    {[EventTypes.PHOTO, EventTypes.LOCATION].includes(
+                      item.type,
+                    ) && (
+                      <SingleMapMemo
+                        lat={item.eventsData.lat}
+                        long={item.eventsData.long}
+                      />
+                    )}
+                    {[EventTypes.PHOTO].includes(item.type) && (
                       <View
                         style={{
-                          height: 1,
-                          width: '100%',
-                          marginTop: 20,
-                          backgroundColor: 'rgba(11, 11, 11, 0.1)',
-                        }}></View>
+                          height: 200,
+                          // width: '100%',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                          borderRadius: 20,
+                        }}>
+                        <View
+                          style={{
+                            height: 200,
+                            width: 200,
+                            borderRadius: 20,
+                            overflow: 'hidden',
+                          }}>
+                          <ImageAsset
+                            localIdentifier={item.eventsData.localIdentifier}
+                            setHeight={200}
+                            setWidth={200}
+                            // height={1}
+                            style={{
+                              // flex: 1,
+                              height: 200,
+                              width: 200,
+                            }}
+                          />
+                        </View>
+                      </View>
                     )}
-                  </View>
-                )}></FlatList>
-            </>
-          )}
-          {/* </ScrollView> */}
-          {screen === screenValues.MEMORIES && (
-            <Animated.View
-              style={{
-                position: 'absolute',
-                right: 30,
-                bottom:
-                  screen === screenValues.MEMORIES ? 100 : floatingButtonBottom,
-                backgroundColor: 'white',
-                padding: 15,
-                borderRadius: 50,
-                borderWidth: 1,
-                borderColor: 'rgba(11, 11, 11, 0.1)',
-                shadowOffset: {
-                  width: 0,
-                  height: 8,
-                },
-                shadowOpacity: 0.44,
-                shadowRadius: 10.32,
+                    {[EventTypes.CALENDAR_EVENT].includes(item.type) &&
+                      item.eventsData.notes !== undefined && (
+                        <ScrollView style={{height: 200}}>
+                          <Text
+                            style={
+                              {
+                                // overflow: 'scroll',
+                                // width: '100%',
+                                // height: 200,
+                              }
+                            }>
+                            {item.eventsData.notes}
+                          </Text>
+                        </ScrollView>
+                      )}
+                    <Box flexDirection="row" gap={10} my={20}>
+                      {item.emotion > 0 && (
+                        <Box
+                          px={10}
+                          py={5}
+                          flexDirection="row"
+                          justifyContent="center"
+                          alignItems="center"
+                          gap={5}
+                          rounded={'$full'}
+                          backgroundColor={emotionToColor({
+                            emotion: item.emotion,
+                            need: emotionAttributes.BACKGROUND,
+                          })}>
+                          <Box
+                            aspectRatio={1}
+                            height={30}
+                            width={30}
+                            p={4}
+                            justifyContent="center"
+                            alignItems="center"
+                            rounded={'$md'}
+                            backgroundColor={emotionToColor({
+                              emotion: item.emotion,
+                              need: emotionAttributes.STROKE,
+                            })}>
+                            {emotionToIcon({
+                              emotion: item.emotion,
+                              active: false,
+                              color: '#fff',
+                            })}
+                          </Box>
 
-                elevation: 16,
-
-                shadowColor: '#000',
-              }}>
-              <TouchableOpacity
-                onPress={async () => {
-                  // const date = new Date(Date.now());
-                  // const mode = 'manual';
-                  // if (mode === 'generate') {
-                  //   await generateEntry({
-                  //     data: await getPermissionsAndData({date: date.getTime()}),
-                  //     date: date.getTime(),
-                  //   });
-                  // } else if (mode === 'manual') {
-                  //   createManualEntry(date.getTime());
-                  // }
-                  setShowModal(true);
-                  setActionsheetScreen(ActionSheetScreens.MEMORIES.CREATE);
-                }}>
-                <NewEntryIcon />
-              </TouchableOpacity>
-            </Animated.View>
-          )}
-
+                          <Text
+                            style={{
+                              fontWeight: 600,
+                              color: emotionToColor({
+                                emotion: item.emotion,
+                                need: emotionAttributes.STROKE,
+                              }),
+                            }}>
+                            {emotionToString(item.emotion)}
+                          </Text>
+                        </Box>
+                      )}
+                      {item.vote !== 0 && (
+                        <Box
+                          px={10}
+                          py={5}
+                          backgroundColor={
+                            item.vote > 0 ? '#DFECF2' : '#E7E7E7'
+                          }
+                          justifyContent="center"
+                          flexDirection="row"
+                          rounded={'$full'}
+                          gap={5}
+                          alignItems="center">
+                          <Box
+                            aspectRatio={1}
+                            height={30}
+                            width={30}
+                            p={4}
+                            justifyContent="center"
+                            alignItems="center"
+                            rounded={'$md'}
+                            backgroundColor={
+                              item.vote > 0 ? '#118ED1' : '#6D6D6D'
+                            }>
+                            {item.vote > 0 ? (
+                              <UpvoteIcon primaryColor={'white'} />
+                            ) : (
+                              <DownvoteIcon primaryColor={'white'} />
+                            )}
+                          </Box>
+                          <Text
+                            style={{
+                              color: item.vote > 0 ? '#118ED1' : '#6D6D6D',
+                              fontWeight: 600,
+                            }}>
+                            {item.vote}
+                          </Text>
+                        </Box>
+                      )}
+                      {Object.values(item.tags).flat().length > 0 && (
+                        <Box
+                          px={10}
+                          py={5}
+                          backgroundColor={'#DFECF2'}
+                          justifyContent="center"
+                          flexDirection="row"
+                          rounded={'$full'}
+                          gap={5}
+                          alignItems="center">
+                          <Box
+                            aspectRatio={1}
+                            height={30}
+                            width={30}
+                            p={4}
+                            justifyContent="center"
+                            alignItems="center"
+                            rounded={'$md'}
+                            backgroundColor={'#118ED1'}>
+                            <LabelIcon primaryColor={'white'} />
+                          </Box>
+                          <Text style={{color: '#118ED1', fontWeight: 600}}>
+                            {Object.values(item.tags).flat().length}
+                          </Text>
+                        </Box>
+                      )}
+                    </Box>
+                  </Pressable>
+                  {index !== memories.length - 1 && (
+                    <View
+                      style={{
+                        height: 1,
+                        width: '100%',
+                        marginTop: 20,
+                        backgroundColor: 'rgba(11, 11, 11, 0.1)',
+                      }}></View>
+                  )}
+                </View>
+              )}></FlatList>
+          </>
+        )}
+        {/* </ScrollView> */}
+        {screen === screenValues.MEMORIES && (
           <Animated.View
             style={{
-              justifyContent: 'space-evenly',
-              flexDirection: 'row',
-              backgroundColor: '#DAD9DD',
-              // flexGrow: 1,
-              // justifyContent: 'flex-end',
-              // alignSelf: 'flex-end',
-              // bottom: 0,
+              position: 'absolute',
+              right: 30,
+              bottom:
+                screen === screenValues.MEMORIES ? 100 : floatingButtonBottom,
+              backgroundColor: 'white',
+              padding: 15,
+              borderRadius: 50,
+              borderWidth: 1,
+              borderColor: 'rgba(11, 11, 11, 0.1)',
+              shadowOffset: {
+                width: 0,
+                height: 8,
+              },
+              shadowOpacity: 0.44,
+              shadowRadius: 10.32,
 
-              height: 75,
+              elevation: 16,
+
+              shadowColor: '#000',
             }}>
             <TouchableOpacity
-              onPress={() => {
-                // swipeableRef.current.close();
-
-                setScreen(screenValues.READ);
-              }}
-              style={{
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
+              onPress={async () => {
+                // const date = new Date(Date.now());
+                // const mode = 'manual';
+                // if (mode === 'generate') {
+                //   await generateEntry({
+                //     data: await getPermissionsAndData({date: date.getTime()}),
+                //     date: date.getTime(),
+                //   });
+                // } else if (mode === 'manual') {
+                //   createManualEntry(date.getTime());
+                // }
+                setShowModal(true);
+                setActionsheetScreen(ActionSheetScreens.MEMORIES.CREATE);
               }}>
-              <DaysMenuIcon
-                fill={screen === screenValues.READ ? '#3286B3' : '#68696A'}
-              />
-              <Text
-                style={{
-                  color: screen === screenValues.READ ? '#3286B3' : '#68696A',
-                }}
-                allowFontScaling={false}>
-                Stories
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => {
-                setScreen(screenValues.MEMORIES);
-              }}
-              style={{
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-              }}>
-              <MomentsMenuIcon
-                fill={screen === screenValues.MEMORIES ? '#3286B3' : '#68696A'}
-              />
-              <Text
-                style={{
-                  color:
-                    screen === screenValues.MEMORIES ? '#3286B3' : '#68696A',
-                }}
-                allowFontScaling={false}>
-                Memories
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate('Settings');
-              }}
-              style={{
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-              }}>
-              <DaysMenuIcon
-                fill={screen === screenValues.READ ? '#3286B3' : '#68696A'}
-              />
-              <Text
-                style={{
-                  color: screen === screenValues.READ ? '#3286B3' : '#68696A',
-                }}
-                allowFontScaling={false}>
-                Settings
-              </Text>
+              <NewEntryIcon />
             </TouchableOpacity>
           </Animated.View>
-        </View>
-      )}
+        )}
+
+        <Animated.View
+          style={{
+            justifyContent: 'space-evenly',
+            flexDirection: 'row',
+            backgroundColor: '#DAD9DD',
+            // flexGrow: 1,
+            // justifyContent: 'flex-end',
+            // alignSelf: 'flex-end',
+            // bottom: 0,
+
+            height: 75,
+          }}>
+          <TouchableOpacity
+            onPress={() => {
+              // swipeableRef.current.close();
+
+              setScreen(screenValues.READ);
+            }}
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+            }}>
+            <DaysMenuIcon
+              fill={screen === screenValues.READ ? '#3286B3' : '#68696A'}
+            />
+            <Text
+              style={{
+                color: screen === screenValues.READ ? '#3286B3' : '#68696A',
+              }}
+              allowFontScaling={false}>
+              Stories
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => {
+              setScreen(screenValues.MEMORIES);
+            }}
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+            }}>
+            <MomentsMenuIcon
+              fill={screen === screenValues.MEMORIES ? '#3286B3' : '#68696A'}
+            />
+            <Text
+              style={{
+                color: screen === screenValues.MEMORIES ? '#3286B3' : '#68696A',
+              }}
+              allowFontScaling={false}>
+              Memories
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate('Settings');
+            }}
+            style={{
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+            }}>
+            <DaysMenuIcon
+              fill={screen === screenValues.READ ? '#3286B3' : '#68696A'}
+            />
+            <Text
+              style={{
+                color: screen === screenValues.READ ? '#3286B3' : '#68696A',
+              }}
+              allowFontScaling={false}>
+              Settings
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
     </SafeAreaView>
   );
 };

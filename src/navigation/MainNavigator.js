@@ -23,6 +23,7 @@ import getMemories from '../utils/getMemories';
 
 import AnimatedLaunchScreen from '../modules/onboarding/views/AnimatedLaunchScreen';
 import AppContext from '../contexts/AppContext';
+import OnboardingView from '../../OnboardingView';
 
 const RootStack = createNativeStackNavigator();
 
@@ -176,6 +177,8 @@ const MainNavigator = () => {
 
   // console.log('main navigator', entries, loadingEntries);
 
+  const [firstEntryGenerated, setFirstEntryGenerated] = useState(false);
+
   const contextValues = {
     entries,
     setEntries,
@@ -186,6 +189,8 @@ const MainNavigator = () => {
     setOnBoarding,
     devMode,
     setDevMode,
+    firstEntryGenerated,
+    setFirstEntryGenerated,
   };
 
   return (
@@ -204,16 +209,15 @@ const MainNavigator = () => {
             <View style={styles.safeArea}>
               {isAuthenticated ? (
                 <AppContext.Provider value={contextValues}>
-                  <AppNavigator />
+                  {onBoarding === true || firstEntryGenerated === true ? (
+                    <OnboardingView />
+                  ) : (
+                    <AppNavigator />
+                  )}
                 </AppContext.Provider>
               ) : (
                 <AuthNavigator />
               )}
-              {/* {isLoading ? (
-                <View style={styles.activityIndicator}>
-                  <ActivityIndicator size="large" />
-                </View>
-              ) : null} */}
             </View>
           )}
         />

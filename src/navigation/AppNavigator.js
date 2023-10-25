@@ -25,9 +25,11 @@ const AppNavigator = ({routes}) => {
         name="Home"
         options={{
           tabBarIcon: ({focused}) => (
-            <TouchableOpacity>
+            <>
+              {/* <TouchableOpacity style={{padding: 20}}> */}
               {focused ? <StoriesIcon fill="#118ED1CC" /> : <StoriesIcon />}
-            </TouchableOpacity>
+              {/* </TouchableOpacity> */}
+            </>
           ),
         }}
         children={params => (
@@ -41,10 +43,13 @@ const AppNavigator = ({routes}) => {
         component={EntryView}
         options={{
           tabBarIcon: ({focused}) => (
-            <TouchableOpacity>
+            <>
+              {/* <TouchableOpacity> */}
               {focused ? <MemoriesIcon fill="#118ED1CC" /> : <MemoriesIcon />}
-            </TouchableOpacity>
+              {/* </TouchableOpacity> */}
+            </>
           ),
+          tabBarLabel: 'Memories',
         }}
       />
       <Tab.Screen
