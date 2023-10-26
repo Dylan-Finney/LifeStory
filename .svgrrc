@@ -6,6 +6,7 @@
     "#f01": "{props.strokeWidth}",
     "stroke-width-value": "{props.strokeWidth}",
     "10101010101010": "{props.width}",
-    "10101010101011": "{props.height}"
+    "10101010101011": "{props.height}",
+    "00000000000000": "{props.height}"
   }
 }

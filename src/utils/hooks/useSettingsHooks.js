@@ -38,6 +38,13 @@ if (storage.getString('settings.globalWritingSettings') === undefined) {
   );
 }
 
+if (storage.getString('settings.customLabels') === undefined) {
+  storage.set(
+    'settings.customLabels',
+    '{"modes": [], "roles": [], "other": []}',
+  );
+}
+
 export default storage;
 /*
 const settingsStorage = new MMKVLoader()

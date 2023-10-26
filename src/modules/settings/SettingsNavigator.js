@@ -12,7 +12,7 @@ const SettingsNavigator = () => {
   return (
     <SettingsStack.Navigator initialRouteName="ThreadsNavigator">
       <SettingsStack.Screen
-        name="Settings"
+        name="Settings_Base"
         component={SettingsView}
         options={{
           headerShown: false,

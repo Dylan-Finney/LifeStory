@@ -122,7 +122,7 @@ const useDatabaseHooks = () => {
     });
   };
 
-  const saveMemoryData = ({
+  const saveMemoryData = async ({
     tags,
     time,
     type,
@@ -133,27 +133,31 @@ const useDatabaseHooks = () => {
     eventsData,
     body,
   }) => {
-    db.transaction(tx => {
-      tx.executeSql(
-        `INSERT INTO Memories (tags, type, time, emotion, vote, bodyModifiedAt, bodyModifiedSource, eventsData, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          tags,
-          type,
-          time,
-          emotion,
-          vote,
-          bodyModifiedAt,
-          bodyModifiedSource,
-          eventsData,
-          body,
-        ],
-        (_, result) => {
-          console.log('Memory created successfully', result);
-        },
-        (_, error) => {
-          console.log('Error creating memory:', error);
-        },
-      );
+    return new Promise((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql(
+          `INSERT INTO Memories (tags, type, time, emotion, vote, bodyModifiedAt, bodyModifiedSource, eventsData, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            tags,
+            type,
+            time,
+            emotion,
+            vote,
+            bodyModifiedAt,
+            bodyModifiedSource,
+            eventsData,
+            body,
+          ],
+          (_, result) => {
+            console.log('Memory created successfully', result);
+            resolve(result);
+          },
+          (_, error) => {
+            console.log('Error creating memory:', error);
+            reject(error);
+          },
+        );
+      });
     });
   };
 
@@ -208,6 +212,61 @@ const useDatabaseHooks = () => {
         ],
         (_, result) => {
           console.log('Data updated successfully', result);
+        },
+        (_, error) => {
+          console.log('Error updating data:', error);
+        },
+      );
+    });
+  };
+
+  const updateMemoryData = ({
+    tags,
+    time,
+    type,
+    emotion,
+    vote,
+    bodyModifiedAt,
+    bodyModifiedSource,
+    eventsData,
+    body,
+    id,
+  }) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `UPDATE Memories SET tags = ?, type = ?, time = ?, emotion = ?, vote = ?, bodyModifiedAt = ?, bodyModifiedSource = ?, eventsData = ?, body = ?  WHERE id = ?`,
+        // `UPDATE Entries SET title = ? WHERE id = ?`,
+        [
+          tags,
+          type,
+
+          time,
+          emotion,
+          vote,
+          bodyModifiedAt,
+          bodyModifiedSource,
+          eventsData,
+          body,
+          id,
+        ],
+        (_, result) => {
+          console.log('Data updated successfully', result);
+        },
+        (_, error) => {
+          console.log('Error updating data:', error);
+        },
+      );
+    });
+  };
+
+  const deleteMemoryData = ({id}) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `DELETE FROM Memories WHERE id = ?`,
+        // `UPDATE Entries SET title = ? WHERE id = ?`,
+        [id],
+        (_, result) => {
+          console.log('Memory deleted successfully', result);
         },
         (_, error) => {
           console.log('Error updating data:', error);
@@ -283,6 +342,8 @@ const useDatabaseHooks = () => {
     updateEntryData,
     retrieveSpecificData,
     resetTable,
+    deleteMemoryData,
+    updateMemoryData,
   };
 };
 

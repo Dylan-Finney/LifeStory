@@ -96,7 +96,11 @@ const generateGenericMemory = async ({data, type, time}) => {
   console.log(response);
   createMemoriesTable();
   saveMemoryData({
-    tags: '',
+    tags: JSON.stringify({
+      roles: [],
+      body: [],
+      other: [],
+    }),
     type,
     body: response,
     bodyModifiedAt: time,

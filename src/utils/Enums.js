@@ -9,3 +9,17 @@ export const Screens = {
   MEMORIES: 1,
   SETTINGS: 2,
 };
+
+export const ActionSheetScreens = {
+  MEMORIES: {
+    BASE: 0.0,
+    LABELS: 0.1,
+    EDIT: 0.2,
+    CREATE: 0.3,
+  },
+  STORIES: {
+    BASE: 1.0,
+    EDIT: 1.1,
+    CREATE: 1.2,
+  },
+};

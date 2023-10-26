@@ -50,7 +50,7 @@ export default generateEntry = async ({memories}) => {
         {
           role: 'system',
           content:
-            'You are a diary writer. I will give a series of "memories", descriptions of events that happened today, and I want you to generate a diary entry based on this. Keep the entry concise and stick to the facts given. The purpose of this is to have a concise summary of what happened during today. In an order that most makes sense, e.g. chronological.',
+            'You are a diary writer. I will give a series of "memories", descriptions of events that happened today, and I want you to generate a diary entry based on this. Keep the entry concise and stick to the facts given. The purpose of this is to have a concise summary of what happened during today. In an order that most makes sense, e.g. chronological. Not not hallucinate details that have not been provided, stick to what I know/said. There is no need for "Dear Diary" or "[Your Name]"',
         },
         {role: 'user', content: `${string}`},
       ],

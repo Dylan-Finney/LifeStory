@@ -32,6 +32,7 @@ const MainNavigator = () => {
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [devMode, setDevMode] = useState(false);
 
   //// future authentication implementation here
   const isAuthenticated = true;
@@ -183,6 +184,8 @@ const MainNavigator = () => {
     loadingEntries,
     onBoarding,
     setOnBoarding,
+    devMode,
+    setDevMode,
   };
 
   return (

@@ -26,7 +26,7 @@ import notifee from '@notifee/react-native';
 export default SettingsView = ({route, navigation}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalScreen, setModalScreen] = useState('');
-  const {setOnBoarding} = useContext(AppContext);
+  const {setOnBoarding, devMode, setDevMode} = useContext(AppContext);
 
   const {deleteTable, createEntryTable, createVisitsTable, resetTable} =
     useDatabaseHooks();
@@ -535,6 +535,14 @@ export default SettingsView = ({route, navigation}) => {
         Change Connected Calendars
       </Text>
       <Divider title={'Other'} />
+      <Text
+        allowFontScaling={false}
+        style={{color: 'red', fontWeight: 600}}
+        onPress={() => {
+          setDevMode(!devMode);
+        }}>
+        {devMode === true ? 'Disable' : 'Enable'} Dev Mode
+      </Text>
       <Text
         allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}

@@ -51,9 +51,11 @@ const AppNavigator = ({routes}) => {
         name="Settings"
         options={{
           tabBarIcon: ({focused}) => (
-            <TouchableOpacity>
+            <>
+              {/* <TouchableOpacity> */}
               {focused ? <SettingsIcon fill="#118ED1CC" /> : <SettingsIcon />}
-            </TouchableOpacity>
+              {/* </TouchableOpacity> */}
+            </>
           ),
         }}
         children={params => <SettingsNavigator {...params} />}

@@ -22,7 +22,7 @@ const getMemories = async () => {
         return {
           ...localMemory,
           type: parseInt(localMemory.type),
-          tags: localMemory.tags === '' ? [] : JSON.parse(localMemory.tags),
+          tags: JSON.parse(localMemory.tags),
           // body: localMemory,
           bodyModifiedAt: parseInt(localMemory.bodyModifiedAt),
           emotion: parseInt(localMemory.emotion),

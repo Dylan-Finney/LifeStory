@@ -31,6 +31,11 @@ import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
 import AIRewriteIcon from './src/assets/ai-rewrite-icon.svg';
 import FirstEntryIcon from './src/assets/first-entry.svg';
+import AngerIcon from './src/assets/emotions/Anger.svg';
+import FrownIcon from './src/assets/emotions/Frown.svg';
+import GrinIcon from './src/assets/emotions/Grin.svg';
+import NeutralIcon from './src/assets/emotions/Neutral.svg';
+import SmileIcon from './src/assets/emotions/Smile.svg';
 
 import notifee, {
   EventType,
@@ -81,6 +86,9 @@ import MomentsMenuIcon from './src/assets/moments-menu.svg';
 import SearchMenuIcon from './src/assets/search-menu.svg';
 import LocationEventIcon from './src/assets/event-location.svg';
 import PhotoEventIcon from './src/assets/event-photo.svg';
+import BinIcon from './src/assets/Bin.svg';
+import PenIcon from './src/assets/Pen.svg';
+import WritingAnimation from './src/assets/writing.gif';
 
 import {emotions} from './src/utils/utils';
 import {ImageAsset} from './src/utils/native-modules/NativeImage';
@@ -91,8 +99,23 @@ import onCreateTriggerReminder from './src/utils/createOpenReminder';
 import SingleMapMemo from './src/components/SingleMapMemo';
 import generateMemories from './src/utils/generateMemories';
 import generateEntry from './src/utils/generateEntry';
-import {EventTypes} from './src/utils/Enums';
+import {ActionSheetScreens, EventTypes} from './src/utils/Enums';
 import getMemories from './src/utils/getMemories';
+import NewModalItem from './src/NewModalItem';
+import {
+  Actionsheet,
+  ActionsheetBackdrop,
+  ActionsheetContent,
+  ActionsheetDragIndicator,
+  ActionsheetDragIndicatorWrapper,
+  ActionsheetItem,
+  Box,
+  Divider,
+} from '@gluestack-ui/themed';
+import LabellingSheet from './src/LabellingSheet';
+import {KeyboardAvoidingView} from '@gluestack-ui/themed';
+import EditSheet from './src/EditSheet';
+import {Pressable} from '@gluestack-ui/themed';
 // const {
 //   DetectFacesCommand,
 //   DetectLabelsCommand,
@@ -110,7 +133,6 @@ AWS.config.update({
   region: Config.AWS_REGION,
 });
 const Rekognition = new AWS.Rekognition();
-
 const configuration = new Configuration({
   apiKey: Config.OPENAI_KEY,
 });
@@ -123,6 +145,8 @@ const {
   createEntryTable,
   createMemoriesTable,
   saveMemoryData,
+  updateMemoryData,
+  deleteMemoryData,
 } = useDatabaseHooks();
 export default FullHomeView = ({route, navigation}) => {
   // const {
@@ -182,6 +206,7 @@ export default FullHomeView = ({route, navigation}) => {
     setOnBoarding,
     memories,
     setMemories,
+    devMode,
   } = useContext(AppContext);
   // console.log({entries, memories});
 
@@ -208,6 +233,7 @@ export default FullHomeView = ({route, navigation}) => {
   const [loadingMessage, setLoadingMessage] = useState('');
   const [memoryLoadingMessage, setMemoryLoadingMessage] =
     useState('Not Needed');
+  const [memoryLoadingState, setMemoryLoadingState] = useState(false);
   const [storyLoadingMessage, setStoryLoadingMessage] = useState('Busy');
 
   const [screen, setScreen] = useState(screenValues.MEMORIES);
@@ -215,13 +241,22 @@ export default FullHomeView = ({route, navigation}) => {
   //   useSettingsHooks.getBoolean('onboarding'),
   // );
 
+  const [refreshedFromPull, setRefreshedFromPull] = useState(false);
+
   const [showModal, setShowModal] = useState(false);
+  const [actionsheetScreen, setActionsheetScreen] = useState(
+    ActionSheetScreens.MEMORIES.BASE,
+  );
+  // const [showModal, setShowModal] = useState(false);
   const [currentRichModeEntryIndex, setCurrentRichModeEntryIndex] = useState();
 
   const [date, setDate] = useState(new Date());
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState(false);
-  const [highlightedMemory, setHighlightedMemory] = useState(-1);
+  const [highlightedMemory, setHighlightedMemory] = useState({
+    index: -1,
+    id: null,
+  });
   const swipeableRef = useRef(null);
   console.log('useSettingsHooks', useSettingsHooks.getBoolean('onboarding'));
   console.log('onboarding', onBoarding);
@@ -601,6 +636,7 @@ export default FullHomeView = ({route, navigation}) => {
 
     const readyToGenerateMemory = async ({start, end}) => {
       setMemoryLoadingMessage('Generating');
+      setMemoryLoadingState(true);
       const eventData = await getPermissionsAndData({start, end});
       console.log('Event Data For Memory Generation', eventData);
       const newMemories = await generateMemories({
@@ -702,6 +738,7 @@ export default FullHomeView = ({route, navigation}) => {
       }
       console.log('Finished checking If Memory is Ready');
       setMemoryLoadingMessage('Finished');
+      setMemoryLoadingState(false);
     };
 
     const checkIfStoryReadyToGenerate = async () => {
@@ -848,9 +885,16 @@ export default FullHomeView = ({route, navigation}) => {
 
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
   const headerNew = createRef();
-  const headerScrollHeight = scrollOffsetY.interpolate({
-    inputRange: [0, H_SCROLL_DISTANCE],
-    outputRange: [H_MAX_HEIGHT * 2, H_MIN_HEIGHT],
+  const scrollRef = createRef();
+  // const headerScrollHeight = scrollOffsetY.interpolate({
+  //   inputRange: [0, H_SCROLL_DISTANCE],
+  //   outputRange: [H_MAX_HEIGHT * 2, H_MIN_HEIGHT],
+  //   extrapolate: 'clamp',
+  // });
+
+  const gifScale = scrollOffsetY.interpolate({
+    inputRange: [-100, 0],
+    outputRange: [75, 0],
     extrapolate: 'clamp',
   });
 
@@ -860,74 +904,220 @@ export default FullHomeView = ({route, navigation}) => {
     return matches;
   }
 
+  gifScale.addListener(val => {
+    console.log({val, refreshedFromPull});
+    if (val.value > 70 && refreshedFromPull === false) {
+      console.log('PIKACHU');
+      checkIfReadyToGenerate();
+      setRefreshedFromPull(true);
+    } else if (val.value === 0 && refreshedFromPull === true) {
+      setRefreshedFromPull(false);
+    }
+  });
+
   // const headerScrollHeight = scrollOffsetY.interpolate({
   //   inputRange: [0, H_SCROLL_DISTANCE],
   //   outputRange: [H_MAX_HEIGHT * 2, H_MIN_HEIGHT],
   //   extrapolate: 'clamp',
   // });
   const [showNewHeader, setShowNewHeader] = useState(false);
+  const [showActionSheet, setShowActionSheet] = useState(false);
   const [entryHeaderList, setEntryHeaderList] = useState([]);
   const [entryHeaderIndex, setEntryHeaderIndex] = useState(0);
-  scrollOffsetY.removeAllListeners();
-  scrollOffsetY.addListener(val => {
-    if (val.value <= 0) {
-      setEntryHeaderIndex(0);
-    } else {
-      for (var i = 0; i < entryHeaderList.length; i++) {
-        if (entryHeaderList[i].y > val.value) {
-          setEntryHeaderIndex(i - 1);
-          break;
-        } else {
-          if (i === entryHeaderList.length - 1) {
-            setEntryHeaderIndex(i);
-          }
+  // scrollOffsetY.removeAllListeners();
+  // scrollOffsetY.addListener(val => {
+  //   // if (val.value <= 0) {
+  //   //   setEntryHeaderIndex(0);
+  //   // } else {
+  //   //   for (var i = 0; i < entryHeaderList.length; i++) {
+  //   //     if (entryHeaderList[i].y > val.value) {
+  //   //       setEntryHeaderIndex(i - 1);
+  //   //       break;
+  //   //     } else {
+  //   //       if (i === entryHeaderList.length - 1) {
+  //   //         setEntryHeaderIndex(i);
+  //   //       }
+  //   //     }
+  //   //   }
+  //   // }
+  //   console.log(val);
+  //   console.log(gifScale);
+  //   // scrollRef.current;
+  //   // console.log(scrollRef.current);
+
+  //   // console.log({val, entryHeaderList});
+  //   // if (val.value > H_SCROLL_DISTANCE) {
+  //   //   setShowNewHeader(true);
+  //   // } else {
+  //   //   setShowNewHeader(false);
+  //   // }
+  // });
+  // const color = scrollOffsetY.interpolate({
+  //   inputRange: [0, H_SCROLL_DISTANCE],
+  //   outputRange: ['#06609E', 'white'],
+  //   extrapolate: 'identity',
+  // });
+  // const rangeViewHeight = scrollOffsetY.interpolate({
+  //   inputRange: [0, 100],
+  //   outputRange: [75, 0],
+  //   extrapolate: 'clamp',
+  // });
+  // const rangeViewPadding = scrollOffsetY.interpolate({
+  //   inputRange: [0, 100],
+  //   outputRange: [20, 0],
+  //   extrapolate: 'clamp',
+  // });
+  // const headerHeight = scrollOffsetY.interpolate({
+  //   inputRange: [100, 150],
+  //   outputRange: [0, 100],
+  //   extrapolate: 'clamp',
+  // });
+  // const headerPadding = scrollOffsetY.interpolate({
+  //   inputRange: [100, 150],
+  //   outputRange: [0, 10],
+  //   extrapolate: 'clamp',
+  // });
+  // const footerHeight = scrollOffsetY.interpolate({
+  //   inputRange: [0, 100],
+  //   outputRange: [75, 0],
+  //   extrapolate: 'clamp',
+  // });
+
+  // const floatingButtonBottom = scrollOffsetY.interpolate({
+  //   inputRange: [0, 100],
+  //   outputRange: [100, 25],
+  //   extrapolate: 'clamp',
+  // });
+
+  const emotions = {
+    NA: 0,
+    HORRIBLE: 1,
+    BAD: 2,
+    NEUTRAL: 3,
+    GOOD: 4,
+    GREAT: 5,
+  };
+
+  const emotionAttributes = {
+    BORDER: 0,
+    BACKGROUND: 1,
+    STROKE: 2,
+  };
+
+  const emotionToColor = ({emotion, need}) => {
+    switch (emotion) {
+      case emotions.HORRIBLE:
+        switch (need) {
+          case emotionAttributes.BORDER:
+            return '#E7E7E7';
+          case emotionAttributes.STROKE:
+            return '#E93535';
+          case emotionAttributes.BACKGROUND:
+            return '#FDEBEB';
+          default:
+            return 'black';
         }
-      }
+      case emotions.BAD:
+        switch (need) {
+          case emotionAttributes.BORDER:
+            return '#E7E7E7';
+          case emotionAttributes.STROKE:
+            return '#C839D4';
+          case emotionAttributes.BACKGROUND:
+            return '#F9EBFB';
+          default:
+            return 'black';
+        }
+      case emotions.NEUTRAL:
+        switch (need) {
+          case emotionAttributes.BORDER:
+            return '#E7E7E7';
+          case emotionAttributes.STROKE:
+            return '#6D6D6D';
+          case emotionAttributes.BACKGROUND:
+            return '#E7E7E7';
+          default:
+            return 'black';
+        }
+      case emotions.GOOD:
+        switch (need) {
+          case emotionAttributes.BORDER:
+            return '#E7E7E7';
+          case emotionAttributes.STROKE:
+            return '#118ED1';
+          case emotionAttributes.BACKGROUND:
+            return '#E7F4FA';
+          default:
+            return 'black';
+        }
+      case emotions.GREAT:
+        switch (need) {
+          case emotionAttributes.BORDER:
+            return '#E7E7E7';
+          case emotionAttributes.STROKE:
+            return '#11A833';
+          case emotionAttributes.BACKGROUND:
+            return '#E7F6EB';
+          default:
+            return 'black';
+        }
+      default:
+        switch (need) {
+          case emotionAttributes.BORDER:
+            return '#E7E7E7';
+          case emotionAttributes.STROKE:
+            return 'black';
+          case emotionAttributes.BACKGROUND:
+            return 'black';
+          default:
+            return 'black';
+        }
     }
+  };
 
-    // console.log({val, entryHeaderList});
-    // if (val.value > H_SCROLL_DISTANCE) {
-    //   setShowNewHeader(true);
-    // } else {
-    //   setShowNewHeader(false);
-    // }
-  });
-  const color = scrollOffsetY.interpolate({
-    inputRange: [0, H_SCROLL_DISTANCE],
-    outputRange: ['#06609E', 'white'],
-    extrapolate: 'identity',
-  });
-  const rangeViewHeight = scrollOffsetY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [75, 0],
-    extrapolate: 'clamp',
-  });
-  const rangeViewPadding = scrollOffsetY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [20, 0],
-    extrapolate: 'clamp',
-  });
-  const headerHeight = scrollOffsetY.interpolate({
-    inputRange: [100, 150],
-    outputRange: [0, 100],
-    extrapolate: 'clamp',
-  });
-  const headerPadding = scrollOffsetY.interpolate({
-    inputRange: [100, 150],
-    outputRange: [0, 10],
-    extrapolate: 'clamp',
-  });
-  const footerHeight = scrollOffsetY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [75, 0],
-    extrapolate: 'clamp',
-  });
+  const emotionToIcon = ({emotion, active, color}) => {
+    const primaryColor =
+      color === undefined
+        ? active
+          ? emotionToColor({
+              emotion,
+              need: emotionAttributes.STROKE,
+            })
+          : '#0b0b0b99'
+        : color;
+    switch (emotion) {
+      case emotions.HORRIBLE:
+        return <AngerIcon primaryColor={primaryColor} />;
+      case emotions.BAD:
+        return <FrownIcon primaryColor={primaryColor} />;
+      case emotions.NEUTRAL:
+        return <NeutralIcon primaryColor={primaryColor} />;
+      case emotions.GOOD:
+        return <SmileIcon primaryColor={primaryColor} />;
+      case emotions.GREAT:
+        return <GrinIcon primaryColor={primaryColor} />;
+      default:
+        return <></>;
+    }
+  };
 
-  const floatingButtonBottom = scrollOffsetY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [100, 25],
-    extrapolate: 'clamp',
-  });
+  const emotionToString = emotion => {
+    switch (emotion) {
+      case emotions.HORRIBLE:
+        return 'Bad';
+      case emotions.BAD:
+        return 'Sad';
+      case emotions.NEUTRAL:
+        return 'Neutral';
+      case emotions.GOOD:
+        return 'Glad';
+      case emotions.GREAT:
+        return 'Happy';
+
+      default:
+        return 'N/A';
+    }
+  };
 
   const ModalItem = ({icon, boldText, softText, onPress}) => {
     return (
@@ -953,6 +1143,347 @@ export default FullHomeView = ({route, navigation}) => {
         // backgroundColor={onBoarding === true ? 'white' : '#F9F9F9'}
         backgroundColor={'white'}
       />
+      <Actionsheet
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setHighlightedMemory({
+            index: -1,
+            id: null,
+          });
+        }}>
+        <ActionsheetBackdrop />
+        <ActionsheetContent pb={50} maxHeight={'80%'}>
+          <ActionsheetDragIndicatorWrapper pb={10}>
+            <ActionsheetDragIndicator />
+          </ActionsheetDragIndicatorWrapper>
+          <ScrollView>
+            {actionsheetScreen === ActionSheetScreens.MEMORIES.BASE && (
+              <>
+                <Box
+                  flexDirection="row"
+                  justifyContent="center"
+                  gap={10}
+                  mb={5}>
+                  {[1, 2, 3, 4, 5].map(val => {
+                    return (
+                      <Pressable
+                        key={val}
+                        onPress={() => {
+                          var updatedMemories = [...memories];
+                          var memory = updatedMemories[highlightedMemory.index];
+                          memory.emotion = memory.emotion === val ? 0 : val;
+                          updatedMemories[highlightedMemory.index] = memory;
+                          setMemories(updatedMemories);
+                          updateMemoryData({
+                            tags: JSON.stringify(memory.tags),
+                            type: memory.type,
+                            body: memory.body,
+                            bodyModifiedAt: memory.bodyModifiedAt,
+                            bodyModifiedSource: memory.bodyModifiedSource,
+                            emotion: memory.emotion,
+                            eventsData: JSON.stringify(memory.eventsData),
+                            time: memory.time,
+                            vote: memory.vote,
+                            id: highlightedMemory.id,
+                          });
+                        }}>
+                        <Box
+                          width={50}
+                          height={50}
+                          backgroundColor={
+                            memories[highlightedMemory.index]?.emotion === val
+                              ? emotionToColor({
+                                  emotion: val,
+                                  need: emotionAttributes.BACKGROUND,
+                                })
+                              : 'white'
+                          }
+                          borderWidth={1}
+                          justifyContent="center"
+                          alignItems="center"
+                          borderColor={
+                            memories[highlightedMemory.index]?.emotion === val
+                              ? emotionToColor({
+                                  emotion: val,
+                                  need: emotionAttributes.BACKGROUND,
+                                })
+                              : emotionToColor({
+                                  need: emotionAttributes.BORDER,
+                                })
+                          }
+                          rounded={'$md'}>
+                          <Box aspectRatio={1} height={'65%'} width={'65%'}>
+                            {emotionToIcon({
+                              emotion: val,
+                              active:
+                                memories[highlightedMemory.index]?.emotion ===
+                                val,
+                            })}
+                            {/* <AngerIcon
+                              primaryColor={
+                                memories[highlightedMemory.index]?.emotion ===
+                                val
+                                  ? emotionToColor({
+                                      emotion: val,
+                                      need: emotionAttributes.STROKE,
+                                    })
+                                  : '#0b0b0b99'
+                              }
+                              // fill={
+                              //   // memories[highlightedMemory.index]?.emotion ===
+                              //   // val
+                              //   //   ? emotionToColor({
+                              //   //       need: emotionAttributes.BORDER,
+                              //   //     })
+                              //   //   : emotionToColor({
+                              //   //       need: emotionAttributes.BORDER,
+                              //   //     })
+                              //   '#000'
+                              // }
+                              // fill={'#000'}
+                            /> */}
+                          </Box>
+                          {/* default stroke: 6D6D6D */}
+                        </Box>
+                      </Pressable>
+                    );
+                  })}
+                </Box>
+                <Divider backgroundColor="black" height={1} />
+                <NewModalItem
+                  boldText={'Upvote'}
+                  normalText={'as more meaningful'}
+                  icon={
+                    <UpvoteIcon
+                      primaryColor={'black'}
+                      // stroke={theme.entry.buttons.toggle.icon.inactive}
+                    />
+                  }
+                  onPress={() => {
+                    var updatedMemories = [...memories];
+                    var memory = updatedMemories[highlightedMemory.index];
+                    memory.vote += 1;
+                    updatedMemories[highlightedMemory.index] = memory;
+                    setMemories(updatedMemories);
+                    updateMemoryData({
+                      tags: JSON.stringify(memory.tags),
+                      type: memory.type,
+                      body: memory.body,
+                      bodyModifiedAt: memory.bodyModifiedAt,
+                      bodyModifiedSource: memory.bodyModifiedSource,
+                      emotion: memory.emotion,
+                      eventsData: JSON.stringify(memory.eventsData),
+                      time: memory.time,
+                      vote: memory.vote,
+                      id: highlightedMemory.id,
+                    });
+                  }}
+                  num={
+                    memories[highlightedMemory.index]?.vote > 0
+                      ? memories[highlightedMemory.index]?.vote
+                      : undefined
+                  }
+                />
+                <NewModalItem
+                  boldText={'Downvote'}
+                  normalText={'as less meaningful'}
+                  icon={<DownvoteIcon primaryColor={'black'} />}
+                  onPress={() => {
+                    var updatedMemories = [...memories];
+                    var memory = updatedMemories[highlightedMemory.index];
+                    memory.vote -= 1;
+                    updatedMemories[highlightedMemory.index] = memory;
+                    setMemories(updatedMemories);
+                    updateMemoryData({
+                      tags: JSON.stringify(memory.tags),
+                      type: memory.type,
+                      body: memory.body,
+                      bodyModifiedAt: memory.bodyModifiedAt,
+                      bodyModifiedSource: memory.bodyModifiedSource,
+                      emotion: memory.emotion,
+                      eventsData: JSON.stringify(memory.eventsData),
+                      time: memory.time,
+                      vote: memory.vote,
+                      id: highlightedMemory.id,
+                    });
+                  }}
+                  num={
+                    memories[highlightedMemory.index]?.vote < 0
+                      ? Math.abs(memories[highlightedMemory.index]?.vote)
+                      : undefined
+                  }
+                  numStyle={1}
+                />
+                <NewModalItem
+                  boldText={'Add labels'}
+                  normalText={'for additional meaning'}
+                  icon={<LabelIcon primaryColor={'black'} />}
+                  onPress={() =>
+                    setActionsheetScreen(ActionSheetScreens.MEMORIES.LABELS)
+                  }
+                  num={
+                    Object.values(
+                      memories[highlightedMemory.index]?.tags || [],
+                    ).flat().length
+                  }
+                />
+                {/* <NewModalItem
+                  boldText={'Redo'}
+                  normalText={''}
+                  icon={
+                    <DownvoteIcon
+                      stroke={theme.entry.buttons.toggle.icon.inactive}
+                    />
+                  }
+                  onPress={() => {
+                    var updatedMemories = [...memories];
+                    var memory = updatedMemories[highlightedMemory.index];
+                    memory.tags = {
+                      roles: [],
+                      modes: [],
+                      other: [],
+                    };
+                    updatedMemories[highlightedMemory.index] = memory;
+                    setMemories(updatedMemories);
+                    updateMemoryData({
+                      tags: JSON.stringify(memory.tags),
+                      type: memory.type,
+                      body: memory.body,
+                      bodyModifiedAt: memory.bodyModifiedAt,
+                      bodyModifiedSource: memory.bodyModifiedSource,
+                      emotion: memory.emotion,
+                      eventsData: JSON.stringify(memory.eventsData),
+                      time: memory.time,
+                      vote: memory.vote,
+                      id: highlightedMemory.id,
+                    });
+                  }}
+                /> */}
+                <NewModalItem
+                  boldText={'Edit'}
+                  normalText={'manually or with the help of AI'}
+                  icon={<PenIcon />}
+                  onPress={() =>
+                    setActionsheetScreen(ActionSheetScreens.MEMORIES.EDIT)
+                  }
+                />
+
+                <Divider backgroundColor="black" height={1} />
+                <NewModalItem
+                  boldText={'Delete Memory'}
+                  icon={<BinIcon />}
+                  danger={true}
+                  onPress={() => {
+                    var updatedMemories = [...memories];
+                    updatedMemories.splice(highlightedMemory.index, 1);
+                    setMemories(updatedMemories);
+                    deleteMemoryData({
+                      id: highlightedMemory.id,
+                    });
+                    setShowModal(false);
+                  }}
+                />
+              </>
+            )}
+            {actionsheetScreen === ActionSheetScreens.MEMORIES.LABELS && (
+              <LabellingSheet
+                activeLabels={memories[highlightedMemory.index]?.tags}
+                update={({labels}) => {
+                  var updatedMemories = [...memories];
+                  var memory = updatedMemories[highlightedMemory.index];
+                  memory.tags = labels;
+                  updatedMemories[highlightedMemory.index] = memory;
+                  setMemories(updatedMemories);
+                  updateMemoryData({
+                    tags: JSON.stringify(memory.tags),
+                    type: memory.type,
+                    body: memory.body,
+                    bodyModifiedAt: memory.bodyModifiedAt,
+                    bodyModifiedSource: memory.bodyModifiedSource,
+                    emotion: memory.emotion,
+                    eventsData: JSON.stringify(memory.eventsData),
+                    time: memory.time,
+                    vote: memory.vote,
+                    id: highlightedMemory.id,
+                  });
+                }}
+              />
+            )}
+            {actionsheetScreen === ActionSheetScreens.MEMORIES.EDIT && (
+              <EditSheet
+                type="memory"
+                body={memories[highlightedMemory.index]?.body}
+                success={({body}) => {
+                  var updatedMemories = [...memories];
+                  var memory = updatedMemories[highlightedMemory.index];
+                  memory.body = body;
+                  updatedMemories[highlightedMemory.index] = memory;
+                  setMemories(updatedMemories);
+                  updateMemoryData({
+                    tags: JSON.stringify(memory.tags),
+                    type: memory.type,
+                    body: memory.body,
+                    bodyModifiedAt: memory.bodyModifiedAt,
+                    bodyModifiedSource: memory.bodyModifiedSource,
+                    emotion: memory.emotion,
+                    eventsData: JSON.stringify(memory.eventsData),
+                    time: memory.time,
+                    vote: memory.vote,
+                    id: highlightedMemory.id,
+                  });
+                  setShowModal(false);
+                }}
+                cancel={() => {
+                  setShowModal(false);
+                }}
+              />
+            )}
+            {actionsheetScreen === ActionSheetScreens.MEMORIES.CREATE && (
+              <EditSheet
+                type="memory"
+                body={''}
+                create={true}
+                success={async ({body}) => {
+                  var newMemory = {
+                    tags: {
+                      roles: [],
+                      body: [],
+                      other: [],
+                    },
+                    type: -1,
+                    body: body,
+                    bodyModifiedAt: 0,
+                    bodyModifiedSource: 'manual',
+                    emotion: 0,
+                    eventsData: {},
+                    time: Date.now(),
+                    vote: 0,
+                  };
+                  try {
+                    createMemoriesTable();
+                    const saveResult = await saveMemoryData({
+                      ...newMemory,
+                      tags: JSON.stringify(newMemory.tags),
+                      eventsData: JSON.stringify(newMemory.eventsData),
+                    });
+                    newMemory.id = saveResult.insertId;
+                  } catch (e) {
+                    console.error({e});
+                    newMemory.saved = false;
+                  }
+                  var updatedMemories = [newMemory, ...memories];
+                  setMemories(updatedMemories);
+                  setShowModal(false);
+                }}
+                cancel={() => {
+                  setShowModal(false);
+                }}
+              />
+            )}
+          </ScrollView>
+        </ActionsheetContent>
+      </Actionsheet>
       {onBoarding === true || firstEntryGenerated === true ? (
         <>
           <OnboardingBackground />
@@ -1080,11 +1611,11 @@ export default FullHomeView = ({route, navigation}) => {
             flex: 1,
             // height: Dimensions.get('screen').height,
           }}>
-          <Modal
+          {/* <Modal
             coverScreen
             animationInTiming={200}
             animationIn={'slideInUp'}
-            isVisible={showModal}
+            isVisible={false}
             // presentationStyle={'pageSheet'}
             // transparent={true}
             onRequestClose={() => {
@@ -1145,88 +1676,56 @@ export default FullHomeView = ({route, navigation}) => {
               <View
                 style={{height: 2, width: '100%', backgroundColor: 'black'}}
               />
-              <ModalItem
-                icon={
-                  <UpvoteIcon
-                    stroke={theme.entry.buttons.toggle.icon.inactive}
-                  />
-                }
-                boldText={'Upvote'}
-                softText={'as more meaningful'}
-              />
-              <ModalItem
-                icon={
-                  <DownvoteIcon
-                    stroke={theme.entry.buttons.toggle.icon.inactive}
-                  />
-                }
-                boldText={'Downvote'}
-                softText={'as less meaningful'}
-              />
-              <ModalItem
-                icon={<LabelIcon />}
-                boldText={'Add labels'}
-                softText={'for addtional meaning'}
-              />
-              <ModalItem
-                icon={<AIRewriteIcon stroke={'black'} />}
-                boldText={'AI Rewrite'}
-                softText={''}
-              />
-
-              <View
-                style={{height: 2, width: '100%', backgroundColor: 'black'}}
-              />
+              
             </View>
-          </Modal>
+          </Modal> */}
+
+          {/* <Actionsheet isOpen={showActionSheet}>
+            <ActionsheetContent></ActionsheetContent>
+          </Actionsheet> */}
 
           {/* <ScrollView removeClippedSubviews={true}> */}
           {screenValues.READ === screen && (
             <View style={{flex: 1}}>
-              <TouchableOpacity
-                onPress={async () => {
-                  const newEntry = await generateEntry({
-                    // memories: [
-                    //   {
-                    //     id: 1,
-                    //     time: 1697994699000,
-                    //     body: 'At 3:00 PM, I had a driving test. After my third attempt, I finally passed.',
-                    //   },
-                    //   {
-                    //     id: 2,
-                    //     time: 1698023499000,
-                    //     body: 'At 6:00 PM, I had a wonderful meal at a resturant. The buffet was a let down but was cheap enough',
-                    //   },
-                    // ],
-                    memories,
-                  });
-                  setEntries([newEntry, ...entries]);
-                }}>
-                <Text>Generate</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={async () => {
-                  retrieveSpecificData(0, Date.now(), res => {
-                    var locations;
-                    (locations = res.map(obj => {
-                      return {
-                        description: obj.description.split(',')[0],
-                        time: obj.date,
-                        lat: obj.lat,
-                        long: obj.lon,
-                      };
-                    })),
-                      console.log(locations);
-                  });
-                }}>
-                <Text>Check Location Data</Text>
-              </TouchableOpacity>
-              <Text>Generation Status: {storyLoadingMessage}</Text>
-              <Text>
-                Selected Entry Creation Time:{' '}
-                {useSettingsHooks.getNumber('settings.createEntryTime')}
-                {':00'}
-              </Text>
+              {devMode === true && (
+                <>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      try {
+                        setStoryLoadingMessage('Generating');
+                        createEntryTable();
+                        const newEntry = await generateEntry({
+                          // memories: [
+                          //   {
+                          //     id: 1,
+                          //     time: 1697994699000,
+                          //     body: 'At 3:00 PM, I had a driving test. After my third attempt, I finally passed.',
+                          //   },
+                          //   {
+                          //     id: 2,
+                          //     time: 1698023499000,
+                          //     body: 'At 6:00 PM, I had a wonderful meal at a resturant. The buffet was a let down but was cheap enough',
+                          //   },
+                          // ],
+                          memories,
+                        });
+                        setEntries([newEntry, ...entries]);
+                        setStoryLoadingMessage('Finished');
+                      } catch (e) {
+                        console.error({e});
+                        setStoryLoadingMessage('Finished with error');
+                      }
+                    }}>
+                    <Text>Generate</Text>
+                  </TouchableOpacity>
+                  <Text>Generation Status: {storyLoadingMessage}</Text>
+                  <Text>
+                    Selected Entry Creation Time:{' '}
+                    {useSettingsHooks.getNumber('settings.createEntryTime')}
+                    {':00'}
+                  </Text>
+                </>
+              )}
               <FlatList
                 data={entries}
                 keyExtractor={entry => entry.id}
@@ -1235,6 +1734,13 @@ export default FullHomeView = ({route, navigation}) => {
                 maxToRenderPerBatch={1}
                 updateCellsBatchingPeriod={100}
                 windowSize={7}
+                ListEmptyComponent={() => {
+                  return (
+                    <View>
+                      <Text>No Stories yet</Text>
+                    </View>
+                  );
+                }}
                 style={{flex: 1}}
                 renderItem={({item, index}) => (
                   <View
@@ -1264,88 +1770,168 @@ export default FullHomeView = ({route, navigation}) => {
           )}
           {screenValues.MEMORIES === screen && (
             <>
-              <Text>Next Memory Creation: {getNextMemoryTime()}</Text>
-              <Text>Memory Length: {memories?.length || 0}</Text>
-              <Text>
-                Last Time Memories Generated:{' '}
-                {new Date(
-                  useSettingsHooks.getNumber('settings.lastMemoryCheckTime'),
-                  // 0,
-                ).toLocaleString()}
-              </Text>
-              <Text>Generation Status: {memoryLoadingMessage}</Text>
+              {devMode === true && (
+                <>
+                  <Text>Next Memory Creation: {getNextMemoryTime()}</Text>
+                  <Text>Memory Length: {memories?.length || 0}</Text>
+                  <Text>
+                    Last Time Memories Generated:{' '}
+                    {new Date(
+                      useSettingsHooks.getNumber(
+                        'settings.lastMemoryCheckTime',
+                      ),
+                      // 0,
+                    ).toLocaleString()}
+                  </Text>
+                  <Text>Generation Status: {memoryLoadingMessage}</Text>
+                </>
+              )}
+              {/* <WritingAnimation /> */}
+              <Animated.View
+                style={{
+                  // backgroundColor: 'red',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  // aspectRatio: 1,
+                  height: memoryLoadingState === true ? 75 : gifScale || 0,
+                  zIndex: 999,
+                  left: 0,
+                  right: 0,
+                  position:
+                    memoryLoadingState === true ? 'relative' : 'absolute',
+                  overflow: 'hidden',
+                }}>
+                <Image
+                  source={require('./src/assets/writing.gif')}
+                  style={{width: 75, height: 75}}
+                />
+              </Animated.View>
               <FlatList
                 data={memories}
                 keyExtractor={memory => memory.id}
+                ref={scrollRef}
                 removeClippedSubviews={true}
                 initialNumToRender={2}
                 maxToRenderPerBatch={1}
                 updateCellsBatchingPeriod={100}
                 windowSize={7}
+                ListEmptyComponent={() => {
+                  return (
+                    <View>
+                      <Text>No Memories yet</Text>
+                    </View>
+                  );
+                }}
+                onScroll={Animated.event(
+                  [{nativeEvent: {contentOffset: {y: scrollOffsetY}}}],
+                  {useNativeDriver: false},
+                )}
+                scrollEventThrottle={16}
+                // onDra
+                // refreshing={false}
+                // onRefresh={() => {
+                //   console.log(`${Date.now()} test`);
+                // }}
+                // refreshControl={
+                //   <RefreshControl
+                //     colors={['#9Bd35A', '#689F38']}
+                //     refreshing={false}
+                //     onRefresh={() => {
+                //       console.log(`${Date.now()} test`);
+                //     }}
+                //   />
+                // }
                 style={{flex: 1}}
                 // contentContainerStyle={{flex: 1}}
                 renderItem={({item, index}) => (
                   <View
                     style={{
-                      marginHorizontal: 20,
-                      padding: 10,
+                      padding: 20,
+                      // paddingTop: 5,
                       borderRadius: 20,
+                      backgroundColor: '#F6F6F6',
                     }}>
                     {console.log({item, index})}
-                    <TouchableOpacity
-                      onPress={() => {
-                        if (highlightedMemory === index) {
-                          setHighlightedMemory(-1);
-                        } else {
-                          setHighlightedMemory(index);
-                          setShowModal(true);
-                        }
+                    <Pressable
+                      onPressIn={() => {
+                        setHighlightedMemory({index, id: item.id});
                       }}
-                      style={{
-                        backgroundColor:
-                          highlightedMemory === index ? 'gray' : 'white',
-                      }}>
-                      <Text>{item.body}</Text>
-                      <Text>{JSON.stringify(item)}</Text>
-                      <View style={{marginTop: 20}}>
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 10,
-                          }}>
+                      onPress={() => {
+                        setHighlightedMemory({index, id: item.id});
+                        setShowModal(true);
+                        setActionsheetScreen(ActionSheetScreens.MEMORIES.BASE);
+                      }}
+                      px={10}
+                      py={15}
+                      rounded={'$md'}
+                      backgroundColor={
+                        highlightedMemory.index === index
+                          ? '#E9E9E9'
+                          : '#F6F6F6'
+                      }>
+                      <Text
+                        allowFontScaling={false}
+                        style={{
+                          fontSize: 18,
+                          lineHeight: 24,
+                          fontWeight: 400,
+                          color: '#0b0b0bcc',
+                        }}>
+                        {item.body}
+                      </Text>
+                      {devMode === true && (
+                        <Text
+                          allowFontScaling={false}
+                          style={{paddingVertical: 5}}>
+                          {JSON.stringify(item)}
+                        </Text>
+                      )}
+                      {item.type > -1 && (
+                        <View style={{marginTop: 20}}>
                           <View
                             style={{
-                              padding: 5,
-                              borderRadius: 30,
-                              borderWidth: 2,
-                              borderColor: '#EAEAEA',
-                              backgroundColor: 'white',
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 10,
                             }}>
-                            {getEventIcon(item.type)}
-                          </View>
-                          <View>
-                            <Text
+                            <View
                               style={{
-                                color: 'rgba(11, 11, 11, 0.8)',
-                                fontWeight: 600,
+                                padding: 5,
+                                borderRadius: 30,
+                                borderWidth: 2,
+                                borderColor: '#EAEAEA',
+                                backgroundColor: 'white',
                               }}>
-                              {item.type === EventTypes.LOCATION &&
-                                item.eventsData.description}
-                              {item.type === EventTypes.PHOTO &&
-                                item.eventsData.name}
-                              {item.type === EventTypes.CALENDAR_EVENT &&
-                                item.eventsData.title}
-                            </Text>
-                            <Text
-                              style={{
-                                color: 'rgba(11, 11, 11, 0.6)',
-                              }}>
-                              {item.formattedTime}
-                            </Text>
+                              {getEventIcon(item.type)}
+                            </View>
+                            <View>
+                              <Text
+                                numberOfLines={
+                                  item.type === EventTypes.PHOTO ? 1 : undefined
+                                }
+                                style={{
+                                  color: 'rgba(11, 11, 11, 0.8)',
+                                  fontWeight: 600,
+                                  marginRight: 50,
+                                }}>
+                                {item.type === EventTypes.LOCATION &&
+                                  item.eventsData.description}
+                                {item.type === EventTypes.PHOTO &&
+                                  item.eventsData.name}
+                                {item.type === EventTypes.CALENDAR_EVENT &&
+                                  item.eventsData.title}
+                              </Text>
+                              <Text
+                                style={{
+                                  color: 'rgba(11, 11, 11, 0.6)',
+                                }}>
+                                {item.formattedTime}
+                              </Text>
+                            </View>
                           </View>
                         </View>
-                      </View>
+                      )}
+
                       {[EventTypes.PHOTO, EventTypes.LOCATION].includes(
                         item.type,
                       ) && (
@@ -1400,13 +1986,123 @@ export default FullHomeView = ({route, navigation}) => {
                             </Text>
                           </ScrollView>
                         )}
-                    </TouchableOpacity>
+                      <Box flexDirection="row" gap={10} my={20}>
+                        {item.emotion > 0 && (
+                          <Box
+                            px={10}
+                            py={5}
+                            flexDirection="row"
+                            justifyContent="center"
+                            alignItems="center"
+                            gap={5}
+                            rounded={'$full'}
+                            backgroundColor={emotionToColor({
+                              emotion: item.emotion,
+                              need: emotionAttributes.BACKGROUND,
+                            })}>
+                            <Box
+                              aspectRatio={1}
+                              height={30}
+                              width={30}
+                              p={4}
+                              justifyContent="center"
+                              alignItems="center"
+                              rounded={'$md'}
+                              backgroundColor={emotionToColor({
+                                emotion: item.emotion,
+                                need: emotionAttributes.STROKE,
+                              })}>
+                              {emotionToIcon({
+                                emotion: item.emotion,
+                                active: false,
+                                color: '#fff',
+                              })}
+                            </Box>
+
+                            <Text
+                              style={{
+                                fontWeight: 600,
+                                color: emotionToColor({
+                                  emotion: item.emotion,
+                                  need: emotionAttributes.STROKE,
+                                }),
+                              }}>
+                              {emotionToString(item.emotion)}
+                            </Text>
+                          </Box>
+                        )}
+                        {item.vote !== 0 && (
+                          <Box
+                            px={10}
+                            py={5}
+                            backgroundColor={
+                              item.vote > 0 ? '#DFECF2' : '#E7E7E7'
+                            }
+                            justifyContent="center"
+                            flexDirection="row"
+                            rounded={'$full'}
+                            gap={5}
+                            alignItems="center">
+                            <Box
+                              aspectRatio={1}
+                              height={30}
+                              width={30}
+                              p={4}
+                              justifyContent="center"
+                              alignItems="center"
+                              rounded={'$md'}
+                              backgroundColor={
+                                item.vote > 0 ? '#118ED1' : '#6D6D6D'
+                              }>
+                              {item.vote > 0 ? (
+                                <UpvoteIcon primaryColor={'white'} />
+                              ) : (
+                                <DownvoteIcon primaryColor={'white'} />
+                              )}
+                            </Box>
+                            <Text
+                              style={{
+                                color: item.vote > 0 ? '#118ED1' : '#6D6D6D',
+                                fontWeight: 600,
+                              }}>
+                              {item.vote}
+                            </Text>
+                          </Box>
+                        )}
+                        {Object.values(item.tags).flat().length > 0 && (
+                          <Box
+                            px={10}
+                            py={5}
+                            backgroundColor={'#DFECF2'}
+                            justifyContent="center"
+                            flexDirection="row"
+                            rounded={'$full'}
+                            gap={5}
+                            alignItems="center">
+                            <Box
+                              aspectRatio={1}
+                              height={30}
+                              width={30}
+                              p={4}
+                              justifyContent="center"
+                              alignItems="center"
+                              rounded={'$md'}
+                              backgroundColor={'#118ED1'}>
+                              <LabelIcon primaryColor={'white'} />
+                            </Box>
+                            <Text style={{color: '#118ED1', fontWeight: 600}}>
+                              {Object.values(item.tags).flat().length}
+                            </Text>
+                          </Box>
+                        )}
+                      </Box>
+                    </Pressable>
                     {index !== memories.length - 1 && (
                       <View
                         style={{
                           height: 1,
                           width: '100%',
-                          marginVertical: 20,
+                          marginTop: 20,
                           backgroundColor: 'rgba(11, 11, 11, 0.1)',
                         }}></View>
                     )}
@@ -1440,16 +2136,18 @@ export default FullHomeView = ({route, navigation}) => {
               }}>
               <TouchableOpacity
                 onPress={async () => {
-                  const date = new Date(Date.now());
-                  const mode = 'manual';
-                  if (mode === 'generate') {
-                    await generateEntry({
-                      data: await getPermissionsAndData({date: date.getTime()}),
-                      date: date.getTime(),
-                    });
-                  } else if (mode === 'manual') {
-                    createManualEntry(date.getTime());
-                  }
+                  // const date = new Date(Date.now());
+                  // const mode = 'manual';
+                  // if (mode === 'generate') {
+                  //   await generateEntry({
+                  //     data: await getPermissionsAndData({date: date.getTime()}),
+                  //     date: date.getTime(),
+                  //   });
+                  // } else if (mode === 'manual') {
+                  //   createManualEntry(date.getTime());
+                  // }
+                  setShowModal(true);
+                  setActionsheetScreen(ActionSheetScreens.MEMORIES.CREATE);
                 }}>
                 <NewEntryIcon />
               </TouchableOpacity>
@@ -1466,7 +2164,7 @@ export default FullHomeView = ({route, navigation}) => {
               // alignSelf: 'flex-end',
               // bottom: 0,
 
-              height: screen === screenValues.MEMORIES ? 75 : footerHeight,
+              height: 75,
             }}>
             <TouchableOpacity
               onPress={() => {
