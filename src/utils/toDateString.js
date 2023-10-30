@@ -1,5 +1,8 @@
-export default toDateString = entryTime => {
+export default toDateString = (entryTime, dayBefore = false) => {
   const date = new Date(entryTime);
+  if (dayBefore) {
+    date.setDate(date.getDate() - 1);
+  }
   const today = new Date(Date.now());
   const yesterday = new Date(Date.now());
   yesterday.setDate(today.getDate() - 1);

@@ -35,7 +35,7 @@ const useDatabaseHooks = () => {
   const createEntryTable = () => {
     db.transaction(tx => {
       tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS Entries (id INTEGER PRIMARY KEY AUTOINCREMENT, tags TEXT, title TEXT, time DATE, emotion INTEGER, vote INTEGER, bodyModifiedAt DATE, bodyModifiedSource TEXT, titleModifiedAt DATE, titleModifiedSource TEXT, events TEXT, body TEXT);`,
+        `CREATE TABLE IF NOT EXISTS Entries (id INTEGER PRIMARY KEY AUTOINCREMENT, tags TEXT, title TEXT, time DATE, emotion INTEGER, vote INTEGER, bodyModifiedAt DATE, bodyModifiedSource TEXT, titleModifiedAt DATE, titleModifiedSource TEXT, events TEXT, body TEXT, showAsYesterday INTEGER);`,
       );
     });
   };
@@ -91,6 +91,7 @@ const useDatabaseHooks = () => {
     titleModifiedSource,
     events,
     body,
+    showAsYesterday,
   }) => {
     console.log({
       tags,
@@ -103,12 +104,13 @@ const useDatabaseHooks = () => {
       titleModifiedAt,
       titleModifiedSource,
       events,
+      showAsYesterday,
       body,
     });
     return new Promise((resolve, reject) => {
       db.transaction(tx => {
         tx.executeSql(
-          `INSERT INTO Entries (tags, title, time, emotion, vote, bodyModifiedAt, bodyModifiedSource, titleModifiedAt, titleModifiedSource, events, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO Entries (tags, title, time, emotion, vote, bodyModifiedAt, bodyModifiedSource, titleModifiedAt, titleModifiedSource, events, showAsYesterday, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             tags,
             title,
@@ -120,6 +122,7 @@ const useDatabaseHooks = () => {
             titleModifiedAt,
             titleModifiedSource,
             events,
+            showAsYesterday,
             body,
           ],
           (_, result) => {
@@ -291,6 +294,7 @@ const useDatabaseHooks = () => {
       db.transaction(
         tx => {
           tx.executeSql(`SELECT * FROM ${tableName}`, [], (tx, results) => {
+            console.log({results});
             let data = [];
             for (let i = 0; i < results.rows.length; i++) {
               data.push(results.rows.item(i));

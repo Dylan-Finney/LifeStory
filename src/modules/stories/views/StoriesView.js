@@ -137,13 +137,15 @@ export default StoriesView = () => {
     memories,
     setMemories,
     devMode,
+    storyLoadingMessage,
+    setStoryLoadingMessage,
   } = useContext(AppContext);
   const [highlightedStory, setHighlightedStory] = useState({
     index: -1,
     id: null,
   });
   const [showModal, setShowModal] = useState(false);
-  const [storyLoadingMessage, setStoryLoadingMessage] = useState('Busy');
+  //   const [storyLoadingMessage, setStoryLoadingMessage] = useState('Busy');
   const [actionsheetScreen, setActionsheetScreen] = useState(
     ActionSheetScreens.STORIES.BASE,
   );
@@ -285,28 +287,21 @@ export default StoriesView = () => {
               <TouchableOpacity
                 onPress={async () => {
                   try {
+                    // setStoryLoadingMessage('Generating');
                     setStoryLoadingMessage('Generating');
-                    createEntryTable();
                     const newEntry = await generateEntry({
-                      // memories: [
-                      //   {
-                      //     id: 1,
-                      //     time: 1697994699000,
-                      //     body: 'At 3:00 PM, I had a driving test. After my third attempt, I finally passed.',
-                      //   },
-                      //   {
-                      //     id: 2,
-                      //     time: 1698023499000,
-                      //     body: 'At 6:00 PM, I had a wonderful meal at a resturant. The buffet was a let down but was cheap enough',
-                      //   },
-                      // ],
-                      memories,
+                      memories: await getMemories(),
+                      showAsYesterday:
+                        useSettingsHooks.getNumber(
+                          'settings.createEntryTime',
+                        ) === 8,
                     });
                     setEntries([newEntry, ...entries]);
                     setStoryLoadingMessage('Finished');
                   } catch (e) {
                     console.error({e});
-                    setStoryLoadingMessage('Finished with error');
+                    // setStoryLoadingMessage('Finished with error');
+                    setStoryLoadingMessage('Finished');
                   }
                 }}>
                 <Text>Generate</Text>
@@ -319,12 +314,12 @@ export default StoriesView = () => {
               </Text>
             </>
           )}
-          <Box height={100} p={20}>
+          {/* <Box height={100} p={20}>
             <Box gap={5}>
               <Text
                 allowFontScaling={false}
                 style={{fontWeight: 400, fontSize: 16, fontStyle: 'italic'}}>
-                Today
+                {toDateString(entries[0]?.time) || 'Today'}
               </Text>
               <Text
                 allowFontScaling={false}
@@ -332,7 +327,29 @@ export default StoriesView = () => {
                 {entries[0]?.title}
               </Text>
             </Box>
-          </Box>
+          </Box> */}
+          {storyLoadingMessage === 'Busy' ||
+            (storyLoadingMessage === 'Generating' && (
+              <View
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  // aspectRatio: 1,
+                  //   height: memoryLoadingState === true ? 75 : gifScale || 0,
+                  zIndex: 999,
+                  //   left: 0,
+                  //   right: 0,
+                  //   top: 100,
+                  //   position: memoryLoadingState === true ? 'relative' : 'absolute',
+                  overflow: 'hidden',
+                }}>
+                <Image
+                  source={require('../../../assets/writing.gif')}
+                  style={{width: 75, height: 75}}
+                />
+              </View>
+            ))}
+
           <FlatList
             data={entries}
             keyExtractor={entry => entry.id}
@@ -353,19 +370,196 @@ export default StoriesView = () => {
               <View
                 key={index}
                 style={{
-                  marginHorizontal: 20,
-                  padding: 10,
+                  padding: 20,
+                  paddingBottom: index === entries.length - 1 && 400,
+                  // paddingTop: 5,
                   borderRadius: 20,
+                  backgroundColor: '#F6F6F6',
                 }}>
                 <Pressable
+                  onPressIn={() => {
+                    setHighlightedStory({index, id: item.id});
+                  }}
+                  onPress={() => {
+                    setHighlightedStory({index, id: item.id});
+                    openActionSheet();
+                  }}
+                  px={10}
+                  py={15}
+                  rounded={'$md'}
+                  backgroundColor={
+                    highlightedStory.index === index ? '#E9E9E9' : '#F6F6F6'
+                  }>
+                  <Text
+                    allowFontScaling={false}
+                    style={{
+                      fontSize: 18,
+                      lineHeight: 24,
+                      fontWeight: 400,
+                      color: '#0b0b0bcc',
+                      fontStyle: 'italic',
+                      marginBottom: 8,
+                    }}>
+                    {toDateString(
+                      entries[index]?.time,
+                      entries[index]?.showAsYesterday,
+                    ) || 'Today'}
+                  </Text>
+                  <Text
+                    allowFontScaling={false}
+                    style={{
+                      fontSize: 24,
+                      lineHeight: 24,
+                      fontWeight: 700,
+                      color: '#0b0b0bcc',
+                      marginBottom: 12,
+                    }}>
+                    {item.title}
+                  </Text>
+                  <Text
+                    allowFontScaling={false}
+                    style={{
+                      fontSize: 18,
+                      lineHeight: 24,
+                      fontWeight: 400,
+                      color: '#0b0b0bcc',
+                    }}>
+                    {item.body}
+                  </Text>
+                  {devMode === true && (
+                    <>
+                      <Text
+                        allowFontScaling={false}
+                        style={{paddingVertical: 5}}>
+                        {new Date(item.time).toLocaleString()}
+                      </Text>
+                      <Text
+                        allowFontScaling={false}
+                        style={{paddingVertical: 5}}>
+                        {JSON.stringify(item)}
+                      </Text>
+                    </>
+                  )}
+
+                  <Box flexDirection="row" gap={10} my={20}>
+                    {/* {item.emotion > 0 && (
+                      <Box
+                        px={10}
+                        py={5}
+                        flexDirection="row"
+                        justifyContent="center"
+                        alignItems="center"
+                        gap={5}
+                        rounded={'$full'}
+                        backgroundColor={emotionToColor({
+                          emotion: item.emotion,
+                          need: emotionAttributes.BACKGROUND,
+                        })}>
+                        <Box
+                          aspectRatio={1}
+                          height={30}
+                          width={30}
+                          p={4}
+                          justifyContent="center"
+                          alignItems="center"
+                          rounded={'$md'}
+                          backgroundColor={emotionToColor({
+                            emotion: item.emotion,
+                            need: emotionAttributes.STROKE,
+                          })}>
+                          {emotionToIcon({
+                            emotion: item.emotion,
+                            active: false,
+                            color: '#fff',
+                          })}
+                        </Box>
+
+                        <Text
+                          style={{
+                            fontWeight: 600,
+                            color: emotionToColor({
+                              emotion: item.emotion,
+                              need: emotionAttributes.STROKE,
+                            }),
+                          }}>
+                          {emotionToString(item.emotion)}
+                        </Text>
+                      </Box>
+                    )} */}
+                    {/* {item.vote !== 0 && (
+                      <Box
+                        px={10}
+                        py={5}
+                        backgroundColor={item.vote > 0 ? '#DFECF2' : '#E7E7E7'}
+                        justifyContent="center"
+                        flexDirection="row"
+                        rounded={'$full'}
+                        gap={5}
+                        alignItems="center">
+                        <Box
+                          aspectRatio={1}
+                          height={30}
+                          width={30}
+                          p={4}
+                          justifyContent="center"
+                          alignItems="center"
+                          rounded={'$md'}
+                          backgroundColor={
+                            item.vote > 0 ? '#118ED1' : '#6D6D6D'
+                          }>
+                          {item.vote > 0 ? (
+                            <UpvoteIcon primaryColor={'white'} />
+                          ) : (
+                            <DownvoteIcon primaryColor={'white'} />
+                          )}
+                        </Box>
+                        <Text
+                          style={{
+                            color: item.vote > 0 ? '#118ED1' : '#6D6D6D',
+                            fontWeight: 600,
+                          }}>
+                          {item.vote}
+                        </Text>
+                      </Box>
+                    )} */}
+                    {Object.values(item.tags).flat().length > 0 && (
+                      <Box
+                        px={10}
+                        py={5}
+                        backgroundColor={'#DFECF2'}
+                        justifyContent="center"
+                        flexDirection="row"
+                        rounded={'$full'}
+                        gap={5}
+                        alignItems="center">
+                        <Box
+                          aspectRatio={1}
+                          height={30}
+                          width={30}
+                          p={4}
+                          justifyContent="center"
+                          alignItems="center"
+                          rounded={'$md'}
+                          backgroundColor={'#118ED1'}>
+                          <LabelIcon primaryColor={'white'} />
+                        </Box>
+                        <Text style={{color: '#118ED1', fontWeight: 600}}>
+                          {Object.values(item.tags).flat().length}
+                        </Text>
+                      </Box>
+                    )}
+                  </Box>
+                </Pressable>
+                {/* <Pressable
                   onPress={() => {
                     setHighlightedStory({index, id: item.id});
                     openActionSheet();
                   }}>
                   <Text>{item.body}</Text>
                   <Text>{item.id || 'Empty'}</Text>
+                  <Text>{new Date(item.time).toLocaleString()}</Text>
                   <Text>{JSON.stringify(item)}</Text>
-                </Pressable>
+                </Pressable> */}
                 {/* {console.log({item, index})} */}
                 {/* <Text>Test</Text> */}
 
@@ -374,7 +568,7 @@ export default StoriesView = () => {
                     style={{
                       height: 1,
                       width: '100%',
-                      marginVertical: 20,
+                      marginTop: 10,
                       backgroundColor: 'rgba(11, 11, 11, 0.1)',
                     }}></View>
                 )}

@@ -173,6 +173,9 @@ export default MemoriesView = ({}) => {
     return timeStr;
   };
   const [itemHeights, setItemHeights] = useState([]);
+  // var itemHeights = {};
+  const [layoutCounter, setLayoutCounter] = useState(0);
+
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
   const gifScale = scrollOffsetY.interpolate({
     inputRange: [-100, 0],
@@ -350,6 +353,13 @@ export default MemoriesView = ({}) => {
         return 'N/A';
     }
   };
+
+  useEffect(() => {
+    if (memories.length === layoutCounter) {
+      setItemHeights(itemHeights.sort((a, b) => a.index - b.index));
+      console.log('reordered itemHeights', {layoutCounter, itemHeights});
+    }
+  }, [layoutCounter]);
   return (
     <SafeAreaView
       style={{
@@ -759,10 +769,14 @@ export default MemoriesView = ({}) => {
             position: memoryLoadingState === true ? 'relative' : 'absolute',
             overflow: 'hidden',
           }}>
-          <Image
-            source={require('../../../assets/writing.gif')}
-            style={{width: 75, height: 75}}
-          />
+          {true ? (
+            <Image
+              source={require('../../../assets/writing.gif')}
+              style={{width: 75, height: 75}}
+            />
+          ) : (
+            <Text>Check back at :00 to create new memories...</Text>
+          )}
         </Animated.View>
 
         <FlatList
@@ -802,17 +816,21 @@ export default MemoriesView = ({}) => {
             let visibleIndex = 0;
 
             for (let i = 0; i < itemHeights.length; i++) {
-              totalHeight += itemHeights[i];
+              totalHeight += itemHeights[i].height;
               if (totalHeight >= yOffset) {
                 visibleIndex = i;
                 break;
               }
             }
-            if (visibleIndex >= itemHeights.length) {
-              visibleIndex = itemHeights.length - 1;
+            if (
+              visibleIndex >= memories.length
+              // yOffset >= itemHeights.reduce()
+            ) {
+              visibleIndex = memories.length - 1;
             }
 
             setVisibleIndex(visibleIndex);
+            // console.log({itemHeights, totalHeight, yOffset, visibleIndex});
             // console.log({
             //   visibleIndex,
             //   totalHeight,
@@ -825,23 +843,55 @@ export default MemoriesView = ({}) => {
             //  )
             scrollOffsetY.setValue(event.nativeEvent.contentOffset.y);
           }}
+          onLayout={() => {
+            console.log('reset heights');
+            // setItemHeights([]);
+          }}
+          onContentSizeChange={() => {
+            console.log('reset?');
+          }}
+          // on
           // scrollEventThrottle={16}
           style={{flex: 1}}
+          onF
           renderItem={({item, index}) => (
             <View
               onLayout={event => {
-                if (index === 0) {
-                  setItemHeights([event.nativeEvent.layout.height]);
+                if (layoutCounter === memories.length) {
+                  console.log('RESET');
+                  setLayoutCounter(1);
+                  setItemHeights([
+                    {
+                      height: event.nativeEvent.layout.height,
+                      index,
+                    },
+                  ]);
+                  // setItemHeights(array);
                 } else {
+                  setLayoutCounter(layoutCounter + 1);
+                  // var array = itemHeights;
                   setItemHeights([
                     ...itemHeights,
-                    event.nativeEvent.layout.height +
-                      itemHeights.reduce((partialSum, a) => partialSum + a, 0),
+                    {
+                      height: event.nativeEvent.layout.height,
+                      index,
+                    },
                   ]);
+                  // setItemHeights(array);
                 }
+                // if (index === 0) {
+                //   setItemHeights([]);
+                // } else {
+                //   setItemHeights([
+                //     ...itemHeights,
+                //     event.nativeEvent.layout.height +
+                //       itemHeights.reduce((partialSum, a) => partialSum + a, 0),
+                //   ]);
+                // }
                 console.log(`onLayout inner ${index}`, {
                   nativeEvent: event.nativeEvent.layout.height,
                   itemHeights,
+                  layoutCounter,
                 });
               }}
               style={{
@@ -875,6 +925,16 @@ export default MemoriesView = ({}) => {
                   }}>
                   {item.body}
                 </Text>
+                {/* <Text
+                  allowFontScaling={false}
+                  style={{
+                    fontSize: 18,
+                    lineHeight: 24,
+                    fontWeight: 400,
+                    color: '#0b0b0bcc',
+                  }}>
+                  {new Date(item.time).toLocaleString()}
+                </Text> */}
                 {devMode === true && (
                   <Text allowFontScaling={false} style={{paddingVertical: 5}}>
                     {JSON.stringify(item)}

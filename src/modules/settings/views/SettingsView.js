@@ -555,7 +555,7 @@ export default SettingsView = ({route, navigation}) => {
                 text: 'Confirm',
                 style: 'default',
                 onPress: () => {
-                  // resetTable('Entries');
+                  resetTable('Entries');
                   // resetTable('Memories');
                   deleteTable('Entries');
                   createEntryTable();

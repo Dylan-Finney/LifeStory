@@ -107,6 +107,8 @@ const MainNavigator = () => {
             },
             events: JSON.parse(localEntry.events),
             entry: localEntry.body,
+            showAsYesterday:
+              parseInt(localEntry.showAsYesterday) === 1 ? true : false,
             generated: parseInt(localEntry.generated) === 0 ? false : true,
           };
         });
@@ -542,7 +544,11 @@ const MainNavigator = () => {
         ) {
           console.log('Ready To Generate Story');
           setStoryLoadingMessage('Generating');
-          const newEntry = await generateEntry({memories});
+          const newEntry = await generateEntry({
+            memories: await getMemories(),
+            showAsYesterday:
+              useSettingsHooks.getNumber('settings.createEntryTime') === 8,
+          });
           setEntries([newEntry, ...entries]);
         } else {
           console.log('Not Ready To Generate Story');
@@ -555,7 +561,11 @@ const MainNavigator = () => {
           // setFirstEntryGenerated(true);
           console.log('Ready abc123');
           setStoryLoadingMessage('Generating');
-          const newEntry = await generateEntry({memories});
+          const newEntry = await generateEntry({
+            memories: await getMemories(),
+            showAsYesterday:
+              useSettingsHooks.getNumber('settings.createEntryTime') === 8,
+          });
           setEntries([newEntry, ...entries]);
           onCreateTriggerNotification({
             first: false,
@@ -639,6 +649,25 @@ const MainNavigator = () => {
     });
   }, []);
 
+  // useEffect(() => {
+  //   const getPhotos = async () => {
+  //     var startOfUnixTime = new Date(Date.now());
+  //     startOfUnixTime.setDate(startOfUnixTime.getDate() - 10);
+  //     var endOfUnixTime = new Date(Date.now());
+  //     endOfUnixTime = Math.floor(endOfUnixTime.getTime() / 1000);
+  //     startOfUnixTime = Math.floor(startOfUnixTime.getTime() / 1000);
+  //     Location.setDateRange(startOfUnixTime, endOfUnixTime);
+  //     var photos = [];
+  //     console.log('getting photos');
+  //     photos = await Location.getPhotosFromNative(false);
+  //     console.log('ABC THESE ARE MY PHOTOS', {photos});
+  //     console.log('found photos');
+
+  //     return photos || [];
+  //   };
+  //   getPhotos();
+  // }, []);
+
   useEffect(() => {
     console.log({entries});
   }, [entries]);
@@ -690,6 +719,8 @@ const MainNavigator = () => {
     setDevMode,
     firstEntryGenerated,
     setFirstEntryGenerated,
+    storyLoadingMessage,
+    setStoryLoadingMessage,
   };
 
   return (
