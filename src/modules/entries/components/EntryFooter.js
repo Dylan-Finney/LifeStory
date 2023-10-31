@@ -3,7 +3,6 @@ import {
   Button,
   Keyboard,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   SafeAreaView,
   ScrollView,

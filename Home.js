@@ -15,10 +15,8 @@ import {
   Animated,
   RefreshControl,
   FlatList,
-  // Modal,
 } from 'react-native';
 
-import Modal from 'react-native-modal';
 import {
   Colors,
   DebugInstructions,
@@ -1514,75 +1512,6 @@ export default FullHomeView = ({route, navigation}) => {
           flex: 1,
           // height: Dimensions.get('screen').height,
         }}>
-        {/* <Modal
-            coverScreen
-            animationInTiming={200}
-            animationIn={'slideInUp'}
-            isVisible={false}
-            // presentationStyle={'pageSheet'}
-            // transparent={true}
-            onRequestClose={() => {
-              setShowModal(false);
-            }}
-            onBackdropPress={() => {
-              setShowModal(false);
-            }}
-            onSwipeComplete={() => {
-              setShowModal(false);
-            }}
-            swipeDirection={['down']}
-            style={{justifyContent: 'flex-end', margin: 0}}>
-            <View style={{backgroundColor: 'white'}}>
-              <View
-                style={{
-                  alignSelf: 'center',
-                  width: 100,
-                  height: 5,
-                  backgroundColor: 'gray',
-                }}></View>
-            </View>
-            <View style={{backgroundColor: 'white', padding: 20, gap: 10}}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'center',
-                  gap: 10,
-                }}>
-                {emotions.map((emotion, i) => {
-                  return (
-                    <TouchableOpacity
-                      key={i}
-                      onPress={() => {
-                        // changeEmotion(i);
-                      }}>
-                      <View
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          paddingVertical: verticalScale(3),
-                          paddingHorizontal: horizontalScale(3),
-                          gap: horizontalScale(2),
-                          backgroundColor:
-                            theme.entry.buttons.toggle.background.inactive,
-                          borderColor:
-                            theme.entry.buttons.toggle.border.inactive,
-                          borderWidth: 1,
-                          borderRadius: 5,
-                        }}>
-                        {emotion.icon(false)}
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-              <View
-                style={{height: 2, width: '100%', backgroundColor: 'black'}}
-              />
-              
-            </View>
-          </Modal> */}
-
         {/* <Actionsheet isOpen={showActionSheet}>
             <ActionsheetContent></ActionsheetContent>
           </Actionsheet> */}

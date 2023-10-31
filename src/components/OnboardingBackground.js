@@ -15,7 +15,6 @@ import {
   NativeEventEmitter,
   Animated,
   RefreshControl,
-  // Modal,
 } from 'react-native';
 
 export default OnboardingBackground = () => {
