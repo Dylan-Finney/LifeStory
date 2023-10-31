@@ -34,9 +34,9 @@ export default generateEntry = async ({memories}) => {
     .sort((a, b) => b.time - a.time);
   // generateEntry2({memories: memoriesFiltered});
   console.log(memories);
-  var string = '';
+  var string = 'Entries:\n---\n';
   memoriesFiltered.map(memory => {
-    string += memory.body + '\n\n';
+    string += memory.body + '\n---\n';
   });
   console.log(string);
   const ids = memoriesFiltered.map(memory => memory.id);
@@ -46,6 +46,7 @@ export default generateEntry = async ({memories}) => {
   if (ids.length > 0) {
     const completion = await openai.createChatCompletion({
       model: 'gpt-3.5-turbo-16k',
+      max_tokens: 2048,
       messages: [
         {
           role: 'system',
@@ -58,29 +59,42 @@ export default generateEntry = async ({memories}) => {
     const response = completion.data.choices[0].message?.content;
     body = response;
   }
+  var id = -1;
+  try {
+    console.log('try');
+    id = await saveEntryData({
+      tags: JSON.stringify({
+        roles: [],
+        modes: [],
+        other: [],
+      }),
+      title: 'New Entry',
+      time: Date.now(),
+      emotion: -1,
+      vote: 0,
+      titleModifiedAt: Date.now(),
+      titleModifiedSource: 'auto',
+      bodyModifiedAt: Date.now(),
+      bodyModifiedSource: 'auto',
+      events: JSON.stringify(ids),
+      body,
+    });
+    id = id.insertId;
+    console.log('try end');
+  } catch (e) {
+    console.error({e});
+  }
 
-  saveEntryData({
-    tags: '',
-    title: 'New Entry',
-    time: Date.now(),
-    emotion: -1,
-    emotions: '',
-    votes: '',
-    titleModifiedAt: Date.now(),
-    titleModifiedSource: 'auto',
-    bodyModifiedAt: Date.now(),
-    bodyModifiedSource: 'auto',
-    events: ids.length === 0 ? '' : JSON.stringify(ids),
-    body,
-    generated: 1,
-  });
   return {
-    tags: [],
+    tags: {
+      roles: [],
+      modes: [],
+      other: [],
+    },
     title: 'New Entry',
     time: Date.now(),
     emotion: -1,
-    emotions: [],
-    votes: [],
+    vote: 0,
     titleModifiedAt: Date.now(),
     titleModifiedSource: 'auto',
     bodyModifiedAt: Date.now(),
@@ -88,5 +102,6 @@ export default generateEntry = async ({memories}) => {
     events: ids.length === 0 ? [] : ids,
     body,
     generated: 1,
+    id,
   };
 };

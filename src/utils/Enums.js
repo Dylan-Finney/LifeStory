@@ -19,7 +19,7 @@ export const ActionSheetScreens = {
   },
   STORIES: {
     BASE: 1.0,
-    EDIT: 1.1,
-    CREATE: 1.2,
+    LABELS: 1.1,
+    EDIT: 1.2,
   },
 };

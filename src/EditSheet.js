@@ -19,6 +19,8 @@ import RewriteIcon from './assets/rewrite/Rewrite.svg';
 import ShortenIcon from './assets/rewrite/Shorten.svg';
 import LengthenIcon from './assets/rewrite/Lengthen.svg';
 import ReverseIcon from './assets/rewrite/Reverse.svg';
+import LabelStack from './LabelStack';
+
 const {Configuration, OpenAIApi} = require('openai');
 const configuration = new Configuration({
   apiKey: Config.OPENAI_KEY,
@@ -248,40 +250,6 @@ const rewriteRequest = async ({attr, action, tempVal, tone, emotion}) => {
   //     break;
   // }
   // setLoading({});
-};
-
-const CategoryButton = ({index, text, onPress, active = false}) => {
-  return (
-    <Pressable
-      py={5}
-      px={10}
-      rounded={'$sm'}
-      onPress={onPress}
-      backgroundColor={active ? '$primary300' : '$backgroundLight300'}
-      key={index}>
-      <Text>{text}</Text>
-    </Pressable>
-  );
-};
-
-const LabelStack = ({includes, handle, labels}) => {
-  return (
-    <HStack flexWrap={'wrap'} gap={10}>
-      {labels.map((item, index) => {
-        return (
-          <CategoryButton
-            text={item}
-            index={index}
-            key={index}
-            active={includes(item)}
-            onPress={() => {
-              handle(item);
-            }}
-          />
-        );
-      })}
-    </HStack>
-  );
 };
 
 const EditTextArea = ({
@@ -522,7 +490,12 @@ export default EditSheet = ({
         <Pressable
           alignSelf="flex-end"
           onPress={() => {
-            if (tempBody.trim().length !== 0) {
+            if (
+              (tempBody.trim().length !== 0 && type === 'memory') ||
+              (type === 'story' &&
+                tempBody.trim().length !== 0 &&
+                tempTitle.trim().length !== 0)
+            ) {
               success({
                 title: tempTitle,
                 body: tempBody,

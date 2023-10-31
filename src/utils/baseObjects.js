@@ -1,0 +1,3 @@
+const baseStory = {};
+
+const baseMemory = {};

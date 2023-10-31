@@ -35,7 +35,7 @@ const useDatabaseHooks = () => {
   const createEntryTable = () => {
     db.transaction(tx => {
       tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS Entries (id INTEGER PRIMARY KEY AUTOINCREMENT, tags TEXT, title TEXT, time DATE, emotion INTEGER, emotions TEXT, votes TEXT, bodyModifiedAt DATE, bodyModifiedSource TEXT, titleModifiedAt DATE, titleModifiedSource TEXT, events TEXT, body TEXT, generated INTEGER);`,
+        `CREATE TABLE IF NOT EXISTS Entries (id INTEGER PRIMARY KEY AUTOINCREMENT, tags TEXT, title TEXT, time DATE, emotion INTEGER, vote INTEGER, bodyModifiedAt DATE, bodyModifiedSource TEXT, titleModifiedAt DATE, titleModifiedSource TEXT, events TEXT, body TEXT);`,
       );
     });
   };
@@ -79,46 +79,59 @@ const useDatabaseHooks = () => {
     });
   };
 
-  const saveEntryData = ({
+  const saveEntryData = async ({
     tags,
     title,
     time,
     emotion,
-    emotions,
-    votes,
+    vote,
     bodyModifiedAt,
     bodyModifiedSource,
     titleModifiedAt,
     titleModifiedSource,
     events,
     body,
-    generated,
   }) => {
-    db.transaction(tx => {
-      tx.executeSql(
-        `INSERT INTO Entries (tags, title, time, emotion, emotions, votes, bodyModifiedAt, bodyModifiedSource, titleModifiedAt, titleModifiedSource, events, body, generated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          tags,
-          title,
-          time,
-          emotion,
-          emotions,
-          votes,
-          bodyModifiedAt,
-          bodyModifiedSource,
-          titleModifiedAt,
-          titleModifiedSource,
-          events,
-          body,
-          generated,
-        ],
-        (_, result) => {
-          console.log('Entry created successfully', result);
-        },
-        (_, error) => {
-          console.log('Error creating entry:', error);
-        },
-      );
+    console.log({
+      tags,
+      title,
+      time,
+      emotion,
+      vote,
+      bodyModifiedAt,
+      bodyModifiedSource,
+      titleModifiedAt,
+      titleModifiedSource,
+      events,
+      body,
+    });
+    return new Promise((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql(
+          `INSERT INTO Entries (tags, title, time, emotion, vote, bodyModifiedAt, bodyModifiedSource, titleModifiedAt, titleModifiedSource, events, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            tags,
+            title,
+            time,
+            emotion,
+            vote,
+            bodyModifiedAt,
+            bodyModifiedSource,
+            titleModifiedAt,
+            titleModifiedSource,
+            events,
+            body,
+          ],
+          (_, result) => {
+            console.log('Entry created successfully', result);
+            resolve(result);
+          },
+          (_, error) => {
+            console.error('Error creating entry:', error);
+            reject(error);
+          },
+        );
+      });
     });
   };
 
@@ -153,7 +166,7 @@ const useDatabaseHooks = () => {
             resolve(result);
           },
           (_, error) => {
-            console.log('Error creating memory:', error);
+            console.error('Error creating memory:', error);
             reject(error);
           },
         );
@@ -181,8 +194,7 @@ const useDatabaseHooks = () => {
     title,
     time,
     emotion,
-    emotions,
-    votes,
+    vote,
     bodyModifiedAt,
     bodyModifiedSource,
     titleModifiedAt,
@@ -193,15 +205,14 @@ const useDatabaseHooks = () => {
   ) => {
     db.transaction(tx => {
       tx.executeSql(
-        `UPDATE Entries SET tags = ?, title = ?, time = ?, emotion = ?, emotions = ?, votes = ?, bodyModifiedAt = ?, bodyModifiedSource = ?, titleModifiedAt = ?, titleModifiedSource = ?, events = ?, body = ? WHERE id = ?`,
+        `UPDATE Entries SET tags = ?, title = ?, time = ?, emotion = ?, vote = ?, bodyModifiedAt = ?, bodyModifiedSource = ?, titleModifiedAt = ?, titleModifiedSource = ?, events = ?, body = ? WHERE id = ?`,
         // `UPDATE Entries SET title = ? WHERE id = ?`,
         [
           tags,
           title,
           time,
           emotion,
-          emotions,
-          votes,
+          vote,
           bodyModifiedAt,
           bodyModifiedSource,
           titleModifiedAt,

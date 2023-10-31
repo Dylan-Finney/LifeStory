@@ -15,6 +15,8 @@ import MemoriesIcon from '../assets/icons/MemoriesIcon';
 import StoriesIcon from '../assets/icons/StoriesIcon';
 
 import SettingsNavigator from '../modules/settings/SettingsNavigator';
+import MemoriesView from '../modules/memories/views/MemoriesView';
+import StoriesView from '../modules/stories/views/StoriesView';
 
 const Tab = createBottomTabNavigator();
 
@@ -34,13 +36,17 @@ const AppNavigator = ({routes}) => {
         }}
         children={params => (
           <GestureHandlerRootView style={{flex: 1}}>
-            <Home {...params} />
+            <StoriesView {...params} />
           </GestureHandlerRootView>
         )}
       />
       <Tab.Screen
         name="Entry"
-        component={EntryView}
+        children={params => (
+          <GestureHandlerRootView style={{flex: 1}}>
+            <MemoriesView {...params} />
+          </GestureHandlerRootView>
+        )}
         options={{
           tabBarIcon: ({focused}) => (
             <>

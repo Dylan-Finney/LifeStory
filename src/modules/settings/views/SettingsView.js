@@ -555,10 +555,12 @@ export default SettingsView = ({route, navigation}) => {
                 text: 'Confirm',
                 style: 'default',
                 onPress: () => {
-                  resetTable('Entries');
-                  resetTable('Memories');
+                  // resetTable('Entries');
+                  // resetTable('Memories');
+                  deleteTable('Entries');
+                  createEntryTable();
                   // deleteTable('Memories');
-                  useSettingsHooks.set('settings.lastMemoryCheckTime', 0);
+                  // useSettingsHooks.set('settings.lastMemoryCheckTime', 0);
                   setEntries([]);
                 },
               },

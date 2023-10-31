@@ -14,40 +14,7 @@ import {HStack, Text, Divider} from '@gluestack-ui/themed';
 import {Box} from '@gluestack-ui/themed';
 import {useState} from 'react';
 import useSettingsHooks from './utils/hooks/useSettingsHooks';
-
-const CategoryButton = ({index, text, onPress, active = false}) => {
-  return (
-    <Pressable
-      py={5}
-      px={10}
-      rounded={'$sm'}
-      onPress={onPress}
-      backgroundColor={active ? '$primary300' : '$backgroundLight300'}
-      key={index}>
-      <Text>{text}</Text>
-    </Pressable>
-  );
-};
-
-const LabelStack = ({includes, handle, labels, type}) => {
-  return (
-    <HStack flexWrap={'wrap'} gap={10}>
-      {labels.map((item, index) => {
-        return (
-          <CategoryButton
-            text={item}
-            index={index}
-            key={index}
-            active={includes(item)}
-            onPress={() => {
-              handle(item);
-            }}
-          />
-        );
-      })}
-    </HStack>
-  );
-};
+import LabelStack from './LabelStack';
 
 export default LabellingSheet = ({
   update,
@@ -114,6 +81,7 @@ export default LabellingSheet = ({
   );
   const [selectedCategory, setSelectedCategory] = useState(categories.MODES);
 
+  console.log({activeLabels});
   const [selectedLabels, setSelectedLabels] = useState(activeLabels);
 
   const handleLabelClick = ({item, type}) => {

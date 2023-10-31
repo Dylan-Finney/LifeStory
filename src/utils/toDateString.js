@@ -28,11 +28,11 @@ export default toDateString = entryTime => {
     'Saturday',
   ];
 
-  switch (date.toDateString()) {
-    case today.toDateString():
+  switch (date.toLocaleDateString()) {
+    case today.toLocaleDateString():
       dateText = 'Today';
       break;
-    case yesterday.toDateString():
+    case yesterday.toLocaleDateString():
       dateText = 'Yesterday';
       break;
     default:
