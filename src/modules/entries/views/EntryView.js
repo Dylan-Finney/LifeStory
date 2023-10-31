@@ -5,9 +5,7 @@ import {
   Button,
   Keyboard,
   Modal,
-  SafeAreaView,
   ScrollView,
-  StatusBar,
   Text,
   TextInput,
   TouchableOpacity,
@@ -605,8 +603,7 @@ export default FullEntryView = ({route, navigation}) => {
   };
 
   return (
-    <SafeAreaView style={{flexGrow: 1}}>
-      <StatusBar barStyle={'light-content'} backgroundColor={'#F9F9F9'} />
+    <>
       <Modal
         visible={modalVisible}
         presentationStyle="formSheet"
@@ -1725,6 +1722,6 @@ export default FullEntryView = ({route, navigation}) => {
           setCurrentDate(Date.now());
         }}
       />
-    </SafeAreaView>
+    </>
   );
 };

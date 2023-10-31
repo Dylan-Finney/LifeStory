@@ -24,7 +24,7 @@ const AppNavigator = ({routes}) => {
   return (
     <Tab.Navigator initialRouteName="Home" screenOptions={{headerShown: false}}>
       <Tab.Screen
-        name="Home"
+        name="Stories"
         options={{
           tabBarIcon: ({focused}) => (
             <>

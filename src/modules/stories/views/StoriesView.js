@@ -1,8 +1,6 @@
 import React, {useState, useEffect, useRef, createRef, useContext} from 'react';
 import {
-  SafeAreaView,
   ScrollView,
-  StatusBar,
   Text,
   TouchableOpacity,
   View,
@@ -152,16 +150,7 @@ export default StoriesView = () => {
     setActionsheetScreen(ActionSheetScreens.STORIES.BASE);
   };
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        // backgroundColor: 'red'
-      }}>
-      <StatusBar
-        barStyle={'dark-content'}
-        // backgroundColor={onBoarding === true ? 'white' : '#F9F9F9'}
-        backgroundColor={'white'}
-      />
+    <>
       <Actionsheet
         isOpen={showModal}
         onClose={() => {
@@ -574,6 +563,6 @@ export default StoriesView = () => {
             )}></FlatList>
         </View>
       </View>
-    </SafeAreaView>
+    </>
   );
 };

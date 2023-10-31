@@ -8,6 +8,8 @@ import {
   Dimensions,
 } from 'react-native';
 
+import {SafeAreaView} from 'react-native-safe-area-context';
+
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
 import notifee, {EventType} from '@notifee/react-native';
@@ -736,7 +738,9 @@ const MainNavigator = () => {
         <RootStack.Screen
           name="MainApp"
           children={() => (
-            <View style={styles.safeArea}>
+            <SafeAreaView
+              edges={['top', 'left', 'right']}
+              style={styles.safeArea}>
               {isAuthenticated ? (
                 <AppContext.Provider value={contextValues}>
                   {onBoarding === true || firstEntryGenerated === true ? (
@@ -748,7 +752,7 @@ const MainNavigator = () => {
               ) : (
                 <AuthNavigator />
               )}
-            </View>
+            </SafeAreaView>
           )}
         />
       </RootStack.Navigator>
@@ -759,18 +763,7 @@ const MainNavigator = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    position: 'relative',
-  },
-  activityIndicator: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#F6F6F6',
   },
 });
 

@@ -1,19 +1,21 @@
 import 'react-native-url-polyfill/auto';
 
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 
 import MainNavigator from './src/navigation/MainNavigator';
 
 import {GluestackUIProvider} from '@gluestack-ui/themed';
 
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+
 import {config} from '@gluestack-ui/config';
 
 export default App = () => {
-  // moment.locale('en-gb');
-
   return (
-    <GluestackUIProvider config={config}>
-      <MainNavigator />
-    </GluestackUIProvider>
+    <SafeAreaProvider>
+      <GluestackUIProvider config={config}>
+        <MainNavigator />
+      </GluestackUIProvider>
+    </SafeAreaProvider>
   );
 };

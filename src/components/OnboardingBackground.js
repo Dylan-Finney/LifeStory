@@ -1,9 +1,7 @@
 import {Defs, LinearGradient, Rect, Stop, Svg} from 'react-native-svg';
 import {theme} from '../theme/styling';
 import {
-  SafeAreaView,
   ScrollView,
-  StatusBar,
   Text,
   TouchableOpacity,
   View,

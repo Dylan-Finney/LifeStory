@@ -474,7 +474,7 @@ export default EditSheet = ({
           onPress={() => {
             cancel();
           }}>
-          <Text>Cancel</Text>
+          <Text style={{color: '#E93535'}}>Cancel</Text>
         </Pressable>
         <Text
           allowFontScaling={false}
@@ -504,7 +504,7 @@ export default EditSheet = ({
               });
             }
           }}>
-          <Text>{create ? 'Create' : 'Update'}</Text>
+          <Text style={{color: '#118ED1'}}>{create ? 'Create' : 'Update'}</Text>
         </Pressable>
       </Box>
       <Divider height={1} width={'$100'} mt={20} mb={20} />
