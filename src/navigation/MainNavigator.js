@@ -10,7 +10,7 @@ import {
 
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
-import notifee from '@notifee/react-native';
+import notifee, {EventType} from '@notifee/react-native';
 
 import AppNavigator from './AppNavigator';
 import AuthNavigator from './AuthNavigator';
