@@ -145,7 +145,7 @@ export default MemoriesView = ({}) => {
       if (memories.length > 1) {
         setRefreshing(false);
       }
-    }, 1500);
+    }, 1000);
   };
 
   console.log('memmmm', memories.length);
@@ -1301,6 +1301,7 @@ export default MemoriesView = ({}) => {
                     </>
                   )}
                   {item.vote !== 0 && <VoteBadge vote={item.vote} />}
+
                   {Object.values(item.tags).flat().length > 0 && (
                     <TagBadge
                       tagCount={Object.values(item.tags).flat().length}
