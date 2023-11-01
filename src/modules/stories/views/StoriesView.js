@@ -165,102 +165,114 @@ export default StoriesView = () => {
           <ActionsheetDragIndicatorWrapper pb={10}>
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
-          <ScrollView>
-            {actionsheetScreen === ActionSheetScreens.STORIES.BASE && (
-              <>
-                <NewModalItem
-                  boldText={'Add labels'}
-                  normalText={'for additional meaning'}
-                  icon={<LabelIcon primaryColor={'black'} />}
-                  onPress={() =>
-                    setActionsheetScreen(ActionSheetScreens.STORIES.LABELS)
-                  }
-                  num={
-                    Object.values(
-                      entries[highlightedStory.index]?.tags || [],
-                    ).flat().length
-                  }
-                />
-                <NewModalItem
-                  boldText={'Edit'}
-                  normalText={'manually or with the help of AI'}
-                  icon={<PenIcon />}
-                  onPress={() =>
-                    setActionsheetScreen(ActionSheetScreens.STORIES.EDIT)
-                  }
-                />
-              </>
-            )}
-            {actionsheetScreen === ActionSheetScreens.STORIES.LABELS && (
-              <LabellingSheet
-                activeLabels={
-                  JSON.stringify(entries[highlightedStory.index]?.tags) === '[]'
-                    ? {
-                        roles: [],
-                        modes: [],
-                        other: [],
-                      }
-                    : entries[highlightedStory.index]?.tags
+          {/* <ScrollView> */}
+          {actionsheetScreen === ActionSheetScreens.STORIES.BASE && (
+            <>
+              <NewModalItem
+                boldText={'Add labels'}
+                normalText={'for additional meaning'}
+                icon={
+                  <LabelIcon height={25} width={25} primaryColor={'black'} />
                 }
-                update={({labels}) => {
-                  var updatedStories = [...entries];
-                  var story = updatedStories[highlightedStory.index];
-                  story.tags = labels;
-                  updatedStories[highlightedStory.index] = story;
-                  console.log({story});
-                  setEntries(updatedStories);
-                  updateEntryData(
-                    JSON.stringify(story.tags),
-                    story.title,
-                    story.time,
-                    story.emotion,
-                    story.vote,
-                    story.bodyModifiedAt,
-                    story.bodyModifiedSource,
-                    story.titleModifiedAt,
-                    story.titleModifiedSource,
-                    JSON.stringify(story.events),
-                    story.body,
-                    highlightedStory.id,
-                  );
-                }}
+                onPress={() =>
+                  setActionsheetScreen(ActionSheetScreens.STORIES.LABELS)
+                }
+                num={
+                  Object.values(
+                    entries[highlightedStory.index]?.tags || [],
+                  ).flat().length
+                }
               />
-            )}
-            {actionsheetScreen === ActionSheetScreens.STORIES.EDIT && (
-              <EditSheet
-                type="story"
-                body={entries[highlightedStory.index]?.body}
-                title={entries[highlightedStory.index]?.title}
-                success={({body, title}) => {
-                  var updatedStories = [...entries];
-                  var story = updatedStories[highlightedStory.index];
+              <NewModalItem
+                boldText={'Edit'}
+                normalText={'manually or with the help of AI'}
+                icon={<PenIcon width={25} height={25} />}
+                onPress={() =>
+                  setActionsheetScreen(ActionSheetScreens.STORIES.EDIT)
+                }
+              />
+            </>
+          )}
+          {actionsheetScreen === ActionSheetScreens.STORIES.LABELS && (
+            <LabellingSheet
+              activeLabels={
+                JSON.stringify(entries[highlightedStory.index]?.tags) === '[]'
+                  ? {
+                      roles: [],
+                      modes: [],
+                      other: [],
+                    }
+                  : entries[highlightedStory.index]?.tags
+              }
+              update={({labels}) => {
+                var updatedStories = [...entries];
+                var story = updatedStories[highlightedStory.index];
+                story.tags = labels;
+                updatedStories[highlightedStory.index] = story;
+                console.log({story});
+                setEntries(updatedStories);
+                updateEntryData(
+                  JSON.stringify(story.tags),
+                  story.title,
+                  story.time,
+                  story.emotion,
+                  story.vote,
+                  story.bodyModifiedAt,
+                  story.bodyModifiedSource,
+                  story.titleModifiedAt,
+                  story.titleModifiedSource,
+                  JSON.stringify(story.events),
+                  story.body,
+                  highlightedStory.id,
+                );
+              }}
+            />
+          )}
+          {actionsheetScreen === ActionSheetScreens.STORIES.EDIT && (
+            <EditSheet
+              type="story"
+              body={entries[highlightedStory.index]?.body}
+              title={entries[highlightedStory.index]?.title}
+              success={({body, title}) => {
+                var updatedStories = [...entries];
+                var story = updatedStories[highlightedStory.index];
+                if (story.body !== body) {
                   story.body = body;
+                  story.bodyModifiedAt = Date.now();
+                }
+                if (story.title !== title) {
                   story.title = title;
-                  updatedStories[highlightedStory.index] = story;
-                  console.log({story});
-                  setEntries(updatedStories);
-                  updateEntryData(
-                    JSON.stringify(story.tags),
-                    story.title,
-                    story.time,
-                    story.emotion,
-                    story.vote,
-                    story.bodyModifiedAt,
-                    story.bodyModifiedSource,
-                    story.titleModifiedAt,
-                    story.titleModifiedSource,
-                    JSON.stringify(story.events),
-                    story.body,
-                    highlightedStory.id,
-                  );
-                  setShowModal(false);
-                }}
-                cancel={() => {
-                  setShowModal(false);
-                }}
-              />
-            )}
-          </ScrollView>
+                  story.titleModifiedAt = Date.now();
+                }
+
+                updatedStories[highlightedStory.index] = story;
+                console.log({story});
+                setEntries(updatedStories);
+                updateEntryData(
+                  JSON.stringify(story.tags),
+                  story.title,
+                  story.time,
+                  story.emotion,
+                  story.vote,
+                  story.bodyModifiedAt,
+                  story.bodyModifiedSource,
+                  story.titleModifiedAt,
+                  story.titleModifiedSource,
+                  JSON.stringify(story.events),
+                  story.body,
+                  highlightedStory.id,
+                );
+                setShowModal(false);
+              }}
+              cancel={() => {
+                // setShowModal(false);
+                setActionsheetScreen(ActionSheetScreens.STORIES.BASE);
+              }}
+              bodyModifiedAt={entries[highlightedStory.index]?.bodyModifiedAt}
+              titleModifiedAt={entries[highlightedStory.index]?.titleModifiedAt}
+            />
+          )}
+          {/* </ScrollView> */}
         </ActionsheetContent>
       </Actionsheet>
       <View
@@ -528,7 +540,11 @@ export default StoriesView = () => {
                           alignItems="center"
                           rounded={'$md'}
                           backgroundColor={'#118ED1'}>
-                          <LabelIcon primaryColor={'white'} />
+                          <LabelIcon
+                            height={25}
+                            width={25}
+                            primaryColor={'white'}
+                          />
                         </Box>
                         <Text style={{color: '#118ED1', fontWeight: 600}}>
                           {Object.values(item.tags).flat().length}

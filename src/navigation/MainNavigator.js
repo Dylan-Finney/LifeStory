@@ -723,6 +723,7 @@ const MainNavigator = () => {
     setFirstEntryGenerated,
     storyLoadingMessage,
     setStoryLoadingMessage,
+    checkIfReadyToGenerate,
   };
 
   return (

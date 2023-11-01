@@ -58,6 +58,7 @@ import LabellingSheet from '../../../LabellingSheet';
 import {KeyboardAvoidingView} from '@gluestack-ui/themed';
 import EditSheet from '../../../EditSheet';
 import {Pressable} from '@gluestack-ui/themed';
+import checkIfMemoryReadyToGenerate from '../../../utils/isMemoryReadyToGenerate';
 import FloatingActionButton from '../../../components/FloatingActionButton';
 import {EmotionBadge, TagBadge, VoteBadge} from '../../../components/Badge';
 
@@ -71,6 +72,7 @@ export default MemoriesView = ({}) => {
     memories,
     setMemories,
     devMode,
+    checkIfReadyToGenerate,
   } = useContext(AppContext);
   const {
     retrieveSpecificData,
@@ -100,25 +102,31 @@ export default MemoriesView = ({}) => {
       lastMemoryCheckTime.setMinutes(0);
       lastMemoryCheckTime.setSeconds(0);
       lastMemoryCheckTime.setMilliseconds(0);
-      timeStr = lastMemoryCheckTime.toLocaleString();
+      // timeStr = lastMemoryCheckTime.toLocaleString();
+      timeStr = lastMemoryCheckTime.getHours();
     } else if (lastMemoryCheckTime.getHours() < 15) {
       lastMemoryCheckTime.setHours(15);
       lastMemoryCheckTime.setMinutes(0);
       lastMemoryCheckTime.setSeconds(0);
       lastMemoryCheckTime.setMilliseconds(0);
-      timeStr = lastMemoryCheckTime.toLocaleString();
+      // timeStr = lastMemoryCheckTime.toLocaleString();
+      timeStr = lastMemoryCheckTime.getHours();
     } else {
       lastMemoryCheckTime.setHours(22);
       lastMemoryCheckTime.setMinutes(0);
       lastMemoryCheckTime.setSeconds(0);
       lastMemoryCheckTime.setMilliseconds(0);
-      timeStr = lastMemoryCheckTime.toLocaleString();
+      // timeStr = lastMemoryCheckTime.toLocaleString();
+      timeStr = lastMemoryCheckTime.getHours();
     }
     return timeStr;
   };
   const [itemHeights, setItemHeights] = useState([]);
   // var itemHeights = {};
   const [layoutCounter, setLayoutCounter] = useState(0);
+  const [forceCheck, setForceCheck] = useState(false);
+  const [isMemoryReadyToGenerate, setIsMemoryReadyToGenerate] = useState(false);
+  const [previousYOffset, setPreviousYOffset] = useState(0);
 
   const scrollOffsetY = useRef(new Animated.Value(0)).current;
   const gifScale = scrollOffsetY.interpolate({
@@ -312,6 +320,20 @@ export default MemoriesView = ({}) => {
         return 'N/A';
     }
   };
+
+  useEffect(() => {
+    const test = async () => {
+      console.log('test1');
+      setMemoryLoadingState(true);
+      await checkIfMemoryReadyToGenerate();
+      setMemoryLoadingState(false);
+      setIsMemoryReadyToGenerate(false);
+      // console.log('test2');
+    };
+    if (isMemoryReadyToGenerate) {
+      test();
+    }
+  }, [isMemoryReadyToGenerate]);
 
   useEffect(() => {
     if (memories.length === layoutCounter) {
@@ -675,70 +697,66 @@ export default MemoriesView = ({}) => {
           <ActionsheetDragIndicatorWrapper pb={10}>
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
-          <ScrollView>
-            {actionsheetScreen === ActionSheetScreens.MEMORIES.BASE && (
-              <>
-                <Box
-                  flexDirection="row"
-                  justifyContent="center"
-                  gap={10}
-                  mb={5}>
-                  {[1, 2, 3, 4, 5].map(val => {
-                    return (
-                      <Pressable
-                        key={val}
-                        onPress={() => {
-                          var updatedMemories = [...memories];
-                          var memory = updatedMemories[highlightedMemory.index];
-                          memory.emotion = memory.emotion === val ? 0 : val;
-                          updatedMemories[highlightedMemory.index] = memory;
-                          setMemories(updatedMemories);
-                          updateMemoryData({
-                            tags: JSON.stringify(memory.tags),
-                            type: memory.type,
-                            body: memory.body,
-                            bodyModifiedAt: memory.bodyModifiedAt,
-                            bodyModifiedSource: memory.bodyModifiedSource,
-                            emotion: memory.emotion,
-                            eventsData: JSON.stringify(memory.eventsData),
-                            time: memory.time,
-                            vote: memory.vote,
-                            id: highlightedMemory.id,
-                          });
-                        }}>
-                        <Box
-                          width={50}
-                          height={50}
-                          backgroundColor={
-                            memories[highlightedMemory.index]?.emotion === val
-                              ? emotionToColor({
-                                  emotion: val,
-                                  need: emotionAttributes.BACKGROUND,
-                                })
-                              : 'white'
-                          }
-                          borderWidth={1}
-                          justifyContent="center"
-                          alignItems="center"
-                          borderColor={
-                            memories[highlightedMemory.index]?.emotion === val
-                              ? emotionToColor({
-                                  emotion: val,
-                                  need: emotionAttributes.BACKGROUND,
-                                })
-                              : emotionToColor({
-                                  need: emotionAttributes.BORDER,
-                                })
-                          }
-                          rounded={'$md'}>
-                          <Box aspectRatio={1} height={'65%'} width={'65%'}>
-                            {emotionToIcon({
-                              emotion: val,
-                              active:
-                                memories[highlightedMemory.index]?.emotion ===
-                                val,
-                            })}
-                            {/* <AngerIcon
+          {/* <ScrollView> */}
+          {actionsheetScreen === ActionSheetScreens.MEMORIES.BASE && (
+            <>
+              <Box flexDirection="row" justifyContent="center" gap={10} mb={5}>
+                {[1, 2, 3, 4, 5].map(val => {
+                  return (
+                    <Pressable
+                      key={val}
+                      onPress={() => {
+                        var updatedMemories = [...memories];
+                        var memory = updatedMemories[highlightedMemory.index];
+                        memory.emotion = memory.emotion === val ? 0 : val;
+                        updatedMemories[highlightedMemory.index] = memory;
+                        setMemories(updatedMemories);
+                        updateMemoryData({
+                          tags: JSON.stringify(memory.tags),
+                          type: memory.type,
+                          body: memory.body,
+                          bodyModifiedAt: memory.bodyModifiedAt,
+                          bodyModifiedSource: memory.bodyModifiedSource,
+                          emotion: memory.emotion,
+                          eventsData: JSON.stringify(memory.eventsData),
+                          time: memory.time,
+                          vote: memory.vote,
+                          id: highlightedMemory.id,
+                        });
+                      }}>
+                      <Box
+                        width={50}
+                        height={50}
+                        backgroundColor={
+                          memories[highlightedMemory.index]?.emotion === val
+                            ? emotionToColor({
+                                emotion: val,
+                                need: emotionAttributes.BACKGROUND,
+                              })
+                            : 'white'
+                        }
+                        borderWidth={1}
+                        justifyContent="center"
+                        alignItems="center"
+                        borderColor={
+                          memories[highlightedMemory.index]?.emotion === val
+                            ? emotionToColor({
+                                emotion: val,
+                                need: emotionAttributes.BACKGROUND,
+                              })
+                            : emotionToColor({
+                                need: emotionAttributes.BORDER,
+                              })
+                        }
+                        rounded={'$md'}>
+                        <Box aspectRatio={1} height={'65%'} width={'65%'}>
+                          {emotionToIcon({
+                            emotion: val,
+                            active:
+                              memories[highlightedMemory.index]?.emotion ===
+                              val,
+                          })}
+                          {/* <AngerIcon
                               primaryColor={
                                 memories[highlightedMemory.index]?.emotion ===
                                 val
@@ -761,92 +779,94 @@ export default MemoriesView = ({}) => {
                               // }
                               // fill={'#000'}
                             /> */}
-                          </Box>
-                          {/* default stroke: 6D6D6D */}
                         </Box>
-                      </Pressable>
-                    );
-                  })}
-                </Box>
-                <Divider backgroundColor="black" height={1} />
-                <NewModalItem
-                  boldText={'Upvote'}
-                  normalText={'as more meaningful'}
-                  icon={
-                    <UpvoteIcon
-                      primaryColor={'black'}
-                      // stroke={theme.entry.buttons.toggle.icon.inactive}
-                    />
-                  }
-                  onPress={() => {
-                    var updatedMemories = [...memories];
-                    var memory = updatedMemories[highlightedMemory.index];
-                    memory.vote += 1;
-                    updatedMemories[highlightedMemory.index] = memory;
-                    setMemories(updatedMemories);
-                    updateMemoryData({
-                      tags: JSON.stringify(memory.tags),
-                      type: memory.type,
-                      body: memory.body,
-                      bodyModifiedAt: memory.bodyModifiedAt,
-                      bodyModifiedSource: memory.bodyModifiedSource,
-                      emotion: memory.emotion,
-                      eventsData: JSON.stringify(memory.eventsData),
-                      time: memory.time,
-                      vote: memory.vote,
-                      id: highlightedMemory.id,
-                    });
-                  }}
-                  num={
-                    memories[highlightedMemory.index]?.vote > 0
-                      ? memories[highlightedMemory.index]?.vote
-                      : undefined
-                  }
-                />
-                <NewModalItem
-                  boldText={'Downvote'}
-                  normalText={'as less meaningful'}
-                  icon={<DownvoteIcon primaryColor={'black'} />}
-                  onPress={() => {
-                    var updatedMemories = [...memories];
-                    var memory = updatedMemories[highlightedMemory.index];
-                    memory.vote -= 1;
-                    updatedMemories[highlightedMemory.index] = memory;
-                    setMemories(updatedMemories);
-                    updateMemoryData({
-                      tags: JSON.stringify(memory.tags),
-                      type: memory.type,
-                      body: memory.body,
-                      bodyModifiedAt: memory.bodyModifiedAt,
-                      bodyModifiedSource: memory.bodyModifiedSource,
-                      emotion: memory.emotion,
-                      eventsData: JSON.stringify(memory.eventsData),
-                      time: memory.time,
-                      vote: memory.vote,
-                      id: highlightedMemory.id,
-                    });
-                  }}
-                  num={
-                    memories[highlightedMemory.index]?.vote < 0
-                      ? Math.abs(memories[highlightedMemory.index]?.vote)
-                      : undefined
-                  }
-                  numStyle={1}
-                />
-                <NewModalItem
-                  boldText={'Add labels'}
-                  normalText={'for additional meaning'}
-                  icon={<LabelIcon primaryColor={'black'} />}
-                  onPress={() =>
-                    setActionsheetScreen(ActionSheetScreens.MEMORIES.LABELS)
-                  }
-                  num={
-                    Object.values(
-                      memories[highlightedMemory.index]?.tags || [],
-                    ).flat().length
-                  }
-                />
-                {/* <NewModalItem
+                        {/* default stroke: 6D6D6D */}
+                      </Box>
+                    </Pressable>
+                  );
+                })}
+              </Box>
+              <Divider backgroundColor="black" height={1} />
+              <NewModalItem
+                boldText={'Upvote'}
+                normalText={'as more meaningful'}
+                icon={
+                  <UpvoteIcon
+                    primaryColor={'black'}
+                    // stroke={theme.entry.buttons.toggle.icon.inactive}
+                  />
+                }
+                onPress={() => {
+                  var updatedMemories = [...memories];
+                  var memory = updatedMemories[highlightedMemory.index];
+                  memory.vote += 1;
+                  updatedMemories[highlightedMemory.index] = memory;
+                  setMemories(updatedMemories);
+                  updateMemoryData({
+                    tags: JSON.stringify(memory.tags),
+                    type: memory.type,
+                    body: memory.body,
+                    bodyModifiedAt: memory.bodyModifiedAt,
+                    bodyModifiedSource: memory.bodyModifiedSource,
+                    emotion: memory.emotion,
+                    eventsData: JSON.stringify(memory.eventsData),
+                    time: memory.time,
+                    vote: memory.vote,
+                    id: highlightedMemory.id,
+                  });
+                }}
+                num={
+                  memories[highlightedMemory.index]?.vote > 0
+                    ? memories[highlightedMemory.index]?.vote
+                    : undefined
+                }
+              />
+              <NewModalItem
+                boldText={'Downvote'}
+                normalText={'as less meaningful'}
+                icon={<DownvoteIcon primaryColor={'black'} />}
+                onPress={() => {
+                  var updatedMemories = [...memories];
+                  var memory = updatedMemories[highlightedMemory.index];
+                  memory.vote -= 1;
+                  updatedMemories[highlightedMemory.index] = memory;
+                  setMemories(updatedMemories);
+                  updateMemoryData({
+                    tags: JSON.stringify(memory.tags),
+                    type: memory.type,
+                    body: memory.body,
+                    bodyModifiedAt: memory.bodyModifiedAt,
+                    bodyModifiedSource: memory.bodyModifiedSource,
+                    emotion: memory.emotion,
+                    eventsData: JSON.stringify(memory.eventsData),
+                    time: memory.time,
+                    vote: memory.vote,
+                    id: highlightedMemory.id,
+                  });
+                }}
+                num={
+                  memories[highlightedMemory.index]?.vote < 0
+                    ? Math.abs(memories[highlightedMemory.index]?.vote)
+                    : undefined
+                }
+                numStyle={1}
+              />
+              <NewModalItem
+                boldText={'Add labels'}
+                normalText={'for additional meaning'}
+                icon={
+                  <LabelIcon height={25} width={25} primaryColor={'black'} />
+                }
+                onPress={() =>
+                  setActionsheetScreen(ActionSheetScreens.MEMORIES.LABELS)
+                }
+                num={
+                  Object.values(
+                    memories[highlightedMemory.index]?.tags || [],
+                  ).flat().length
+                }
+              />
+              {/* <NewModalItem
                   boldText={'Redo'}
                   normalText={''}
                   icon={
@@ -878,128 +898,143 @@ export default MemoriesView = ({}) => {
                     });
                   }}
                 /> */}
-                <NewModalItem
-                  boldText={'Edit'}
-                  normalText={'manually or with the help of AI'}
-                  icon={<PenIcon />}
-                  onPress={() =>
-                    setActionsheetScreen(ActionSheetScreens.MEMORIES.EDIT)
-                  }
-                />
+              <NewModalItem
+                boldText={'Edit'}
+                normalText={'manually or with the help of AI'}
+                icon={<PenIcon height={20} width={20} />}
+                onPress={() =>
+                  setActionsheetScreen(ActionSheetScreens.MEMORIES.EDIT)
+                }
+              />
 
-                <Divider backgroundColor="black" height={1} />
-                <NewModalItem
-                  boldText={'Delete Memory'}
-                  icon={<BinIcon />}
-                  danger={true}
-                  onPress={() => {
-                    var updatedMemories = [...memories];
-                    updatedMemories.splice(highlightedMemory.index, 1);
-                    setMemories(updatedMemories);
-                    deleteMemoryData({
-                      id: highlightedMemory.id,
-                    });
-                    setShowModal(false);
-                  }}
-                />
-              </>
-            )}
-            {actionsheetScreen === ActionSheetScreens.MEMORIES.LABELS && (
-              <LabellingSheet
-                activeLabels={memories[highlightedMemory.index]?.tags}
-                update={({labels}) => {
+              <Divider backgroundColor="black" height={1} />
+              <NewModalItem
+                boldText={'Delete Memory'}
+                icon={<BinIcon />}
+                danger={true}
+                onPress={() => {
                   var updatedMemories = [...memories];
-                  var memory = updatedMemories[highlightedMemory.index];
-                  memory.tags = labels;
-                  updatedMemories[highlightedMemory.index] = memory;
+                  updatedMemories.splice(highlightedMemory.index, 1);
                   setMemories(updatedMemories);
-                  updateMemoryData({
-                    tags: JSON.stringify(memory.tags),
-                    type: memory.type,
-                    body: memory.body,
-                    bodyModifiedAt: memory.bodyModifiedAt,
-                    bodyModifiedSource: memory.bodyModifiedSource,
-                    emotion: memory.emotion,
-                    eventsData: JSON.stringify(memory.eventsData),
-                    time: memory.time,
-                    vote: memory.vote,
+                  deleteMemoryData({
                     id: highlightedMemory.id,
                   });
-                }}
-              />
-            )}
-            {actionsheetScreen === ActionSheetScreens.MEMORIES.EDIT && (
-              <EditSheet
-                type="memory"
-                body={memories[highlightedMemory.index]?.body}
-                success={({body}) => {
-                  var updatedMemories = [...memories];
-                  var memory = updatedMemories[highlightedMemory.index];
-                  memory.body = body;
-                  updatedMemories[highlightedMemory.index] = memory;
-                  setMemories(updatedMemories);
-                  updateMemoryData({
-                    tags: JSON.stringify(memory.tags),
-                    type: memory.type,
-                    body: memory.body,
-                    bodyModifiedAt: memory.bodyModifiedAt,
-                    bodyModifiedSource: memory.bodyModifiedSource,
-                    emotion: memory.emotion,
-                    eventsData: JSON.stringify(memory.eventsData),
-                    time: memory.time,
-                    vote: memory.vote,
-                    id: highlightedMemory.id,
-                  });
-                  setShowModal(false);
-                }}
-                cancel={() => {
-                  setShowModal(false);
-                }}
-              />
-            )}
-            {actionsheetScreen === ActionSheetScreens.MEMORIES.CREATE && (
-              <EditSheet
-                type="memory"
-                body={''}
-                create={true}
-                success={async ({body}) => {
-                  var newMemory = {
-                    tags: {
-                      roles: [],
-                      modes: [],
-                      other: [],
-                    },
-                    type: -1,
-                    body: body,
-                    bodyModifiedAt: 0,
-                    bodyModifiedSource: 'manual',
-                    emotion: 0,
-                    eventsData: {},
-                    time: Date.now(),
-                    vote: 0,
-                  };
-                  try {
-                    createMemoriesTable();
-                    const saveResult = await saveMemoryData({
-                      ...newMemory,
-                      tags: JSON.stringify(newMemory.tags),
-                      eventsData: JSON.stringify(newMemory.eventsData),
-                    });
-                    newMemory.id = saveResult.insertId;
-                  } catch (e) {
-                    console.error({e});
-                    newMemory.saved = false;
+                  var newItemHeights = itemHeights;
+                  console.log({newItemHeights});
+                  for (
+                    var i = highlightedMemory.index + 1;
+                    i < newItemHeights.length;
+                    i++
+                  ) {
+                    newItemHeights[i].index = newItemHeights[i].index - 1;
                   }
-                  var updatedMemories = [newMemory, ...memories];
-                  setMemories(updatedMemories);
-                  setShowModal(false);
-                }}
-                cancel={() => {
+                  newItemHeights.splice(highlightedMemory.index, 1);
+                  console.log({newItemHeights});
+                  setItemHeights(newItemHeights);
                   setShowModal(false);
                 }}
               />
-            )}
-          </ScrollView>
+            </>
+          )}
+          {actionsheetScreen === ActionSheetScreens.MEMORIES.LABELS && (
+            <LabellingSheet
+              activeLabels={memories[highlightedMemory.index]?.tags}
+              update={({labels}) => {
+                var updatedMemories = [...memories];
+                var memory = updatedMemories[highlightedMemory.index];
+                memory.tags = labels;
+                updatedMemories[highlightedMemory.index] = memory;
+                setMemories(updatedMemories);
+                updateMemoryData({
+                  tags: JSON.stringify(memory.tags),
+                  type: memory.type,
+                  body: memory.body,
+                  bodyModifiedAt: memory.bodyModifiedAt,
+                  bodyModifiedSource: memory.bodyModifiedSource,
+                  emotion: memory.emotion,
+                  eventsData: JSON.stringify(memory.eventsData),
+                  time: memory.time,
+                  vote: memory.vote,
+                  id: highlightedMemory.id,
+                });
+              }}
+            />
+          )}
+          {actionsheetScreen === ActionSheetScreens.MEMORIES.EDIT && (
+            <EditSheet
+              type="memory"
+              body={memories[highlightedMemory.index]?.body}
+              success={({body}) => {
+                var updatedMemories = [...memories];
+                var memory = updatedMemories[highlightedMemory.index];
+                memory.body = body;
+                memory.bodyModifiedAt = Date.now();
+                updatedMemories[highlightedMemory.index] = memory;
+                setMemories(updatedMemories);
+                updateMemoryData({
+                  tags: JSON.stringify(memory.tags),
+                  type: memory.type,
+                  body: memory.body,
+                  bodyModifiedAt: memory.bodyModifiedAt,
+                  bodyModifiedSource: memory.bodyModifiedSource,
+                  emotion: memory.emotion,
+                  eventsData: JSON.stringify(memory.eventsData),
+                  time: memory.time,
+                  vote: memory.vote,
+                  id: highlightedMemory.id,
+                });
+                setShowModal(false);
+              }}
+              cancel={() => {
+                setActionsheetScreen(ActionSheetScreens.MEMORIES.BASE);
+              }}
+              bodyModifiedAt={memories[highlightedMemory.index]?.bodyModifiedAt}
+              // bodyModifiedAt={1698767276000}
+            />
+          )}
+          {actionsheetScreen === ActionSheetScreens.MEMORIES.CREATE && (
+            <EditSheet
+              type="memory"
+              body={''}
+              create={true}
+              success={async ({body}) => {
+                var newMemory = {
+                  tags: {
+                    roles: [],
+                    modes: [],
+                    other: [],
+                  },
+                  type: -1,
+                  body: body,
+                  bodyModifiedAt: Date.now(),
+                  bodyModifiedSource: 'manual',
+                  emotion: 0,
+                  eventsData: {},
+                  time: Date.now(),
+                  vote: 0,
+                };
+                try {
+                  createMemoriesTable();
+                  const saveResult = await saveMemoryData({
+                    ...newMemory,
+                    tags: JSON.stringify(newMemory.tags),
+                    eventsData: JSON.stringify(newMemory.eventsData),
+                  });
+                  newMemory.id = saveResult.insertId;
+                } catch (e) {
+                  console.error({e});
+                  newMemory.saved = false;
+                }
+                var updatedMemories = [newMemory, ...memories];
+                setMemories(updatedMemories);
+                setShowModal(false);
+              }}
+              cancel={() => {
+                setShowModal(false);
+              }}
+            />
+          )}
+          {/* </ScrollView> */}
         </ActionsheetContent>
       </Actionsheet>
       <>
@@ -1019,6 +1054,58 @@ export default MemoriesView = ({}) => {
             <Text>Visible Memory: {visibleIndex}</Text>
           </>
         )}
+        {/* <WritingAnimation /> */}
+        <Box
+          elevation={5}
+          shadowRadius={3}
+          overflow={'hidden'}
+          p={20}
+          height={100}>
+          <Box gap={5}>
+            <Text
+              allowFontScaling={false}
+              style={{fontWeight: 400, fontSize: 16, fontStyle: 'italic'}}>
+              {toDateString(memories[visibleIndex]?.time)}
+            </Text>
+            <Text
+              allowFontScaling={false}
+              style={{fontWeight: 600, fontSize: 24}}>
+              {timeToSegment(memories[visibleIndex]?.time)}
+            </Text>
+          </Box>
+        </Box>
+        <Animated.View
+          style={{
+            // backgroundColor: 'red',
+            justifyContent: 'center',
+            alignItems: 'center',
+            // aspectRatio: 1,
+            height: memoryLoadingState === true ? 75 : gifScale || 0,
+            zIndex: 999,
+            left: 0,
+            right: 0,
+            top: memoryLoadingState === true ? -30 : 100,
+            position: memoryLoadingState === true ? 'relative' : 'absolute',
+            overflow: 'hidden',
+          }}>
+          {forceCheck ? (
+            <>
+              {isMemoryReadyToGenerate ? (
+                <Image
+                  source={require('../../../assets/writing.gif')}
+                  style={{width: 75, height: 75}}
+                />
+              ) : (
+                <Text>
+                  Check back at {getNextMemoryTime()}:00 to create new
+                  memories...
+                </Text>
+              )}
+            </>
+          ) : (
+            <Text>Try slow scrolling to see if works</Text>
+          )}
+        </Animated.View>
 
         <FlatList
           data={memories}
@@ -1044,6 +1131,12 @@ export default MemoriesView = ({}) => {
               </View>
             );
           }}
+          // onScroll={Animated.event(
+          //   [{nativeEvent: {contentOffset: {y: scrollOffsetY}}}],
+          //   {useNativeDriver: false},
+          // )}
+          alwaysBounceVertical={false}
+          // bounces={false}
           onScroll={event => {
             const {contentOffset, layoutMeasurement, contentSize} =
               event.nativeEvent;
@@ -1052,6 +1145,27 @@ export default MemoriesView = ({}) => {
 
             let totalHeight = 0;
             let visibleIndex = 0;
+            console.log({yOffset, previousYOffset, forceCheck});
+
+            if (
+              yOffset < -30 &&
+              previousYOffset <= -1 &&
+              previousYOffset >= -30 &&
+              !forceCheck
+            ) {
+              console.log('setForceCheck(true);');
+              // var test = isMemoryReadyToGenerateFunc();
+              setForceCheck(true);
+              // setIsMemoryReadyToGenerate(checkIfMemoryReadyToGenerate());
+              setIsMemoryReadyToGenerate(true);
+            } else if (
+              yOffset >= 0 &&
+              isMemoryReadyToGenerate === false &&
+              forceCheck
+            ) {
+              console.log('setForceCheck(false);');
+              setForceCheck(false);
+            }
 
             for (let i = 0; i < itemHeights.length; i++) {
               totalHeight += itemHeights[i].height;
@@ -1066,21 +1180,16 @@ export default MemoriesView = ({}) => {
             ) {
               visibleIndex = memories.length - 1;
             }
-
+            console.log({
+              yOffset,
+              visibleIndex,
+              itemHeights,
+            });
             setVisibleIndex(visibleIndex);
-            // console.log({itemHeights, totalHeight, yOffset, visibleIndex});
-            // console.log({
-            //   visibleIndex,
-            //   totalHeight,
-            //   itemHeights,
-            //   yOffset,
-            // });
-            //   Animated.event(
-            //    [{nativeEvent: {contentOffset: {y: scrollOffsetY}}}],
-            //   {useNativeDriver: false},
-            //  )
+            setPreviousYOffset(yOffset);
             scrollOffsetY.setValue(event.nativeEvent.contentOffset.y);
           }}
+          // decelerationRate={'fast'}
           onLayout={() => {
             console.log('reset heights');
             // setItemHeights([]);
@@ -1092,15 +1201,40 @@ export default MemoriesView = ({}) => {
           renderItem={({item, index}) => (
             <View
               onLayout={event => {
+                console.log({
+                  item,
+                  index,
+                  length: memories.length,
+                  layoutCounter,
+                  itemHeights,
+                  height: event.nativeEvent.layout.height,
+                });
                 if (layoutCounter === memories.length) {
                   console.log('RESET');
-                  setLayoutCounter(1);
-                  setItemHeights([
-                    {
-                      height: event.nativeEvent.layout.height,
-                      index,
-                    },
-                  ]);
+                  // setLayoutCounter(1);
+                  if (index === 0) {
+                    setItemHeights([
+                      {
+                        height: event.nativeEvent.layout.height,
+                        index,
+                      },
+                      ...itemHeights.map(itemHeight => {
+                        return {
+                          ...itemHeight,
+                          index: itemHeight.index + 1,
+                        };
+                      }),
+                    ]);
+                  } else {
+                    setItemHeights([
+                      ...itemHeights,
+                      {
+                        height: event.nativeEvent.layout.height,
+                        index,
+                      },
+                    ]);
+                  }
+
                   // setItemHeights(array);
                 } else {
                   setLayoutCounter(layoutCounter + 1);
@@ -1303,9 +1437,34 @@ export default MemoriesView = ({}) => {
                   {item.vote !== 0 && <VoteBadge vote={item.vote} />}
 
                   {Object.values(item.tags).flat().length > 0 && (
-                    <TagBadge
-                      tagCount={Object.values(item.tags).flat().length}
-                    />
+                    <Box
+                      px={10}
+                      py={5}
+                      backgroundColor={'#DFECF2'}
+                      justifyContent="center"
+                      flexDirection="row"
+                      rounded={'$full'}
+                      gap={5}
+                      alignItems="center">
+                      <Box
+                        aspectRatio={1}
+                        height={30}
+                        width={30}
+                        p={4}
+                        justifyContent="center"
+                        alignItems="center"
+                        rounded={'$md'}
+                        backgroundColor={'#118ED1'}>
+                        <LabelIcon
+                          height={25}
+                          width={25}
+                          primaryColor={'white'}
+                        />
+                      </Box>
+                      <Text style={{color: '#118ED1', fontWeight: 600}}>
+                        {Object.values(item.tags).flat().length}
+                      </Text>
+                    </Box>
                   )}
                 </Box>
               </Pressable>

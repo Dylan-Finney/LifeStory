@@ -19,7 +19,12 @@ import RewriteIcon from './assets/rewrite/Rewrite.svg';
 import ShortenIcon from './assets/rewrite/Shorten.svg';
 import LengthenIcon from './assets/rewrite/Lengthen.svg';
 import ReverseIcon from './assets/rewrite/Reverse.svg';
+import HistoryIcon from './assets/rewrite/History.svg';
+import NewEntryIcon from './assets/NewEntry.svg';
 import LabelStack from './LabelStack';
+import LabelIcon from '../src/assets/Labelling.svg';
+import PenIcon from '../src/assets/Pen.svg';
+import getDifferenceUnit from './utils/getDifferenceTime';
 
 const {Configuration, OpenAIApi} = require('openai');
 const configuration = new Configuration({
@@ -261,108 +266,86 @@ const EditTextArea = ({
   update,
   reset,
   different,
+  time,
 }) => {
   return (
-    <Textarea height={150} mb={20}>
-      <Box flexDirection="row" gap={10} ml={15} mt={10} mb={10}>
-        <Pressable
-          backgroundColor={
-            loadingAction.action === actions.REWRITE &&
-            loadingAction.attr === attr
-              ? 'green'
-              : 'white'
-          }
-          rounded={'$md'}
-          borderWidth={1}
-          padding={5}
-          alignItems={'center'}
-          jusitfyCenter={'center'}
-          disabled={loadingAction.action !== null}
-          onPress={async () => {
-            setLoadingAction({
-              attr,
-              action: actions.REWRITE,
-            });
-            const response = await rewriteRequest({
-              action: actions.REWRITE,
-              attr,
-              tempVal: body,
-            });
-            // attr === attribute.TITLE ? setTitle(response) : setBody(response);
-            update(response, 'auto', Date.now());
-            setLoadingAction({
-              attr: null,
-              action: null,
-            });
-          }}>
-          <RewriteIcon />
-        </Pressable>
-        <Pressable
-          backgroundColor={
-            loadingAction.action === actions.REWRITE &&
-            loadingAction.attr === attr
-              ? 'green'
-              : 'white'
-          }
-          rounded={'$md'}
-          borderWidth={1}
-          padding={5}
-          alignItems={'center'}
-          jusitfyCenter={'center'}
-          disabled={loadingAction.action !== null}
-          onPress={async () => {
-            setLoadingAction({
-              attr,
-              action: actions.LENGTHEN,
-            });
-            const response = await rewriteRequest({
-              action: actions.LENGTHEN,
-              attr,
-              tempVal: attr === attribute.TITLE ? title : body,
-            });
-            update(response, 'auto', Date.now());
-            setLoadingAction({
-              attr: null,
-              action: null,
-            });
-          }}>
-          <LengthenIcon />
-        </Pressable>
-        <Pressable
-          backgroundColor={
-            loadingAction.action === actions.REWRITE &&
-            loadingAction.attr === attr
-              ? 'green'
-              : 'white'
-          }
-          rounded={'$md'}
-          borderWidth={1}
-          padding={5}
-          alignItems={'center'}
-          jusitfyCenter={'center'}
-          disabled={loadingAction.action !== null}
-          onPress={async () => {
-            setLoadingAction({
-              attr,
-              action: actions.SHORTEN,
-            });
-            const response = await rewriteRequest({
-              action: actions.SHORTEN,
-              attr,
-              tempVal: attr === attribute.TITLE ? title : body,
-            });
-            update(response, 'auto', Date.now());
-            setLoadingAction({
-              attr: null,
-              action: null,
-            });
-          }}>
-          <ShortenIcon />
-        </Pressable>
-        {different === true && (
+    <Textarea height={150} mb={20} rounded={'$lg'}>
+      <Box
+        justifyContent="space-between"
+        flexDirection="row"
+        ml={15}
+        mr={15}
+        mt={10}
+        mb={10}>
+        <Box flexDirection="row" gap={10}>
           <Pressable
             backgroundColor={
-              loadingAction.action === actions.REVERSE &&
+              loadingAction.action === actions.REWRITE &&
+              loadingAction.attr === attr
+                ? 'green'
+                : 'white'
+            }
+            rounded={'$md'}
+            borderWidth={1}
+            borderColor="#E7E7E7"
+            padding={5}
+            alignItems={'center'}
+            jusitfyCenter={'center'}
+            disabled={loadingAction.action !== null}
+            onPress={async () => {
+              setLoadingAction({
+                attr,
+                action: actions.REWRITE,
+              });
+              const response = await rewriteRequest({
+                action: actions.REWRITE,
+                attr,
+                tempVal: body,
+              });
+              // attr === attribute.TITLE ? setTitle(response) : setBody(response);
+              update(response, 'auto', Date.now());
+              setLoadingAction({
+                attr: null,
+                action: null,
+              });
+            }}>
+            <RewriteIcon width={16} />
+          </Pressable>
+          <Pressable
+            backgroundColor={
+              loadingAction.action === actions.REWRITE &&
+              loadingAction.attr === attr
+                ? 'green'
+                : 'white'
+            }
+            rounded={'$md'}
+            borderWidth={1}
+            borderColor="#E7E7E7"
+            padding={5}
+            alignItems={'center'}
+            jusitfyCenter={'center'}
+            disabled={loadingAction.action !== null}
+            onPress={async () => {
+              setLoadingAction({
+                attr,
+                action: actions.LENGTHEN,
+              });
+              const response = await rewriteRequest({
+                action: actions.LENGTHEN,
+                attr,
+                tempVal: attr === attribute.TITLE ? title : body,
+              });
+              update(response, 'auto', Date.now());
+              setLoadingAction({
+                attr: null,
+                action: null,
+              });
+            }}>
+            <LengthenIcon />
+          </Pressable>
+          <Pressable
+            backgroundColor={
+              loadingAction.action === actions.REWRITE &&
               loadingAction.attr === attr
                 ? 'green'
                 : 'white'
@@ -370,21 +353,55 @@ const EditTextArea = ({
             rounded={'$md'}
             borderWidth={1}
             padding={5}
+            borderColor="#E7E7E7"
             alignItems={'center'}
             jusitfyCenter={'center'}
             disabled={loadingAction.action !== null}
-            onPress={() => {
+            onPress={async () => {
               setLoadingAction({
                 attr,
-                action: actions.REVERSE,
+                action: actions.SHORTEN,
               });
-              reset();
+              const response = await rewriteRequest({
+                action: actions.SHORTEN,
+                attr,
+                tempVal: attr === attribute.TITLE ? title : body,
+              });
+              update(response, 'auto', Date.now());
               setLoadingAction({
                 attr: null,
                 action: null,
               });
             }}>
-            {/* <Box
+            <ShortenIcon />
+          </Pressable>
+          {different === true && (
+            <Pressable
+              backgroundColor={
+                loadingAction.action === actions.REVERSE &&
+                loadingAction.attr === attr
+                  ? 'green'
+                  : 'white'
+              }
+              rounded={'$md'}
+              borderWidth={1}
+              padding={5}
+              borderColor="#E7E7E7"
+              alignItems={'center'}
+              jusitfyCenter={'center'}
+              disabled={loadingAction.action !== null}
+              onPress={() => {
+                setLoadingAction({
+                  attr,
+                  action: actions.REVERSE,
+                });
+                reset();
+                setLoadingAction({
+                  attr: null,
+                  action: null,
+                });
+              }}>
+              {/* <Box
             width={20}
             height={20}
             backgroundColor={
@@ -393,10 +410,29 @@ const EditTextArea = ({
                 : 'red'
             }
           > */}
-            <ReverseIcon />
+              <ReverseIcon />
 
-            {/* // </Box> */}
-          </Pressable>
+              {/* // </Box> */}
+            </Pressable>
+          )}
+        </Box>
+        {time !== undefined && (
+          <Box
+            rounded={'$full'}
+            px={10}
+            backgroundColor="#E7F4FA"
+            alignItems="center"
+            flexDirection="row"
+            gap={5}
+            // alignContent="flex-end"
+          >
+            <HistoryIcon />
+            <Text fontWeight="500" color="#118ED1">
+              {different
+                ? 'Now'
+                : `${getDifferenceUnit(Math.abs(Date.now() - time))} ago`}
+            </Text>
+          </Box>
         )}
       </Box>
       <TextareaInput
@@ -433,6 +469,9 @@ export default EditSheet = ({
     attr: null,
     action: null,
   });
+
+  // const rightNow = new Date(Date.now(()))
+
   const [tempTitle, setTempTitle] = useState(title);
   const [tempLastTitleEdit, setTempLastTitleEdit] = useState({
     source: titleModifiedSource,
@@ -467,28 +506,53 @@ export default EditSheet = ({
   };
 
   return (
-    <Box px={25}>
-      <Box flexDirection="row" justifyContent="space-between">
+    <Box>
+      <Box
+        px={25}
+        flexDirection="row"
+        justifyContent="space-between"
+        alignItems="center">
         <Pressable
-          alignSelf="flex-start"
+          alignItems="center"
           onPress={() => {
             cancel();
           }}>
-          <Text style={{color: '#E93535'}}>Cancel</Text>
+          <Text color={'#E93535'} fontWeight="500" textAlign={'center'}>
+            Cancel
+          </Text>
         </Pressable>
-        <Text
-          allowFontScaling={false}
-          fontWeight={'$bold'}
-          pl={create ? 7 : type === 'memory' ? 15 : 9}>
-          {create
-            ? 'Create New'
-            : type === 'memory'
-            ? 'Edit Memory'
-            : 'Edit Story'}
-        </Text>
+        <Box
+          alignItems="center"
+          justifyContent="center"
+          flexDirection="row"
+          gap={5}>
+          <Box
+            paddingHorizontal={4}
+            paddingVertical={4}
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor="white"
+            borderColor="#E7E7E7"
+            borderRadius={5}
+            borderWidth={3}>
+            {/* <PenIcon height={15} width={15} primaryColor={'#6D6D6D'} /> */}
+            <NewEntryIcon />
+          </Box>
+          <Text
+            fontSize={20}
+            allowFontScaling={false}
+            fontWeight={'$bold'}
+            textAlign={'center'}>
+            {create
+              ? 'Create New'
+              : type === 'memory'
+              ? 'Edit Memory'
+              : 'Edit Story'}
+          </Text>
+        </Box>
 
         <Pressable
-          alignSelf="flex-end"
+          alignItems="center"
           onPress={() => {
             if (
               (tempBody.trim().length !== 0 && type === 'memory') ||
@@ -504,16 +568,48 @@ export default EditSheet = ({
               });
             }
           }}>
-          <Text style={{color: '#118ED1'}}>{create ? 'Create' : 'Update'}</Text>
+          <Text
+            color={
+              tempTitle !== title || tempBody !== body ? '#118ED1' : '#E7E7E7'
+            }
+            fontWeight="500"
+            textAlign={'center'}>
+            {create ? 'Create' : 'Update'}
+          </Text>
         </Pressable>
       </Box>
       <Divider height={1} width={'$100'} mt={20} mb={20} />
-      <Text allowFontScaling={false} textAlign={'center'}>
-        Labels help add meaning and find content more easily
-      </Text>
-      {type === 'story' && (
+      <ScrollView contentContainerStyle={{paddingHorizontal: 25}}>
+        {type === 'story' && (
+          <EditTextArea
+            attr={attribute.TITLE}
+            body={tempBody}
+            setBody={val => setTempBody(val)}
+            setTitle={val => setTempTitle(val)}
+            loadingAction={loadingAction}
+            setLoadingAction={val => setLoadingAction(val)}
+            title={tempTitle}
+            reset={() => {
+              setTempTitle(title);
+              setTempLastTitleEdit({
+                source: titleModifiedSource,
+                time: titleModifiedAt,
+              });
+            }}
+            update={(val, source, time) => {
+              setTempTitle(val);
+              setTempLastTitleEdit({
+                source: source,
+                time: time,
+              });
+            }}
+            different={tempTitle !== title}
+            time={titleModifiedAt}
+          />
+        )}
+
         <EditTextArea
-          attr={attribute.TITLE}
+          attr={attribute.BODY}
           body={tempBody}
           setBody={val => setTempBody(val)}
           setTitle={val => setTempTitle(val)}
@@ -521,93 +617,72 @@ export default EditSheet = ({
           setLoadingAction={val => setLoadingAction(val)}
           title={tempTitle}
           reset={() => {
-            setTempTitle(title);
-            setTempLastTitleEdit({
-              source: titleModifiedSource,
-              time: titleModifiedAt,
+            setTempBody(body);
+            setTempLastBodyEdit({
+              source: bodyModifiedSource,
+              time: bodyModifiedAt,
             });
           }}
           update={(val, source, time) => {
-            setTempTitle(val);
-            setTempLastTitleEdit({
+            setTempBody(val);
+            setTempLastBodyEdit({
               source: source,
               time: time,
             });
           }}
-          different={tempTitle !== title}
+          different={tempBody !== body}
+          time={bodyModifiedAt}
         />
-      )}
-
-      <EditTextArea
-        attr={attribute.BODY}
-        body={tempBody}
-        setBody={val => setTempBody(val)}
-        setTitle={val => setTempTitle(val)}
-        loadingAction={loadingAction}
-        setLoadingAction={val => setLoadingAction(val)}
-        title={tempTitle}
-        reset={() => {
-          setTempBody(body);
-          setTempLastBodyEdit({
-            source: bodyModifiedSource,
-            time: bodyModifiedAt,
-          });
-        }}
-        update={(val, source, time) => {
-          setTempBody(val);
-          setTempLastBodyEdit({
-            source: source,
-            time: time,
-          });
-        }}
-        different={tempBody !== body}
-      />
-      <Text allowFontScaling={false}>Styles for automated texts</Text>
-      <Text allowFontScaling={false}>
-        Customize automated outputs by using the options below
-      </Text>
-      <Text allowFontScaling={false}>Tone</Text>
-      <LabelStack
-        includes={item => writingStyleSettings.tone === item}
-        handle={item =>
-          writingStyleSettings.tone === item
-            ? setWritingStyleSettings({
-                ...writingStyleSettings,
-                tone: undefined,
-              })
-            : setWritingStyleSettings({...writingStyleSettings, tone: item})
-        }
-        labels={[
-          'Informative',
-          'Direct',
-          'Professional',
-          'Funny',
-          'Reflective',
-          'Creative',
-          'Poetic',
-        ]}
-      />
-      <Divider height={1} width={'$100'} mt={20} mb={20} />
-      <Text allowFontScaling={false}>Emotion</Text>
-      <LabelStack
-        includes={item => writingStyleSettings.emotion === item}
-        handle={item =>
-          writingStyleSettings.emotion === item
-            ? setWritingStyleSettings({
-                ...writingStyleSettings,
-                emotion: undefined,
-              })
-            : setWritingStyleSettings({...writingStyleSettings, emotion: item})
-        }
-        labels={[
-          'Neutral',
-          'Positive',
-          'Excited',
-          'Disheartened',
-          'Sad',
-          'Angry',
-        ]}
-      />
+        <Text allowFontScaling={false}>Styles for automated texts</Text>
+        <Text allowFontScaling={false}>
+          Customize automated outputs by using the options below
+        </Text>
+        <Text allowFontScaling={false}>Tone</Text>
+        <LabelStack
+          includes={item => writingStyleSettings.tone === item}
+          handle={item =>
+            writingStyleSettings.tone === item
+              ? setWritingStyleSettings({
+                  ...writingStyleSettings,
+                  tone: undefined,
+                })
+              : setWritingStyleSettings({...writingStyleSettings, tone: item})
+          }
+          labels={[
+            'Informative',
+            'Direct',
+            'Professional',
+            'Funny',
+            'Reflective',
+            'Creative',
+            'Poetic',
+          ]}
+        />
+        <Divider height={1} width={'$100'} mt={20} mb={20} />
+        <Text allowFontScaling={false}>Emotion</Text>
+        <LabelStack
+          includes={item => writingStyleSettings.emotion === item}
+          handle={item =>
+            writingStyleSettings.emotion === item
+              ? setWritingStyleSettings({
+                  ...writingStyleSettings,
+                  emotion: undefined,
+                })
+              : setWritingStyleSettings({
+                  ...writingStyleSettings,
+                  emotion: item,
+                })
+          }
+          labels={[
+            'Neutral',
+            'Positive',
+            'Excited',
+            'Disheartened',
+            'Sad',
+            'Angry',
+          ]}
+        />
+      </ScrollView>
     </Box>
   );
 };

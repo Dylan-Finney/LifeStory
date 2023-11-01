@@ -1340,7 +1340,9 @@ export default FullHomeView = ({route, navigation}) => {
                 <NewModalItem
                   boldText={'Add labels'}
                   normalText={'for additional meaning'}
-                  icon={<LabelIcon primaryColor={'black'} />}
+                  icon={
+                    <LabelIcon height={25} width={25} primaryColor={'black'} />
+                  }
                   onPress={() =>
                     setActionsheetScreen(ActionSheetScreens.MEMORIES.LABELS)
                   }

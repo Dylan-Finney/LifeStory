@@ -61,6 +61,8 @@ const styles = StyleSheet.create({
     borderColor: '#0b0b0b1a',
     borderRadius: 5,
     borderWidth: 1,
+    width: 40,
+    height: 40,
   },
   boldText: {
     fontSize: 16,
