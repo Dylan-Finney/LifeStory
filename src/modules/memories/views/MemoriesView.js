@@ -73,6 +73,9 @@ export default MemoriesView = ({}) => {
     setMemories,
     devMode,
     checkIfReadyToGenerate,
+    readyToGenerateMemory,
+    memoryLoadingMessage,
+    setMemoryLoadingMessage,
   } = useContext(AppContext);
   const {
     retrieveSpecificData,
@@ -134,8 +137,8 @@ export default MemoriesView = ({}) => {
     outputRange: [75, 0],
     extrapolate: 'clamp',
   });
-  const [memoryLoadingMessage, setMemoryLoadingMessage] =
-    useState('Not Needed');
+  // const [memoryLoadingMessage, setMemoryLoadingMessage] =
+  //   useState('Not Needed');
   const [memoryLoadingState, setMemoryLoadingState] = useState(false);
   const [visibleIndex, setVisibleIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
@@ -932,6 +935,10 @@ export default MemoriesView = ({}) => {
                   console.log({newItemHeights});
                   setItemHeights(newItemHeights);
                   setShowModal(false);
+                  setHighlightedMemory({
+                    index: -1,
+                    id: null,
+                  });
                 }}
               />
             </>
@@ -984,6 +991,10 @@ export default MemoriesView = ({}) => {
                   id: highlightedMemory.id,
                 });
                 setShowModal(false);
+                setHighlightedMemory({
+                  index: -1,
+                  id: null,
+                });
               }}
               cancel={() => {
                 setActionsheetScreen(ActionSheetScreens.MEMORIES.BASE);
@@ -1028,9 +1039,17 @@ export default MemoriesView = ({}) => {
                 var updatedMemories = [newMemory, ...memories];
                 setMemories(updatedMemories);
                 setShowModal(false);
+                setHighlightedMemory({
+                  index: -1,
+                  id: null,
+                });
               }}
               cancel={() => {
                 setShowModal(false);
+                setHighlightedMemory({
+                  index: -1,
+                  id: null,
+                });
               }}
             />
           )}
@@ -1040,6 +1059,19 @@ export default MemoriesView = ({}) => {
       <>
         {devMode === true && (
           <>
+            <Pressable
+              onPress={async () => {
+                var start = new Date(Date.now());
+                var end = new Date(Date.now());
+                start.setHours(start.getHours() - 3);
+                await readyToGenerateMemory({
+                  start,
+                  end,
+                });
+                setMemoryLoadingMessage('Finished');
+              }}>
+              <Text>Generate</Text>
+            </Pressable>
             <Text>Next Memory Creation: {getNextMemoryTime()}</Text>
             <Text>Memory Length: {memories?.length || 0}</Text>
             <Text>
@@ -1080,17 +1112,36 @@ export default MemoriesView = ({}) => {
             justifyContent: 'center',
             alignItems: 'center',
             // aspectRatio: 1,
-            height: memoryLoadingState === true ? 75 : gifScale || 0,
+            height:
+              memoryLoadingState === true ||
+              (memoryLoadingMessage !== 'Busy' &&
+                memoryLoadingMessage !== 'Finished')
+                ? 75
+                : gifScale || 0,
             zIndex: 999,
             left: 0,
             right: 0,
-            top: memoryLoadingState === true ? -30 : 100,
-            position: memoryLoadingState === true ? 'relative' : 'absolute',
+            top:
+              memoryLoadingState === true ||
+              (memoryLoadingMessage !== 'Busy' &&
+                memoryLoadingMessage !== 'Finished')
+                ? -30
+                : 100,
+            position:
+              memoryLoadingState === true ||
+              (memoryLoadingMessage !== 'Busy' &&
+                memoryLoadingMessage !== 'Finished')
+                ? 'relative'
+                : 'absolute',
             overflow: 'hidden',
           }}>
-          {forceCheck ? (
+          {forceCheck ||
+          (memoryLoadingMessage !== 'Busy' &&
+            memoryLoadingMessage !== 'Finished') ? (
             <>
-              {isMemoryReadyToGenerate ? (
+              {isMemoryReadyToGenerate ||
+              (memoryLoadingMessage !== 'Busy' &&
+                memoryLoadingMessage !== 'Finished') ? (
                 <Image
                   source={require('../../../assets/writing.gif')}
                   style={{width: 75, height: 75}}
@@ -1479,7 +1530,8 @@ export default MemoriesView = ({}) => {
               )}
             </View>
           )}
-          ListHeaderComponent={FlatListHeaderComponent}></FlatList>
+          // ListHeaderComponent={FlatListHeaderComponent}
+        ></FlatList>
         {refreshing && <WritingAnimation />}
         <FloatingActionButton
           onPress={async () => {

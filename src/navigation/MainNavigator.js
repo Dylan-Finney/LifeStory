@@ -372,6 +372,20 @@ const MainNavigator = () => {
     };
   };
 
+  const readyToGenerateMemory = async ({start, end}) => {
+    setMemoryLoadingMessage('Generating');
+    setMemoryLoadingState(true);
+    const eventData = await getPermissionsAndData({start, end});
+    console.log('Event Data For Memory Generation', eventData);
+    const newMemories = await generateMemories({
+      data: eventData,
+      // date: date.getTime(),
+    });
+    const updatedMemories = await getMemories();
+    setMemories(updatedMemories);
+    useSettingsHooks.set('settings.lastMemoryCheckTime', Date.now());
+  };
+
   const checkIfReadyToGenerate = async () => {
     const date = new Date(Date.now());
     const lastMemoryCheckTime = new Date(
@@ -397,20 +411,6 @@ const MainNavigator = () => {
     //   } else if (lastMemoryCheckTime.getHours() < 22 && date.getHours() >= 22) {
     //   }
     // }
-
-    const readyToGenerateMemory = async ({start, end}) => {
-      setMemoryLoadingMessage('Generating');
-      setMemoryLoadingState(true);
-      const eventData = await getPermissionsAndData({start, end});
-      console.log('Event Data For Memory Generation', eventData);
-      const newMemories = await generateMemories({
-        data: eventData,
-        date: date.getTime(),
-      });
-      const updatedMemories = await getMemories();
-      setMemories(updatedMemories);
-      useSettingsHooks.set('settings.lastMemoryCheckTime', Date.now());
-    };
 
     const checkIfMemoryReadyToGenerate = async () => {
       setMemoryLoadingMessage('Checking');
@@ -724,6 +724,9 @@ const MainNavigator = () => {
     storyLoadingMessage,
     setStoryLoadingMessage,
     checkIfReadyToGenerate,
+    readyToGenerateMemory,
+    memoryLoadingMessage,
+    setMemoryLoadingMessage,
   };
 
   return (
