@@ -87,9 +87,14 @@ export default LabellingSheet = ({
   const [canCreateLabel, setCanCreateLabel] = useState(false);
 
   console.log({activeLabels});
-  const [selectedLabels, setSelectedLabels] = useState(activeLabels);
+  const [selectedLabels, setSelectedLabels] = useState({
+    roles: activeLabels.roles || [],
+    modes: activeLabels.roles || [],
+    other: activeLabels.roles || [],
+  });
 
   const handleLabelClick = ({item, type}) => {
+    console.log({item, type, selectedLabels});
     var indexInSelectedLabels = selectedLabels[type].findIndex(
       element => element === item,
     );
