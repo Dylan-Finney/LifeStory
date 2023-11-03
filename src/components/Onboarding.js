@@ -212,6 +212,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
               fontWeight: '700',
               fontSize: moderateScale(28),
               marginBottom: verticalScale(20),
+              textAlign: 'center',
             }}>
             {onBoardingStep === 0 &&
               initalScreen === false &&
@@ -219,7 +220,7 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
             {onBoardingStep === 0 &&
               initalScreen === true &&
               'Welcome StoryTeller!'}
-            {onBoardingStep === 1 && 'You are the lead in your story'}
+            {onBoardingStep === 1 && 'Your Story, Your Lead!'}
             {onBoardingStep === 2 && 'Private by default'}
             {onBoardingStep === 3 && 'Start your story'}
             {onBoardingStep === 4 &&
@@ -231,12 +232,13 @@ const Onboarding = ({endOnboarding, generateEntry, getPermissionsAndData}) => {
             style={{
               color: theme.onboarding.text,
               fontWeight: '400',
-              fontSize: moderateScale(16),
-              marginBottom: verticalScale(20),
+              fontSize: moderateScale(18),
+              marginBottom: verticalScale(30),
+              textAlign: 'center',
             }}>
             {onBoardingStep === 0 &&
               initalScreen === false &&
-              'Lifestory creates your daily journal entries automatically based on your photos, location and more.'}
+              'Lifestory creates your daily journal entries automatically based on your photos, calendar, location and more.'}
             {onBoardingStep === 1 &&
               'With Lifestory you can reflect your life and memories via beautiful stories on daily basis.'}
             {onBoardingStep === 2 &&

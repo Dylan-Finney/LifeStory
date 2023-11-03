@@ -26,6 +26,10 @@ import notifee from '@notifee/react-native';
 export default SettingsView = ({route, navigation}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalScreen, setModalScreen] = useState('');
+  const [photos, setPhotos] = useState([]);
+  const [startPhotosDate, setStartPhotosDate] = useState(0);
+  const [endPhotosDate, setEndPhotosDate] = useState(0);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
   const {setOnBoarding, devMode, setDevMode} = useContext(AppContext);
 
   const {deleteTable, createEntryTable, createVisitsTable, resetTable} =
@@ -601,6 +605,88 @@ export default SettingsView = ({route, navigation}) => {
         }}>
         Reset All Data
       </Text>
+      {devMode === true && (
+        <>
+          <Divider title={'Dev Mode'} />
+
+          <Divider title={'Photos'} />
+          <Text
+            allowFontScaling={false}
+            style={{color: 'red', fontWeight: 600}}
+            onPress={async () => {
+              console.log('TEST GET PHOTOS');
+              var endOfUnixTime = new Date(Date.now());
+              var startOfUnixTime = new Date(Date.now());
+              // endOfUnixTime.setTime(endOfUnixTime.getTime() - 2000);
+              startOfUnixTime.setDate(startOfUnixTime.getDate() - 1);
+              setStartPhotosDate(startOfUnixTime.getTime());
+              setEndPhotosDate(endOfUnixTime.getTime());
+              endOfUnixTime = Math.floor(endOfUnixTime.getTime() / 1000);
+              startOfUnixTime = Math.floor(startOfUnixTime.getTime() / 1000);
+              NativeModules.Location.setDateRange(
+                startOfUnixTime,
+                endOfUnixTime,
+              );
+              try {
+                setLoadingPhotos(true);
+                var photos = await NativeModules.Location.getPhotosFromNative(
+                  true,
+                );
+
+                console.log(photos);
+                photos = photos.map(photo => {
+                  return {
+                    ...photo,
+                    data: '',
+                    creation: new Date(
+                      parseInt(photo.creation) * 1000,
+                    ).toLocaleString(),
+                  };
+                });
+                setPhotos(photos);
+                setLoadingPhotos(false);
+              } catch (e) {
+                setPhotos([{error: 'Try/catch error'}]);
+                setLoadingPhotos(false);
+              }
+            }}>
+            Get Photos from past day
+          </Text>
+          <Text
+            allowFontScaling={false}
+            style={{color: 'red', fontWeight: 600}}>
+            Photos Data: {loadingPhotos === true && 'Loading...'}
+          </Text>
+          <Text>
+            Start: {new Date(startPhotosDate).toLocaleString()} End:
+            {new Date(endPhotosDate).toLocaleString()}
+          </Text>
+          {loadingPhotos === false &&
+            (photos.length > 0 ? (
+              photos.map((photo, index) => {
+                if (photo.error !== undefined) {
+                  return (
+                    <View key={index}>
+                      <Text allowFontScaling={false} style={{color: 'red'}}>
+                        {photo.error}
+                      </Text>
+                    </View>
+                  );
+                } else {
+                  return (
+                    <View key={index}>
+                      <Text allowFontScaling={false}>{photo.name}</Text>
+                      <Text allowFontScaling={false}>{photo.creation}</Text>
+                      <Text allowFontScaling={false}>{photo.description}</Text>
+                    </View>
+                  );
+                }
+              })
+            ) : (
+              <Text>No Photos Detected</Text>
+            ))}
+        </>
+      )}
     </ScrollView>
   );
 };

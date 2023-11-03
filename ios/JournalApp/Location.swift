@@ -19,8 +19,8 @@ class Location: RCTEventEmitter, CLLocationManagerDelegate, EKCalendarChooserDel
   var testIdentifiers: [[String: String]] = []
 var presentingVC = RCTPresentedViewController()
   var dateEvents: [[String: String]] = []
-  var startDate: Date!
-  var endDate: Date!
+  var endDate: Date! = Date()
+  var startDate: Date! = Calendar.current.date(byAdding: .day, value: -1, to: Date())
   let semaphore = DispatchSemaphore(value: 0)
   let photoThread = DispatchSemaphore(value: 1)
   var reverseGeoCodePhoto = DispatchSemaphore(value: 0)
@@ -370,6 +370,8 @@ fetchedAssets.enumerateObjects({ (object, count, stop) in
     newPhoto["lat"] = "null"
     newPhoto["lon"] = "null"
     newPhoto["loc"] = "null"
+    self.reverseGeoCodePhoto.signal()
+
 
 
   }

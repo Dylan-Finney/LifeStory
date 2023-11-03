@@ -65,6 +65,8 @@ import {
 } from '../../../utils/metrics';
 
 import DatePicker from 'react-native-date-picker';
+import AMImage from '../../../assets/AMImage.png';
+import PMImage from '../../../assets/PMImage.png';
 
 import {decode, encode} from 'base-64';
 import {useAppState} from '@react-native-community/hooks';
@@ -112,6 +114,8 @@ import LabellingSheet from '../../../LabellingSheet';
 import {KeyboardAvoidingView} from '@gluestack-ui/themed';
 import EditSheet from '../../../EditSheet';
 import {Pressable} from '@gluestack-ui/themed';
+import {baseHighlight} from '../../../utils/baseObjects';
+import EmptyStoriesView from '../components/EmptyStoriesView';
 
 export default StoriesView = () => {
   const {
@@ -357,13 +361,11 @@ export default StoriesView = () => {
             maxToRenderPerBatch={1}
             updateCellsBatchingPeriod={100}
             windowSize={7}
-            ListEmptyComponent={() => {
-              return (
-                <View>
-                  <Text>No Stories yet</Text>
-                </View>
-              );
+            onScrollEndDrag={() => {
+              setHighlightedStory(baseHighlight);
             }}
+            contentContainerStyle={{flexGrow: 1}}
+            ListEmptyComponent={<EmptyStoriesView />}
             style={{flex: 1}}
             renderItem={({item, index}) => (
               <View

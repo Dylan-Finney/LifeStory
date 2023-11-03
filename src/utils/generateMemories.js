@@ -261,6 +261,8 @@ const generateGenericMemory = async ({data, type, time}) => {
     "timeTaken": "${new Date(
       Math.floor(parseFloat(data.creation) * 1000),
     ).toLocaleString()}",
+    "imageRecognitionLabels": [
+    ],
   }
 }`,
         },
@@ -282,6 +284,7 @@ const generateGenericMemory = async ({data, type, time}) => {
   const completion = await openai.createChatCompletion({
     // model: 'gpt-4',
     model: 'gpt-3.5-turbo',
+    temperature: 0.5,
     messages,
   });
   const response = completion.data.choices[0].message?.content;

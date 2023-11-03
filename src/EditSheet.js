@@ -25,6 +25,12 @@ import LabelStack from './LabelStack';
 import LabelIcon from '../src/assets/Labelling.svg';
 import PenIcon from '../src/assets/Pen.svg';
 import getDifferenceUnit from './utils/getDifferenceTime';
+import AngerIcon from './assets/emotions/Anger.svg';
+import FrownIcon from './assets/emotions/Frown.svg';
+import GrinIcon from './assets/emotions/Grin.svg';
+import NeutralIcon from './assets/emotions/Neutral.svg';
+import SmileIcon from './assets/emotions/Smile.svg';
+import EmotionButton from './components/EmotionButton';
 
 const {Configuration, OpenAIApi} = require('openai');
 const configuration = new Configuration({
@@ -42,6 +48,118 @@ const actions = {
   LENGTHEN: 1,
   SHORTEN: 2,
   REVERSE: 3,
+};
+
+const emotions = {
+  NA: 0,
+  HORRIBLE: 1,
+  BAD: 2,
+  NEUTRAL: 3,
+  GOOD: 4,
+  GREAT: 5,
+};
+
+const emotionAttributes = {
+  BORDER: 0,
+  BACKGROUND: 1,
+  STROKE: 2,
+};
+
+const emotionToColor = ({emotion, need}) => {
+  switch (emotion) {
+    case emotions.HORRIBLE:
+      switch (need) {
+        case emotionAttributes.BORDER:
+          return '#E7E7E7';
+        case emotionAttributes.STROKE:
+          return '#E93535';
+        case emotionAttributes.BACKGROUND:
+          return '#FDEBEB';
+        default:
+          return 'black';
+      }
+    case emotions.BAD:
+      switch (need) {
+        case emotionAttributes.BORDER:
+          return '#E7E7E7';
+        case emotionAttributes.STROKE:
+          return '#C839D4';
+        case emotionAttributes.BACKGROUND:
+          return '#F9EBFB';
+        default:
+          return 'black';
+      }
+    case emotions.NEUTRAL:
+      switch (need) {
+        case emotionAttributes.BORDER:
+          return '#E7E7E7';
+        case emotionAttributes.STROKE:
+          return '#6D6D6D';
+        case emotionAttributes.BACKGROUND:
+          return '#E7E7E7';
+        default:
+          return 'black';
+      }
+    case emotions.GOOD:
+      switch (need) {
+        case emotionAttributes.BORDER:
+          return '#E7E7E7';
+        case emotionAttributes.STROKE:
+          return '#118ED1';
+        case emotionAttributes.BACKGROUND:
+          return '#E7F4FA';
+        default:
+          return 'black';
+      }
+    case emotions.GREAT:
+      switch (need) {
+        case emotionAttributes.BORDER:
+          return '#E7E7E7';
+        case emotionAttributes.STROKE:
+          return '#11A833';
+        case emotionAttributes.BACKGROUND:
+          return '#E7F6EB';
+        default:
+          return 'black';
+      }
+    default:
+      switch (need) {
+        case emotionAttributes.BORDER:
+          return '#E7E7E7';
+        case emotionAttributes.STROKE:
+          return 'black';
+        case emotionAttributes.BACKGROUND:
+          return 'black';
+        default:
+          return 'black';
+      }
+  }
+};
+
+const emotionToIcon = ({emotion, active, color}) => {
+  const primaryColor =
+    color === undefined
+      ? active
+        ? emotionToColor({
+            emotion,
+            need: emotionAttributes.STROKE,
+          })
+        : '#0b0b0b99'
+      : color;
+  switch (emotion) {
+    case emotions.HORRIBLE:
+      return <AngerIcon primaryColor={primaryColor} />;
+    case emotions.BAD:
+      return <FrownIcon primaryColor={primaryColor} />;
+    case emotions.NEUTRAL:
+      return <NeutralIcon primaryColor={primaryColor} />;
+    case emotions.GOOD:
+      return <SmileIcon primaryColor={primaryColor} />;
+    case emotions.GREAT:
+      return <GrinIcon primaryColor={primaryColor} />;
+    default:
+      return <></>;
+  }
 };
 
 const rewriteRequest = async ({attr, action, tempVal, tone, emotion}) => {
@@ -633,10 +751,38 @@ export default EditSheet = ({
           different={tempBody !== body}
           time={bodyModifiedAt}
         />
-        <Text allowFontScaling={false}>Styles for automated texts</Text>
+        {/* <Text allowFontScaling={false}>Styles for automated texts</Text>
         <Text allowFontScaling={false}>
           Customize automated outputs by using the options below
-        </Text>
+        </Text> */}
+        <Box flexDirection="row" justifyContent="center" gap={10} mb={5}>
+          {['Angry', 'Sad', 'Neutral', 'Positive', 'Excited'].map(
+            (val, index) => {
+              return (
+                <>
+                  <EmotionButton
+                    key={index}
+                    active={writingStyleSettings.emotion === val}
+                    emotionNum={index + 1}
+                    onPress={() => {
+                      writingStyleSettings.emotion === val
+                        ? setWritingStyleSettings({
+                            ...writingStyleSettings,
+                            emotion: undefined,
+                          })
+                        : setWritingStyleSettings({
+                            ...writingStyleSettings,
+                            emotion: val,
+                          });
+                    }}
+                  />
+                </>
+              );
+            },
+          )}
+        </Box>
+        <Divider height={1} width={'$100'} mt={20} mb={20} />
+
         <Text allowFontScaling={false}>Tone</Text>
         <LabelStack
           includes={item => writingStyleSettings.tone === item}
@@ -658,9 +804,7 @@ export default EditSheet = ({
             'Poetic',
           ]}
         />
-        <Divider height={1} width={'$100'} mt={20} mb={20} />
-        <Text allowFontScaling={false}>Emotion</Text>
-        <LabelStack
+        {/* <LabelStack
           includes={item => writingStyleSettings.emotion === item}
           handle={item =>
             writingStyleSettings.emotion === item
@@ -681,7 +825,7 @@ export default EditSheet = ({
             'Sad',
             'Angry',
           ]}
-        />
+        /> */}
       </ScrollView>
     </Box>
   );

@@ -61,6 +61,10 @@ import {Pressable} from '@gluestack-ui/themed';
 import checkIfMemoryReadyToGenerate from '../../../utils/isMemoryReadyToGenerate';
 import FloatingActionButton from '../../../components/FloatingActionButton';
 import {EmotionBadge, TagBadge, VoteBadge} from '../../../components/Badge';
+import {baseHighlight} from '../../../utils/baseObjects';
+import EmptyMemoriesView from '../components/EmptyMemoriesView';
+import getNextMemoryTime from '../../../utils/getNextMemoryTime';
+import EmotionButton from '../../../components/EmotionButton';
 
 export default MemoriesView = ({}) => {
   const {
@@ -87,43 +91,7 @@ export default MemoriesView = ({}) => {
     updateMemoryData,
     deleteMemoryData,
   } = useDatabaseHooks();
-  const getNextMemoryTime = () => {
-    // const now = new Date(Date.now());
-    const lastMemoryCheckTime = new Date(
-      useSettingsHooks.getNumber('settings.lastMemoryCheckTime'),
-      // 0,
-    );
-    var timeStr = '';
-    if (
-      lastMemoryCheckTime.getHours() >= 22 ||
-      lastMemoryCheckTime.getHours() < 8
-    ) {
-      if (lastMemoryCheckTime.getHours() >= 22) {
-        lastMemoryCheckTime.setDate(lastMemoryCheckTime.getDate() + 1);
-      }
-      lastMemoryCheckTime.setHours(8);
-      lastMemoryCheckTime.setMinutes(0);
-      lastMemoryCheckTime.setSeconds(0);
-      lastMemoryCheckTime.setMilliseconds(0);
-      // timeStr = lastMemoryCheckTime.toLocaleString();
-      timeStr = lastMemoryCheckTime.getHours();
-    } else if (lastMemoryCheckTime.getHours() < 15) {
-      lastMemoryCheckTime.setHours(15);
-      lastMemoryCheckTime.setMinutes(0);
-      lastMemoryCheckTime.setSeconds(0);
-      lastMemoryCheckTime.setMilliseconds(0);
-      // timeStr = lastMemoryCheckTime.toLocaleString();
-      timeStr = lastMemoryCheckTime.getHours();
-    } else {
-      lastMemoryCheckTime.setHours(22);
-      lastMemoryCheckTime.setMinutes(0);
-      lastMemoryCheckTime.setSeconds(0);
-      lastMemoryCheckTime.setMilliseconds(0);
-      // timeStr = lastMemoryCheckTime.toLocaleString();
-      timeStr = lastMemoryCheckTime.getHours();
-    }
-    return timeStr;
-  };
+
   const [itemHeights, setItemHeights] = useState([]);
   // var itemHeights = {};
   const [layoutCounter, setLayoutCounter] = useState(0);
@@ -180,10 +148,7 @@ export default MemoriesView = ({}) => {
     }
   };
   const scrollRef = createRef();
-  const [highlightedMemory, setHighlightedMemory] = useState({
-    index: -1,
-    id: null,
-  });
+  const [highlightedMemory, setHighlightedMemory] = useState(baseHighlight);
   const getEventIcon = type => {
     switch (type) {
       case EventTypes.LOCATION:
@@ -452,6 +417,7 @@ export default MemoriesView = ({}) => {
             }}>
             {item.body}
           </Text>
+          x
           {/* <Text
           allowFontScaling={false}
           style={{
@@ -511,7 +477,6 @@ export default MemoriesView = ({}) => {
               </View>
             </View>
           )}
-
           {[EventTypes.PHOTO, EventTypes.LOCATION].includes(item.type) && (
             <SingleMapMemo
               lat={item.eventsData.lat}
@@ -684,17 +649,14 @@ export default MemoriesView = ({}) => {
     );
   };
 
+  const closeActionSheet = () => {
+    setShowModal(false);
+    setHighlightedMemory(baseHighlight);
+  };
+
   return (
     <>
-      <Actionsheet
-        isOpen={showModal}
-        onClose={() => {
-          setShowModal(false);
-          setHighlightedMemory({
-            index: -1,
-            id: null,
-          });
-        }}>
+      <Actionsheet isOpen={showModal} onClose={closeActionSheet}>
         <ActionsheetBackdrop />
         <ActionsheetContent pb={50} maxHeight={'80%'}>
           <ActionsheetDragIndicatorWrapper pb={10}>
@@ -704,10 +666,14 @@ export default MemoriesView = ({}) => {
           {actionsheetScreen === ActionSheetScreens.MEMORIES.BASE && (
             <>
               <Box flexDirection="row" justifyContent="center" gap={10} mb={5}>
-                {[1, 2, 3, 4, 5].map(val => {
+                {[1, 2, 3, 4, 5].map((val, index) => {
                   return (
-                    <Pressable
-                      key={val}
+                    <EmotionButton
+                      active={
+                        memories[highlightedMemory.index]?.emotion === val
+                      }
+                      emotionNum={val}
+                      key={index}
                       onPress={() => {
                         var updatedMemories = [...memories];
                         var memory = updatedMemories[highlightedMemory.index];
@@ -726,66 +692,8 @@ export default MemoriesView = ({}) => {
                           vote: memory.vote,
                           id: highlightedMemory.id,
                         });
-                      }}>
-                      <Box
-                        width={50}
-                        height={50}
-                        backgroundColor={
-                          memories[highlightedMemory.index]?.emotion === val
-                            ? emotionToColor({
-                                emotion: val,
-                                need: emotionAttributes.BACKGROUND,
-                              })
-                            : 'white'
-                        }
-                        borderWidth={1}
-                        justifyContent="center"
-                        alignItems="center"
-                        borderColor={
-                          memories[highlightedMemory.index]?.emotion === val
-                            ? emotionToColor({
-                                emotion: val,
-                                need: emotionAttributes.BACKGROUND,
-                              })
-                            : emotionToColor({
-                                need: emotionAttributes.BORDER,
-                              })
-                        }
-                        rounded={'$md'}>
-                        <Box aspectRatio={1} height={'65%'} width={'65%'}>
-                          {emotionToIcon({
-                            emotion: val,
-                            active:
-                              memories[highlightedMemory.index]?.emotion ===
-                              val,
-                          })}
-                          {/* <AngerIcon
-                              primaryColor={
-                                memories[highlightedMemory.index]?.emotion ===
-                                val
-                                  ? emotionToColor({
-                                      emotion: val,
-                                      need: emotionAttributes.STROKE,
-                                    })
-                                  : '#0b0b0b99'
-                              }
-                              // fill={
-                              //   // memories[highlightedMemory.index]?.emotion ===
-                              //   // val
-                              //   //   ? emotionToColor({
-                              //   //       need: emotionAttributes.BORDER,
-                              //   //     })
-                              //   //   : emotionToColor({
-                              //   //       need: emotionAttributes.BORDER,
-                              //   //     })
-                              //   '#000'
-                              // }
-                              // fill={'#000'}
-                            /> */}
-                        </Box>
-                        {/* default stroke: 6D6D6D */}
-                      </Box>
-                    </Pressable>
+                      }}
+                    />
                   );
                 })}
               </Box>
@@ -934,11 +842,7 @@ export default MemoriesView = ({}) => {
                   newItemHeights.splice(highlightedMemory.index, 1);
                   console.log({newItemHeights});
                   setItemHeights(newItemHeights);
-                  setShowModal(false);
-                  setHighlightedMemory({
-                    index: -1,
-                    id: null,
-                  });
+                  closeActionSheet();
                 }}
               />
             </>
@@ -990,11 +894,7 @@ export default MemoriesView = ({}) => {
                   vote: memory.vote,
                   id: highlightedMemory.id,
                 });
-                setShowModal(false);
-                setHighlightedMemory({
-                  index: -1,
-                  id: null,
-                });
+                closeActionSheet();
               }}
               cancel={() => {
                 setActionsheetScreen(ActionSheetScreens.MEMORIES.BASE);
@@ -1038,19 +938,9 @@ export default MemoriesView = ({}) => {
                 }
                 var updatedMemories = [newMemory, ...memories];
                 setMemories(updatedMemories);
-                setShowModal(false);
-                setHighlightedMemory({
-                  index: -1,
-                  id: null,
-                });
+                closeActionSheet();
               }}
-              cancel={() => {
-                setShowModal(false);
-                setHighlightedMemory({
-                  index: -1,
-                  id: null,
-                });
-              }}
+              cancel={closeActionSheet}
             />
           )}
           {/* </ScrollView> */}
@@ -1094,16 +984,20 @@ export default MemoriesView = ({}) => {
           p={20}
           height={100}>
           <Box gap={5}>
-            <Text
-              allowFontScaling={false}
-              style={{fontWeight: 400, fontSize: 16, fontStyle: 'italic'}}>
-              {toDateString(memories[visibleIndex]?.time)}
-            </Text>
-            <Text
-              allowFontScaling={false}
-              style={{fontWeight: 600, fontSize: 24}}>
-              {timeToSegment(memories[visibleIndex]?.time)}
-            </Text>
+            {memories.length > 0 && (
+              <>
+                <Text
+                  allowFontScaling={false}
+                  style={{fontWeight: 400, fontSize: 16, fontStyle: 'italic'}}>
+                  {toDateString(memories[visibleIndex]?.time)}
+                </Text>
+                <Text
+                  allowFontScaling={false}
+                  style={{fontWeight: 600, fontSize: 24}}>
+                  {timeToSegment(memories[visibleIndex]?.time)}
+                </Text>
+              </>
+            )}
           </Box>
         </Box>
         <Animated.View
@@ -1175,19 +1069,15 @@ export default MemoriesView = ({}) => {
           maxToRenderPerBatch={1}
           updateCellsBatchingPeriod={100}
           windowSize={7}
-          ListEmptyComponent={() => {
-            return (
-              <View>
-                <Text>No Memories yet</Text>
-              </View>
-            );
-          }}
+          contentContainerStyle={{flexGrow: 1}}
+          ListEmptyComponent={<EmptyMemoriesView />}
           // onScroll={Animated.event(
           //   [{nativeEvent: {contentOffset: {y: scrollOffsetY}}}],
           //   {useNativeDriver: false},
           // )}
           alwaysBounceVertical={false}
           // bounces={false}
+          scrollEnabled={memories.length > 0}
           onScroll={event => {
             const {contentOffset, layoutMeasurement, contentSize} =
               event.nativeEvent;
@@ -1240,6 +1130,9 @@ export default MemoriesView = ({}) => {
             setPreviousYOffset(yOffset);
             scrollOffsetY.setValue(event.nativeEvent.contentOffset.y);
           }}
+          onScrollEndDrag={() => {
+            setHighlightedMemory(baseHighlight);
+          }}
           // decelerationRate={'fast'}
           onLayout={() => {
             console.log('reset heights');
@@ -1252,14 +1145,14 @@ export default MemoriesView = ({}) => {
           renderItem={({item, index}) => (
             <View
               onLayout={event => {
-                console.log({
-                  item,
-                  index,
-                  length: memories.length,
-                  layoutCounter,
-                  itemHeights,
-                  height: event.nativeEvent.layout.height,
-                });
+                // console.log({
+                //   item,
+                //   index,
+                //   length: memories.length,
+                //   layoutCounter,
+                //   itemHeights,
+                //   height: event.nativeEvent.layout.height,
+                // });
                 if (layoutCounter === memories.length) {
                   console.log('RESET');
                   // setLayoutCounter(1);
