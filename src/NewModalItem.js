@@ -72,20 +72,21 @@ const styles = StyleSheet.create({
     fontWeight: 'normal',
   },
   numContainer: {
-    backgroundColor: '#E7E7E7',
+    backgroundColor: '#E7F4FA',
+
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 100,
   },
   numText: {
     fontWeight: 'bold',
-    color: '#636363',
+    color: '#118ED1',
   },
   numContainerActive: {
-    backgroundColor: '#E7F4FA',
+    backgroundColor: '#E7E7E7',
   },
   numTextActive: {
-    color: '#118ED1',
+    color: '#636363',
   },
   dangerText: {
     color: 'red',
