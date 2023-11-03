@@ -116,6 +116,7 @@ import EditSheet from '../../../EditSheet';
 import {Pressable} from '@gluestack-ui/themed';
 import {baseHighlight} from '../../../utils/baseObjects';
 import EmptyStoriesView from '../components/EmptyStoriesView';
+import {TagBadge} from '../../../components/Badge';
 
 export default StoriesView = () => {
   const {
@@ -523,35 +524,11 @@ export default StoriesView = () => {
                         </Text>
                       </Box>
                     )} */}
+
                     {Object.values(item.tags).flat().length > 0 && (
-                      <Box
-                        px={10}
-                        py={5}
-                        backgroundColor={'#DFECF2'}
-                        justifyContent="center"
-                        flexDirection="row"
-                        rounded={'$full'}
-                        gap={5}
-                        alignItems="center">
-                        <Box
-                          aspectRatio={1}
-                          height={30}
-                          width={30}
-                          p={4}
-                          justifyContent="center"
-                          alignItems="center"
-                          rounded={'$md'}
-                          backgroundColor={'#118ED1'}>
-                          <LabelIcon
-                            height={25}
-                            width={25}
-                            primaryColor={'white'}
-                          />
-                        </Box>
-                        <Text style={{color: '#118ED1', fontWeight: 600}}>
-                          {Object.values(item.tags).flat().length}
-                        </Text>
-                      </Box>
+                      <TagBadge
+                        tagCount={Object.values(item.tags).flat().length}
+                      />
                     )}
                   </Box>
                 </Pressable>
