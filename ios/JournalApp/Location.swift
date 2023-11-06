@@ -263,8 +263,8 @@ for localIdentifier in calendarIdentifiers {
     locationManager.desiredAccuracy = kCLLocationAccuracyBest
     locationManager.distanceFilter = kCLDistanceFilterNone
     locationManager.allowsBackgroundLocationUpdates = true
-    //  locationManager.startMonitoringVisits() //Make Sure this is active for release
-   locationManager.startUpdatingLocation() //Simulator Debug as Visits doesn't work
+     locationManager.startMonitoringVisits() //Make Sure this is active for release
+  //  locationManager.startUpdatingLocation() //Simulator Debug as Visits doesn't work
     resolve(true)
 
   }
