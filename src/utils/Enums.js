@@ -23,3 +23,18 @@ export const ActionSheetScreens = {
     EDIT: 1.2,
   },
 };
+
+export const emotions = {
+  NA: 0,
+  HORRIBLE: 1,
+  BAD: 2,
+  NEUTRAL: 3,
+  GOOD: 4,
+  GREAT: 5,
+};
+
+export const emotionAttributes = {
+  BORDER: 0,
+  BACKGROUND: 1,
+  STROKE: 2,
+};

@@ -22,7 +22,9 @@ const Tab = createBottomTabNavigator();
 
 const AppNavigator = ({routes}) => {
   return (
-    <Tab.Navigator initialRouteName="Home" screenOptions={{headerShown: false}}>
+    <Tab.Navigator
+      initialRouteName="Entry"
+      screenOptions={{headerShown: false}}>
       <Tab.Screen
         name="Stories"
         options={{

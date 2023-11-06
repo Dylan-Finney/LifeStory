@@ -215,6 +215,7 @@ const generateGenericMemory = async ({data, type, time}) => {
 15. Focus on what image is about and where its taken
 16. Dont mention camera settings
 17. Dont mention image recognition labels
+18. If the object has no image recognition labels don't write about what the image shows
 
 -----`,
         },
@@ -262,11 +263,16 @@ const generateGenericMemory = async ({data, type, time}) => {
       Math.floor(parseFloat(data.creation) * 1000),
     ).toLocaleString()}",
     "imageRecognitionLabels": [
+      ${data.labels?.map(label => {
+        return `{ "label": "${label.title}", "confidence": ${label.Confidence} },
+`;
+      })}
     ],
   }
 }`,
         },
       ];
+      console.log('photo message', JSON.stringify(messages));
       break;
     default:
       messages = [
@@ -376,12 +382,16 @@ const generateMemories = async ({data, date}) => {
           // setLoadingMessage(
           //   `Creating Photos Memories - ${index + 1}/${photos.length}`,
           // );
-          var newPhotoMemory = await generateGenericMemory({
-            data: photo,
-            type: EventTypes.PHOTO,
-            time: Math.floor(parseFloat(photo.creation) * 1000),
-          });
-          newMemories.push(newPhotoMemory);
+          try {
+            var newPhotoMemory = await generateGenericMemory({
+              data: photo,
+              type: EventTypes.PHOTO,
+              time: Math.floor(parseFloat(photo.creation) * 1000),
+            });
+            newMemories.push(newPhotoMemory);
+          } catch (e) {
+            console.error(e);
+          }
         }),
       ).then(() => {
         console.log('photos finished');

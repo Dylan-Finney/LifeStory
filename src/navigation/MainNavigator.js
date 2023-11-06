@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import {SafeAreaView} from 'react-native-safe-area-context';
+import Config from 'react-native-config';
 
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
@@ -30,8 +31,23 @@ import onCreateTriggerReminder from '../utils/createOpenReminder';
 import onCreateTriggerNotification from '../utils/createNotification';
 import Location from '../../src/utils/native-modules/NativeFuncs.js';
 import generateMemories from '../utils/generateMemories';
+import {decode, encode} from 'base-64';
 
 const RootStack = createNativeStackNavigator();
+const {Configuration, OpenAIApi} = require('openai');
+
+const AWS = require('aws-sdk');
+
+AWS.config.update({
+  accessKeyId: Config.AWS_ACCESS_KEY,
+  secretAccessKey: Config.AWS_SECRET_KEY,
+  region: Config.AWS_REGION,
+});
+
+const Rekognition = new AWS.Rekognition();
+const configuration = new Configuration({
+  apiKey: Config.OPENAI_KEY,
+});
 
 const MainNavigator = () => {
   const {createVisitsTable, insertData, retrieveData, retrieveSpecificData} =
@@ -268,6 +284,8 @@ const MainNavigator = () => {
 
     var includeDownloadedPhotosCheck =
       useSettingsHooks.getBoolean('settings.includeDownloadedPhotos') || false;
+    var photoAnalysis =
+      useSettingsHooks.getBoolean('settings.photoAnalysis') || false;
 
     try {
       if (onboarding === false) {
@@ -281,6 +299,78 @@ const MainNavigator = () => {
         if (includeDownloadedPhotosCheck !== true) {
           setLoadingMessage('Filtering out downloaded Photos');
           photos = photos.filter(photo => photo.lat !== 'null');
+        }
+        console.log('photos after exclude', {photos});
+
+        //Photo Labelling
+        if (photoAnalysis === true) {
+          setLoadingMessage('Labelling Photos');
+          await Promise.all(
+            photos.map(async photo => {
+              if (photo.lat === 'null') {
+                return photo;
+              } else {
+                const image = decode(photo.data);
+                const length = image.length;
+                const imageBytes = new ArrayBuffer(length);
+                const ua = new Uint8Array(imageBytes);
+                for (var i = 0; i < length; i++) {
+                  ua[i] = image.charCodeAt(i);
+                }
+                var response;
+                try {
+                  response = await Rekognition.detectLabels({
+                    Image: {Bytes: ua},
+                  }).promise();
+                  console.log('Rekognition.detectLabels Response', response);
+                } catch (e) {
+                  console.error('Error with Rekognition.detectLabels', e);
+                  return {
+                    ...photo,
+                    lat: parseFloat(photo.lat),
+                    lon: parseFloat(photo.lon),
+                  };
+                }
+                const labels = response.Labels;
+                const labelsFiltered = labels.filter(
+                  label => label.Confidence >= 80,
+                );
+                const labelsWithTitle = labelsFiltered.map(label => {
+                  if (
+                    label.Categories.filter(category => category.Name).some(
+                      r =>
+                        [
+                          'Person Description',
+                          'Actions',
+                          'Events and Attractions',
+                        ].indexOf(r) >= 0,
+                    )
+                  ) {
+                    return {
+                      ...label,
+                      title: `${label.Instances.length}x${label.Name}`,
+                    };
+                  } else {
+                    return {
+                      ...label,
+                      title: label.Name,
+                    };
+                  }
+                  // return `${label.Instances.length}x${label.Name}`;
+                });
+                console.log({labelsWithTitle});
+                return {
+                  ...photo,
+                  labels: labelsWithTitle,
+                  lat: parseFloat(photo.lat),
+                  lon: parseFloat(photo.lon),
+                };
+              }
+            }),
+          ).then(res => {
+            console.log({res});
+            photos = res;
+          });
         }
       } else {
         Location.getPhotosAccess();
@@ -357,13 +447,6 @@ const MainNavigator = () => {
     await notifee.requestPermission();
     CounterEvents.removeAllListeners('photoChange');
     CounterEvents.removeAllListeners('photoCount');
-    photos = photos.map(photo => {
-      return {
-        ...photo,
-        long: parseFloat(photo.lon),
-        lat: parseFloat(photo.lat),
-      };
-    });
     //RETURNS
     return {
       photos,
@@ -587,9 +670,9 @@ const MainNavigator = () => {
     await checkIfMemoryReadyToGenerate();
     //Create Local Notifications to go off at 08:00, 15:00 && 22:0
     try {
-      onCreateTriggerReminder({remindTime: 8});
-      onCreateTriggerReminder({remindTime: 15});
-      onCreateTriggerReminder({remindTime: 22});
+      // onCreateTriggerReminder({remindTime: 8});
+      // onCreateTriggerReminder({remindTime: 15});
+      // onCreateTriggerReminder({remindTime: 22});
     } catch (e) {
       console.error({e});
     }

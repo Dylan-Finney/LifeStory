@@ -30,10 +30,29 @@ export default SettingsView = ({route, navigation}) => {
   const [startPhotosDate, setStartPhotosDate] = useState(0);
   const [endPhotosDate, setEndPhotosDate] = useState(0);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
+
+  const [events, setEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+
+  const [locations, setLocations] = useState([]);
+  const [loadingLocations, setLoadingLocations] = useState(false);
+
   const {setOnBoarding, devMode, setDevMode} = useContext(AppContext);
 
-  const {deleteTable, createEntryTable, createVisitsTable, resetTable} =
-    useDatabaseHooks();
+  const [includeDownloadedPhotos, setIncludeDownloadedPhotos] = useState(
+    useSettingsHooks.getBoolean('settings.includeDownloadedPhotos'),
+  );
+  const [analyzePhotos, setAnalyzePhotos] = useState(
+    useSettingsHooks.getBoolean('settings.photoAnalysis'),
+  );
+
+  const {
+    deleteTable,
+    createEntryTable,
+    createVisitsTable,
+    resetTable,
+    retrieveSpecificData,
+  } = useDatabaseHooks();
   // const {
   //   setOnBoarding,
   //   calendars,
@@ -402,7 +421,7 @@ export default SettingsView = ({route, navigation}) => {
         allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
-          if (useSettingsHooks.getBoolean('settings.photoAnalysis') === true) {
+          if (analyzePhotos === true) {
             Alert.alert(
               'Warning!',
               'Photos taken from the camera will not be analyzed and, as such, no descriptions can be generated about them.\nDo you wish to proceed?',
@@ -412,6 +431,7 @@ export default SettingsView = ({route, navigation}) => {
                   style: 'default',
                   onPress: () => {
                     // setPhotoAnalysis(false);
+                    setAnalyzePhotos(false);
                     useSettingsHooks.set('settings.photoAnalysis', false);
                   },
                 },
@@ -428,6 +448,7 @@ export default SettingsView = ({route, navigation}) => {
                   text: 'Confirm',
                   style: 'default',
                   onPress: () => {
+                    setAnalyzePhotos(true);
                     useSettingsHooks.set('settings.photoAnalysis', true);
                   },
                 },
@@ -436,7 +457,7 @@ export default SettingsView = ({route, navigation}) => {
             );
           }
         }}>
-        {useSettingsHooks.getBoolean('settings.photoAnalysis')
+        {analyzePhotos
           ? 'Stop photos being analyzed'
           : 'Allow photos to be analyzed'}
       </Text>
@@ -444,10 +465,8 @@ export default SettingsView = ({route, navigation}) => {
         allowFontScaling={false}
         style={{color: 'red', fontWeight: 600}}
         onPress={() => {
-          if (
-            useSettingsHooks.getBoolean('settings.includeDownloadedPhotos') ===
-            true
-          ) {
+          console.log(includeDownloadedPhotos);
+          if (includeDownloadedPhotos === true) {
             Alert.alert(
               'Warning!',
               'Photos downloaded or from Third Party apps will NOT be included in your entries.\nDo you wish to proceed?',
@@ -456,6 +475,7 @@ export default SettingsView = ({route, navigation}) => {
                   text: 'Confirm',
                   style: 'default',
                   onPress: () => {
+                    setIncludeDownloadedPhotos(false);
                     useSettingsHooks.set(
                       'settings.includeDownloadedPhotos',
                       false,
@@ -475,10 +495,16 @@ export default SettingsView = ({route, navigation}) => {
                   text: 'Confirm',
                   style: 'default',
                   onPress: () => {
+                    setIncludeDownloadedPhotos(true);
                     useSettingsHooks.set(
                       'settings.includeDownloadedPhotos',
                       true,
                     );
+                    // console.log(
+                    //   useSettingsHooks.getBoolean(
+                    //     'settings.includeDownloadedPhotos',
+                    //   ),
+                    // );
                   },
                 },
                 {text: 'Cancel', style: 'cancel'},
@@ -486,7 +512,7 @@ export default SettingsView = ({route, navigation}) => {
             );
           }
         }}>
-        {useSettingsHooks.getBoolean('settings.includeDownloadedPhotos')
+        {includeDownloadedPhotos
           ? 'EXCLUDE Downloaded Photos'
           : 'INCLUDE Downloaded Photos'}
       </Text>
@@ -684,6 +710,170 @@ export default SettingsView = ({route, navigation}) => {
               })
             ) : (
               <Text>No Photos Detected</Text>
+            ))}
+
+          <Divider title={'Calendar Events'} />
+          <Text
+            allowFontScaling={false}
+            style={{color: 'red', fontWeight: 600}}
+            onPress={async () => {
+              console.log('TEST GET PHOTOS');
+              var endOfUnixTime = new Date(Date.now());
+              var startOfUnixTime = new Date(Date.now());
+              // endOfUnixTime.setTime(endOfUnixTime.getTime() - 2000);
+              startOfUnixTime.setDate(startOfUnixTime.getDate() - 1);
+              setStartPhotosDate(startOfUnixTime.getTime());
+              setEndPhotosDate(endOfUnixTime.getTime());
+              endOfUnixTime = Math.floor(endOfUnixTime.getTime() / 1000);
+              startOfUnixTime = Math.floor(startOfUnixTime.getTime() / 1000);
+              NativeModules.Location.setDateRange(
+                startOfUnixTime,
+                endOfUnixTime,
+              );
+              try {
+                setLoadingEvents(true);
+
+                var events = await NativeModules.Location.getCalendarEvents(
+                  startOfUnixTime,
+                  endOfUnixTime,
+                );
+
+                console.log(events);
+                events = events.map(event => {
+                  return {
+                    ...event,
+                    // data: '',
+                    // creation: new Date(
+                    //   parseInt(photo.creation) * 1000,
+                    // ).toLocaleString(),
+                  };
+                });
+                setEvents(events);
+                setLoadingEvents(false);
+              } catch (e) {
+                setEvents([{error: 'Try/catch error'}]);
+                setLoadingEvents(false);
+              }
+            }}>
+            Get Events from past day
+          </Text>
+          <Text
+            allowFontScaling={false}
+            style={{color: 'red', fontWeight: 600}}>
+            Events Data: {loadingEvents === true && 'Loading...'}
+          </Text>
+          <Text>
+            Start: {new Date(startPhotosDate).toLocaleString()} End:
+            {new Date(endPhotosDate).toLocaleString()}
+          </Text>
+          {loadingEvents === false &&
+            (events.length > 0 ? (
+              events.map((event, index) => {
+                if (event.error !== undefined) {
+                  return (
+                    <View key={index}>
+                      <Text allowFontScaling={false} style={{color: 'red'}}>
+                        {event.error}
+                      </Text>
+                    </View>
+                  );
+                } else {
+                  return (
+                    <View key={index}>
+                      <Text allowFontScaling={false}>{event.title}</Text>
+                      <Text allowFontScaling={false}>
+                        {new Date(
+                          parseInt(event.start) * 1000,
+                        ).toLocaleString()}
+                      </Text>
+                      <Text allowFontScaling={false}>
+                        {new Date(parseInt(event.end) * 1000).toLocaleString()}
+                      </Text>
+                      <Text allowFontScaling={false}>{event.calendar}</Text>
+                    </View>
+                  );
+                }
+              })
+            ) : (
+              <Text>No Events Detected</Text>
+            ))}
+
+          <Divider title={'Locations'} />
+          <Text
+            allowFontScaling={false}
+            style={{color: 'red', fontWeight: 600}}
+            onPress={async () => {
+              console.log('TEST GET PHOTOS');
+              var endOfUnixTime = new Date(Date.now());
+              var startOfUnixTime = new Date(Date.now());
+              // endOfUnixTime.setTime(endOfUnixTime.getTime() - 2000);
+              startOfUnixTime.setDate(startOfUnixTime.getDate() - 1);
+              setStartPhotosDate(startOfUnixTime.getTime());
+              setEndPhotosDate(endOfUnixTime.getTime());
+              endOfUnixTime = Math.floor(endOfUnixTime.getTime());
+              startOfUnixTime = Math.floor(startOfUnixTime.getTime());
+              try {
+                setLoadingLocations(true);
+                var locations = [];
+                retrieveSpecificData(startOfUnixTime, endOfUnixTime, res => {
+                  (locations = res.map(obj => {
+                    return {
+                      description: obj.description.split(',')[0],
+                      time: obj.date,
+                      lat: obj.lat,
+                      long: obj.lon,
+                    };
+                  })),
+                    console.log(locations);
+                  setLocations(locations);
+                  setLoadingLocations(false);
+                });
+              } catch (e) {
+                setLocations([{error: 'Try/catch error'}]);
+                setLoadingLocations(false);
+              }
+            }}>
+            Get Locations from past day
+          </Text>
+          <Text
+            allowFontScaling={false}
+            style={{color: 'red', fontWeight: 600}}>
+            Locations Data: {loadingLocations === true && 'Loading...'}
+          </Text>
+          <Text>
+            Start: {new Date(startPhotosDate).toLocaleString()} End:
+            {new Date(endPhotosDate).toLocaleString()}
+          </Text>
+          {loadingLocations === false &&
+            (locations.length > 0 ? (
+              locations.map((location, index) => {
+                if (location.error !== undefined) {
+                  return (
+                    <View key={index}>
+                      <Text allowFontScaling={false} style={{color: 'red'}}>
+                        {location.error}
+                      </Text>
+                    </View>
+                  );
+                } else {
+                  return (
+                    <View key={index}>
+                      <Text allowFontScaling={false}>
+                        {new Date(location.time).toLocaleString()}
+                      </Text>
+                      <Text allowFontScaling={false}>
+                        {location.description}
+                      </Text>
+                      <Text allowFontScaling={false}>Lat: {location.lat}</Text>
+                      <Text allowFontScaling={false}>
+                        Long: {location.long}
+                      </Text>
+                    </View>
+                  );
+                }
+              })
+            ) : (
+              <Text>No Locations Detected</Text>
             ))}
         </>
       )}

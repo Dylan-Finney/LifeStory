@@ -704,9 +704,9 @@ export default OnboardingView = ({route, navigation}) => {
     await checkIfMemoryReadyToGenerate();
     //Create Local Notifications to go off at 08:00, 15:00 && 22:0
     try {
-      onCreateTriggerReminder({remindTime: 8});
-      onCreateTriggerReminder({remindTime: 15});
-      onCreateTriggerReminder({remindTime: 22});
+      // onCreateTriggerReminder({remindTime: 8});
+      // onCreateTriggerReminder({remindTime: 15});
+      // onCreateTriggerReminder({remindTime: 22});
     } catch (e) {
       console.error({e});
     }
@@ -1030,9 +1030,9 @@ export default OnboardingView = ({route, navigation}) => {
           useSettingsHooks.set('onboarding', false);
           console.log('END ONBOARDING');
           try {
-            onCreateTriggerReminder({remindTime: 8});
-            onCreateTriggerReminder({remindTime: 15});
-            onCreateTriggerReminder({remindTime: 22});
+            // onCreateTriggerReminder({remindTime: 8});
+            // onCreateTriggerReminder({remindTime: 15});
+            // onCreateTriggerReminder({remindTime: 22});
           } catch (e) {
             console.error({e});
           }
