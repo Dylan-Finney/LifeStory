@@ -58,7 +58,7 @@ export const VoteBadge = ({vote}) => {
   );
 };
 
-export const TagBadge = ({tagCount}) => {
+export const LabelBadge = ({tagCount}) => {
   return (
     <View
       style={[
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     width: 12,
   },
   text: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
   },
 });

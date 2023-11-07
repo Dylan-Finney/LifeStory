@@ -116,7 +116,7 @@ import EditSheet from '../../../EditSheet';
 import {Pressable} from '@gluestack-ui/themed';
 import {baseHighlight} from '../../../utils/baseObjects';
 import EmptyStoriesView from '../components/EmptyStoriesView';
-import {TagBadge} from '../../../components/Badge';
+import {LabelBadge} from '../../../components/Badge';
 
 export default StoriesView = () => {
   const {
@@ -526,7 +526,7 @@ export default StoriesView = () => {
                     )} */}
 
                     {Object.values(item.tags).flat().length > 0 && (
-                      <TagBadge
+                      <LabelBadge
                         tagCount={Object.values(item.tags).flat().length}
                       />
                     )}

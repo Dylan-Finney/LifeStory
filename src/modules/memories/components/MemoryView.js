@@ -11,7 +11,7 @@ import PhotoEventIcon from '../../../assets/event-photo.svg';
 import CalendarEventIcon from '../../../assets/calendar-event.svg';
 import SingleMapMemo from '../../../components/SingleMapMemo';
 import {ImageAsset} from '../../../utils/native-modules/NativeImage';
-import {EmotionBadge, VoteBadge} from '../../../components/Badge';
+import {EmotionBadge, LabelBadge, VoteBadge} from '../../../components/Badge';
 import {
   emotionToColor,
   emotionToIcon,
@@ -206,30 +206,7 @@ export default MemoryView = ({
           {item.vote !== 0 && <VoteBadge vote={item.vote} />}
 
           {Object.values(item.tags).flat().length > 0 && (
-            <Box
-              px={10}
-              py={5}
-              backgroundColor={'#DFECF2'}
-              justifyContent="center"
-              flexDirection="row"
-              rounded={'$full'}
-              gap={5}
-              alignItems="center">
-              <Box
-                aspectRatio={1}
-                height={30}
-                width={30}
-                p={4}
-                justifyContent="center"
-                alignItems="center"
-                rounded={'$md'}
-                backgroundColor={'#118ED1'}>
-                <LabelIcon height={25} width={25} primaryColor={'white'} />
-              </Box>
-              <Text style={{color: '#118ED1', fontWeight: 600}}>
-                {Object.values(item.tags).flat().length}
-              </Text>
-            </Box>
+            <LabelBadge tagCount={Object.values(item.tags).flat().length} />
           )}
         </Box>
       </Pressable>
