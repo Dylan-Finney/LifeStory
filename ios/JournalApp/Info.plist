@@ -76,9 +76,11 @@
 		</dict>
 	</dict>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Collects events from the User's day in order to generate a diary entry based on this data </string>
+	<string>Collects events from the User&apos;s day in order to generate a diary entry based on this data </string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Life Story uses your calendar data to generate a diary entry featuring events from your day.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Some calendars shared with users need this permission to be able to be shown and selected. LifeStory does not use your contact informatino for any other purpose.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Life Story uses your location data as part of generating a entry. To allow constant location tracking, please select Always Allow. If you select Only While Using, location data will be limited.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
