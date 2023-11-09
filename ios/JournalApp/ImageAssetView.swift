@@ -19,6 +19,7 @@ class ImageAssetView: UIView {
       let newHeight: CGFloat = CGFloat(Float(integerValue))
       newFrame.size.height = newHeight
       imageView.frame.size.height = newFrame.size.height
+      displayAssetInImageView(localIdentifier: localIdentifier as String)
       
     }
   }
@@ -31,6 +32,7 @@ class ImageAssetView: UIView {
       let newWidth: CGFloat = CGFloat(Float(integerValue))
       newFrame.size.width = newWidth
       imageView.frame.size.width = newFrame.size.width
+      displayAssetInImageView(localIdentifier: localIdentifier as String)
       
     }
   }
@@ -68,7 +70,7 @@ class ImageAssetView: UIView {
          let requestOptions = PHImageRequestOptions()
          requestOptions.isSynchronous = true // You might want to change this for asynchronous loading
 
-         PHImageManager.default().requestImage(for: asset, targetSize: imageView.bounds.size, contentMode: .aspectFit, options: requestOptions) { image, _ in
+         PHImageManager.default().requestImage(for: asset, targetSize: imageView.frame.size, contentMode: .aspectFill, options: requestOptions) { image, _ in
            self.imageView.image = image
           print("hello")
          }

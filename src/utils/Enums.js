@@ -2,6 +2,7 @@ export const EventTypes = {
   PHOTO: 0,
   LOCATION: 1,
   CALENDAR_EVENT: 2,
+  PHOTO_GROUP: 3,
 };
 
 export const Screens = {

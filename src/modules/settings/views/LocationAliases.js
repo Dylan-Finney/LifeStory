@@ -45,7 +45,7 @@ export default LocationAliasesView = ({route, navigation}) => {
               JSON.stringify(dataArr),
             );
             navigation.navigate({
-              name: 'Settings',
+              name: 'Settings_Base',
               merge: true,
             });
           }}

@@ -759,24 +759,23 @@ export default EditSheet = ({
           {['Angry', 'Sad', 'Neutral', 'Positive', 'Excited'].map(
             (val, index) => {
               return (
-                <>
-                  <EmotionButton
-                    key={index}
-                    active={writingStyleSettings.emotion === val}
-                    emotionNum={index + 1}
-                    onPress={() => {
-                      writingStyleSettings.emotion === val
-                        ? setWritingStyleSettings({
-                            ...writingStyleSettings,
-                            emotion: undefined,
-                          })
-                        : setWritingStyleSettings({
-                            ...writingStyleSettings,
-                            emotion: val,
-                          });
-                    }}
-                  />
-                </>
+                <EmotionButton
+                  key={index}
+                  index={index}
+                  active={writingStyleSettings.emotion === val}
+                  emotionNum={index + 1}
+                  onPress={() => {
+                    writingStyleSettings.emotion === val
+                      ? setWritingStyleSettings({
+                          ...writingStyleSettings,
+                          emotion: undefined,
+                        })
+                      : setWritingStyleSettings({
+                          ...writingStyleSettings,
+                          emotion: val,
+                        });
+                  }}
+                />
               );
             },
           )}

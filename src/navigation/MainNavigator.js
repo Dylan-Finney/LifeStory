@@ -190,6 +190,7 @@ const MainNavigator = () => {
     var events = [];
     var locations = [];
     var photos = [];
+    var photosGroups = [];
     // GET CALENDAR EVENTS
     // let startOfUnixTime = moment(date).startOf('day').unix();
 
@@ -308,7 +309,11 @@ const MainNavigator = () => {
           await Promise.all(
             photos.map(async photo => {
               if (photo.lat === 'null') {
-                return photo;
+                return {
+                  ...photo,
+                  creation: Math.floor(parseFloat(photo.creation) * 1000),
+                  data: '',
+                };
               } else {
                 const image = decode(photo.data);
                 const length = image.length;
@@ -317,21 +322,54 @@ const MainNavigator = () => {
                 for (var i = 0; i < length; i++) {
                   ua[i] = image.charCodeAt(i);
                 }
-                var response;
+                var responseLabels;
+                var responseOCR;
                 try {
-                  response = await Rekognition.detectLabels({
+                  responseOCR = await Rekognition.detectText({
                     Image: {Bytes: ua},
                   }).promise();
-                  console.log('Rekognition.detectLabels Response', response);
+                  console.log('Rekognition.detectText Response', responseOCR);
+                } catch (e) {
+                  console.error('Error with Rekognition.detectText', e);
+                  return {
+                    ...photo,
+                    lat: parseFloat(photo.lat),
+                    lon: parseFloat(photo.lon),
+                    creation: Math.floor(parseFloat(photo.creation) * 1000),
+                    data: '',
+                  };
+                }
+                responseOCR = responseOCR.TextDetections.filter(
+                  textDetection =>
+                    textDetection.Confidence >= 80 &&
+                    textDetection.Type === 'LINE',
+                );
+                const TextDetections = responseOCR.map(textDetection => {
+                  return {
+                    Text: textDetection.DetectedText,
+                    Confidence: textDetection.Confidence,
+                  };
+                });
+                console.log({TextDetections});
+                try {
+                  responseLabels = await Rekognition.detectLabels({
+                    Image: {Bytes: ua},
+                  }).promise();
+                  console.log(
+                    'Rekognition.detectLabels Response',
+                    responseLabels,
+                  );
                 } catch (e) {
                   console.error('Error with Rekognition.detectLabels', e);
                   return {
                     ...photo,
                     lat: parseFloat(photo.lat),
                     lon: parseFloat(photo.lon),
+                    creation: Math.floor(parseFloat(photo.creation) * 1000),
+                    data: '',
                   };
                 }
-                const labels = response.Labels;
+                const labels = responseLabels.Labels;
                 const labelsFiltered = labels.filter(
                   label => label.Confidence >= 80,
                 );
@@ -361,16 +399,64 @@ const MainNavigator = () => {
                 console.log({labelsWithTitle});
                 return {
                   ...photo,
+                  data: '',
                   labels: labelsWithTitle,
+                  text: TextDetections,
                   lat: parseFloat(photo.lat),
                   lon: parseFloat(photo.lon),
+                  creation: Math.floor(parseFloat(photo.creation) * 1000),
                 };
               }
             }),
           ).then(res => {
             console.log({res});
             photos = res;
+            var res2 = res.sort((a, b) => a.creation - b.creation);
+            var grouping = [];
+
+            for (var i = 0; i < res2.length; i++) {
+              if (
+                grouping.length > 0 &&
+                res2[i].creation - grouping[grouping.length - 1].creation >
+                  180000
+              ) {
+                photosGroups.push(grouping);
+                grouping = [];
+              }
+              grouping.push(res2[i]);
+              if (i === res2.length - 1 && grouping.length > 0) {
+                photosGroups.push(grouping);
+              }
+            }
+            console.log({photosGroups});
           });
+        } else {
+          console.log('no photo analysis');
+          photos = photos.map(photo => {
+            return {
+              ...photo,
+              data: '',
+              creation: Math.floor(parseFloat(photo.creation) * 1000),
+            };
+          });
+          var res2 = photos.sort((a, b) => a.creation - b.creation);
+          console.log('no photo analysis', {res2});
+          var grouping = [];
+
+          for (var i = 0; i < res2.length; i++) {
+            if (
+              grouping.length > 0 &&
+              res2[i].creation - grouping[grouping.length - 1].creation > 180000
+            ) {
+              photosGroups.push(grouping);
+              grouping = [];
+            }
+            grouping.push(res2[i]);
+            if (i === res2.length - 1 && grouping.length > 0) {
+              photosGroups.push(grouping);
+            }
+          }
+          console.log('photosGroups', JSON.stringify(photosGroups));
         }
       } else {
         Location.getPhotosAccess();
@@ -441,6 +527,7 @@ const MainNavigator = () => {
     } catch (e) {
       console.error({e});
     }
+
     // console.log({photos});
 
     // NOTIFICATIONS
@@ -449,7 +536,7 @@ const MainNavigator = () => {
     CounterEvents.removeAllListeners('photoCount');
     //RETURNS
     return {
-      photos,
+      photosGroups,
       locations,
       events,
     };

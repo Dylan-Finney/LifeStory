@@ -32,6 +32,27 @@ const getAddressName = address => {
   }
 };
 
+const getBestLocationTag = description => {
+  if (description === undefined) {
+    return '';
+  }
+
+  var addressArray = description?.split(',');
+  var index = 0;
+  var alias = getAddressName(addressArray[0].trim());
+  if (alias === '') {
+    for (var i = 0; i < addressArray.length; i++) {
+      if (!/^\d$/.test(addressArray[i].trim().charAt(0))) {
+        index = i;
+        break;
+      }
+    }
+    return addressArray[index].trim();
+  } else {
+    return alias;
+  }
+};
+
 const generateGenericMemory = async ({data, type, time}) => {
   var messages = [];
   var systemPrompt = `You are my assistant. I will give you an event that happened today (location visit, photo taken, route, etc) and I want you to write a brief concise natural description as if it were apart of a diary. Assume that other entries could exist before and after. Write in the ${useSettingsHooks.getString(
@@ -44,15 +65,6 @@ const generateGenericMemory = async ({data, type, time}) => {
 
   switch (type) {
     case EventTypes.LOCATION:
-      var address = data.description?.split(',')[0] || '';
-      var alias = getAddressName(address || '');
-      userPrompt = `Visited ${
-        address !== ''
-          ? `${alias !== '' ? alias : address}`
-          : `${data.lat !== 'null' ? `Lat: ${data.lat}` : ''} ${
-              data.lon !== 'null' ? `Lon: ${data.lon}` : ''
-            }`
-      } @${moment(data.time).format('LT')}`;
       messages = [
         {
           role: 'system',
@@ -97,7 +109,9 @@ const generateGenericMemory = async ({data, type, time}) => {
           role: 'user',
           content: `{
   "geoLocationStay": {
-    "locationTag": "${data.description}",
+    "locationTag": "${getBestLocationTag(
+      data.description?.split('@')[0] || undefined,
+    )}",
     "location":
       "latitude": "${data.lat}",
       "longitude": "${data.lon}"
@@ -180,8 +194,10 @@ const generateGenericMemory = async ({data, type, time}) => {
       break;
     case EventTypes.PHOTO:
       data.data = '';
-      var address = data.description?.split(',')[0] || '';
-      var alias = address === '' ? '' : getAddressName(address);
+
+      var alias = getBestLocationTag(
+        data.description?.split('@')[0] || undefined,
+      );
       // userPrompt = `Photo Taken: ${
       //   data.labels !== undefined
       //     ? `Labels: ${data.labels.map(label => label.title).toString()}`
@@ -254,17 +270,21 @@ const generateGenericMemory = async ({data, type, time}) => {
           content: `{
   "photo": {
     "fileName": "${data.name}",
-    "locationTag": "${data.description}",
+    "locationTag": "${alias}",
     "coordinates": {
       "latitude": "${data.lat}",
       "longitude": "${data.lon}"
     },
-    "timeTaken": "${new Date(
-      Math.floor(parseFloat(data.creation) * 1000),
-    ).toLocaleString()}",
+    "timeTaken": "${new Date(data.creation).toLocaleString()}",
     "imageRecognitionLabels": [
       ${data.labels?.map(label => {
         return `{ "label": "${label.title}", "confidence": ${label.Confidence} },
+`;
+      })}
+    ],
+    "textRecognitionLabels": [
+      ${data.text?.map(label => {
+        return `{ "line": "${label.Text}", "confidence": ${label.Confidence} },
 `;
       })}
     ],
@@ -272,6 +292,99 @@ const generateGenericMemory = async ({data, type, time}) => {
 }`,
         },
       ];
+      console.log('photo message', JSON.stringify(messages));
+      break;
+    case EventTypes.PHOTO_GROUP:
+      messages = [
+        {
+          role: 'system',
+          content: `Your role is to write text entry without titles for a set of photos that are shown in context of your text, based on the data provided and following these instructions:
+
+1. Write in first person
+2. Don’t write about anything that is not included in data provided
+3. Write in neutral and informative tone
+4. Use up to 500 characters
+5. Don't mention exact times, but refer time as ‘early morning’, ‘around noon’, like we would in a typical conversation
+6. Don’t write about ending times, rather refer to approximate duration
+7. Don’t write street names, instead refer to a area location/district and/or popular landmarks names. Ie. like in a typical conversation
+8. Write in today's past tent, but dont say today
+9. Don't mention timezones
+10. Don't mention latitude or longitude coordinates
+11. Don't mention dates
+12. Write only one description while utilizing relevant data available from all photos provided
+13. Don't mention weather if not provided
+14. Don’t write contact data if available (emails, phone numbers, etc), but you can use indicative information if available/relevant ie. persons name
+15. Focus on what image is about and where its taken
+16. Don't mention camera settings
+17. Don't mention image recognition labels
+18. Don't add reference labels
+-----`,
+        },
+        {
+          role: 'user',
+          content: `{
+  "photo": {
+    "fileName": "IMG_20230415_1720.jpg",
+    "locationTag": "Griffith Observatory, Los Angeles",
+    "coordinates": {
+      "latitude": "34.1184° N",
+      "longitude": "118.3004° W"
+    },
+    "timeTaken": "2023-04-15T17:20:00-07:00",
+    "cameraSettings": {
+      "aperture": "f/4.0",
+      "shutterSpeed": "1/500 sec",
+      "ISO": "200",
+      "focalLength": "28mm"
+    },
+    "imageRecognitionLabels": [
+      { "label": "Architecture", "confidence": 100 },
+      { "label": "Building", "confidence": 100 },
+      { "label": "Multiple People", "confidence": 98 }
+    ],
+    "timezone": "PDT"
+  }
+}`,
+        },
+        {
+          role: 'assistant',
+          content: `I spent the late afternoon at Griffith Observatory, Los Angeles. The architecture and observatory dome are prominent in the photos. People in casual clothing enjoyed the outdoor surroundings, with some wearing T-shirts and shorts. The observatory's peak and planetarium are visible. Later, I explored a lush area with slopes, vegetation, and a bicycle.`,
+        },
+        {
+          role: 'user',
+          content: `[
+            ${data.slice(0, 10).map(
+              photo => `{
+  "photo": {
+    "fileName": "${photo.name}",
+    "locationTag": "${getBestLocationTag(
+      photo.description?.split('@')[0] || undefined,
+    )}",
+    "coordinates": {
+      "latitude": "${photo.lat}",
+      "longitude": "${photo.lon}"
+    },
+    "timeTaken": "${new Date(photo.creation).toLocaleString()}",
+    "imageRecognitionLabels": [
+      ${photo.labels?.map(label => {
+        return `{ "label": "${label.title}", "confidence": ${label.Confidence} },
+`;
+      })}
+    ],
+    "textRecognitionLabels": [
+      ${photo.text?.map(label => {
+        return `{ "line": "${label.Text}", "confidence": ${label.Confidence} },
+`;
+      })}
+    ],
+  }
+},
+`,
+            )}
+          ]`,
+        },
+      ];
+
       console.log('photo message', JSON.stringify(messages));
       break;
     default:
@@ -289,8 +402,9 @@ const generateGenericMemory = async ({data, type, time}) => {
   }
   const completion = await openai.createChatCompletion({
     // model: 'gpt-4',
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-3.5-turbo-1106',
     temperature: 0.5,
+    max_tokens: 1053,
     messages,
   });
   const response = completion.data.choices[0].message?.content;
@@ -326,7 +440,7 @@ const generateGenericMemory = async ({data, type, time}) => {
 
 const generateMemories = async ({data, date}) => {
   console.log('Generate Memories');
-  var {locations, events, photos} = data;
+  var {locations, events, photosGroups} = data;
 
   var newMemories = [];
 
@@ -376,25 +490,31 @@ const generateMemories = async ({data, date}) => {
       }),
     ).then(async () => {
       console.log('event finished');
-      console.log({photos});
+      console.log({photosGroups});
       await Promise.allSettled(
-        photos.map(async (photo, index) => {
-          // setLoadingMessage(
-          //   `Creating Photos Memories - ${index + 1}/${photos.length}`,
-          // );
+        photosGroups.map(async (photoGroup, index) => {
           try {
-            var newPhotoMemory = await generateGenericMemory({
-              data: photo,
-              type: EventTypes.PHOTO,
-              time: Math.floor(parseFloat(photo.creation) * 1000),
-            });
-            newMemories.push(newPhotoMemory);
+            if (photoGroup.length > 1) {
+              var newPhotoGroupMemory = await generateGenericMemory({
+                data: photoGroup,
+                type: EventTypes.PHOTO_GROUP,
+                time: photoGroup[0].creation,
+              });
+              newMemories.push(newPhotoGroupMemory);
+            } else {
+              var newPhotoMemory = await generateGenericMemory({
+                data: photoGroup[0],
+                type: EventTypes.PHOTO,
+                time: photoGroup[0].creation,
+              });
+              newMemories.push(newPhotoMemory);
+            }
           } catch (e) {
             console.error(e);
           }
         }),
       ).then(() => {
-        console.log('photos finished');
+        console.log('photosGroups finished');
       });
     });
   });

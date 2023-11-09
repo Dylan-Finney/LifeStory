@@ -20,6 +20,318 @@ import {
 import {View, Text, ScrollView} from 'react-native';
 import {Pressable, Box} from '@gluestack-ui/themed';
 
+const CustomImage = ({identifier, index, length}) => {
+  const baseValues = {
+    width: {
+      base: 165,
+    },
+    height: {
+      base: 200,
+      small: 67,
+    },
+  };
+
+  const width = () => {
+    switch (index) {
+      case 0:
+        return baseValues.width.base;
+      case 1:
+      case 2:
+        switch (length) {
+          case 1:
+          case 2:
+          case 3:
+            return baseValues.width.base;
+          case 4:
+          case 5:
+            return baseValues.width.base / 2;
+          default:
+            return baseValues.width.base / 3;
+        }
+      case 3:
+        switch (length) {
+          case 1:
+          case 2:
+          case 3:
+          case 4:
+            return baseValues.width.base;
+          case 5:
+            return baseValues.width.base / 2;
+          default:
+            return baseValues.width.base / 3;
+        }
+      case 4:
+        switch (length) {
+          case 5:
+            return baseValues.width.base / 2;
+          case 6:
+            return baseValues.width.base / 2;
+          default:
+            return baseValues.width.base / 3;
+        }
+      case 5:
+      case 6:
+        switch (length) {
+          case 0:
+            return baseValues.width.base / 3;
+          case 1:
+            return baseValues.width.base;
+          case 6:
+            return baseValues.width.base / 2;
+          default:
+            return baseValues.width.base / 3;
+        }
+      case 7:
+      case 8:
+      case 9:
+        switch ((length - 1) % 3) {
+          case 0:
+            return baseValues.width.base / 3;
+          case 1:
+            return baseValues.width.base;
+          case 2:
+            return baseValues.width.base / 2;
+        }
+    }
+  };
+
+  const height = () => {
+    switch (length) {
+      case 1:
+      case 2:
+        return baseValues.height.base;
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+        switch (index) {
+          case 0:
+            return baseValues.height.base;
+          default:
+            return baseValues.height.base / 2;
+        }
+      case 7:
+        switch (index) {
+          case 0:
+            return baseValues.height.base;
+          default:
+            return baseValues.height.base / 2;
+        }
+      case 9:
+        switch (index) {
+          case 0:
+            return baseValues.height.base;
+          default:
+            return baseValues.height.small;
+        }
+      default:
+        switch (index) {
+          case 0:
+            return baseValues.height.base;
+          default:
+            return baseValues.height.small;
+        }
+    }
+  };
+
+  const bordersTopLeft = () => {
+    if (index === 0 || index === undefined) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const bordersTopRight = () => {
+    switch (length) {
+      case 3:
+        switch (index) {
+          case 1:
+            return true;
+          default:
+            return false;
+        }
+      default:
+        switch (index) {
+          case length - 1:
+            return true;
+          default:
+            return false;
+        }
+    }
+  };
+
+  const bordersBottomLeft = () => {
+    if (index === 0 || index === undefined) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const bordersBottomRight = () => {
+    switch (length) {
+      case 1:
+        return true;
+      case 2:
+        switch (index) {
+          case 1:
+            return true;
+          default:
+            return false;
+        }
+      case 4:
+      case 3:
+      case 5:
+        switch (index) {
+          case 2:
+            return true;
+          default:
+            return false;
+        }
+      default:
+        switch (index) {
+          case 3:
+            return true;
+          default:
+            return false;
+        }
+    }
+  };
+  return (
+    <View
+      style={{
+        height: height(),
+        // width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        // backgroundColor: 'green',
+        overflow: 'hidden',
+        // borderRadius: 20,
+      }}>
+      <View
+        style={{
+          height: height(),
+          width: width(),
+          // backgroundColor: 'red',
+          borderRadius: 20,
+          borderTopLeftRadius: bordersTopLeft() === true ? 20 : 0,
+          borderTopRightRadius: bordersTopRight() === true ? 20 : 0,
+          borderBottomLeftRadius: bordersBottomLeft() === true ? 20 : 0,
+          borderBottomRightRadius: bordersBottomRight() === true ? 20 : 0,
+          overflow: 'hidden',
+        }}>
+        <ImageAsset
+          localIdentifier={identifier}
+          setHeight={height()}
+          setWidth={width()}
+          // height={1}
+          style={{
+            // flex: 1,
+            height: height(),
+            width: width(),
+          }}
+        />
+      </View>
+    </View>
+  );
+};
+
+const ImageCollage = ({photoGroupData}) => {
+  const length = photoGroupData.length;
+  switch (length) {
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+      return (
+        <View style={{flexDirection: 'row'}}>
+          <CustomImage
+            identifier={photoGroupData[0].localIdentifier}
+            index={0}
+            length={length}
+          />
+          <View style={{flexDirection: 'column'}}>
+            {length > 3 && (
+              <View style={{flexDirection: 'row'}}>
+                {[...Array(length - 3 > 2 ? 2 : length - 3)].map((e, i) => (
+                  <CustomImage
+                    key={i}
+                    identifier={photoGroupData[3 + i].localIdentifier}
+                    index={3 + i}
+                    length={length}
+                  />
+                ))}
+              </View>
+            )}
+            {length > 1 && (
+              <View style={{flexDirection: length === 3 ? 'column' : 'row'}}>
+                {[...Array(length - 1 > 2 ? 2 : length - 1)].map((e, i) => (
+                  <CustomImage
+                    key={i}
+                    identifier={photoGroupData[1 + i].localIdentifier}
+                    index={1 + i}
+                    length={length}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+      );
+    default:
+      return (
+        <View style={{flexDirection: 'row'}}>
+          <CustomImage
+            identifier={photoGroupData[0].localIdentifier}
+            index={0}
+            length={length}
+          />
+          <View style={{flexDirection: 'column'}}>
+            {length > 7 && (
+              <View style={{flexDirection: 'row'}}>
+                {[...Array(length - 7 > 3 ? 3 : length - 7)].map((e, i) => (
+                  <CustomImage
+                    key={i}
+                    identifier={photoGroupData[7 + i].localIdentifier}
+                    index={7 + i}
+                    length={length}
+                  />
+                ))}
+              </View>
+            )}
+
+            {length > 4 && (
+              <View style={{flexDirection: 'row'}}>
+                {[...Array(length - 4 > 3 ? 3 : length - 4)].map((e, i) => (
+                  <CustomImage
+                    key={i}
+                    identifier={photoGroupData[4 + i].localIdentifier}
+                    index={4 + i}
+                    length={length}
+                  />
+                ))}
+              </View>
+            )}
+            {length > 1 && (
+              <View style={{flexDirection: 'row'}}>
+                {[...Array(length - 1 > 3 ? 3 : length - 1)].map((e, i) => (
+                  <CustomImage
+                    key={i}
+                    identifier={photoGroupData[1 + i].localIdentifier}
+                    index={1 + i}
+                    length={length}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+      );
+  }
+};
+
 export default MemoryView = ({
   item,
   index,
@@ -35,6 +347,7 @@ export default MemoryView = ({
       case EventTypes.LOCATION:
         return <LocationEventIcon />;
       case EventTypes.PHOTO:
+      case EventTypes.PHOTO_GROUP:
         return <PhotoEventIcon />;
       case EventTypes.CALENDAR_EVENT:
         return <CalendarEventIcon />;
@@ -111,7 +424,9 @@ export default MemoryView = ({
                   }}>
                   {item.type === EventTypes.LOCATION &&
                     item.eventsData.description}
-                  {item.type === EventTypes.PHOTO && item.eventsData.name}
+                  {item.type === EventTypes.PHOTO && `1 Photo`}
+                  {item.type === EventTypes.PHOTO_GROUP &&
+                    `${item.eventsData.length} Photos`}
                   {item.type === EventTypes.CALENDAR_EVENT &&
                     item.eventsData.title}
                 </Text>
@@ -136,7 +451,7 @@ export default MemoryView = ({
           <View
             style={{
               height: 200,
-              // width: '100%',
+              width: '100%',
               alignItems: 'center',
               justifyContent: 'center',
               overflow: 'hidden',
@@ -145,14 +460,14 @@ export default MemoryView = ({
             <View
               style={{
                 height: 200,
-                width: 200,
+                width: 400,
                 borderRadius: 20,
                 overflow: 'hidden',
               }}>
               <ImageAsset
                 localIdentifier={item.eventsData.localIdentifier}
                 setHeight={200}
-                setWidth={200}
+                setWidth={400}
                 // height={1}
                 style={{
                   // flex: 1,
@@ -163,7 +478,12 @@ export default MemoryView = ({
             </View>
           </View>
         )}
-        {[EventTypes.CALENDAR_EVENT].includes(item.type) &&
+        {[EventTypes.PHOTO_GROUP].includes(item.type) && (
+          <>
+            <ImageCollage photoGroupData={item.eventsData.slice(0, 10)} />
+          </>
+        )}
+        {/* {[EventTypes.CALENDAR_EVENT].includes(item.type) &&
           item.eventsData.notes !== undefined && (
             <ScrollView style={{height: 200}}>
               <Text
@@ -177,7 +497,7 @@ export default MemoryView = ({
                 {item.eventsData.notes}
               </Text>
             </ScrollView>
-          )}
+          )} */}
         <Box flexDirection="row" gap={10} my={20}>
           {item.emotion > 0 && (
             <>

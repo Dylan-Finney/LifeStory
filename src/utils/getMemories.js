@@ -2,6 +2,25 @@ import useDatabaseHooks from './hooks/useDatabaseHooks';
 import {EventTypes} from './Enums';
 import getFormatedTimeString from './getFormattedTimeString';
 const {createVisitsTable, insertData, retrieveData} = useDatabaseHooks();
+
+const formatTime = ({localMemory}) => {
+  switch (parseInt(localMemory.type)) {
+    case EventTypes.CALENDAR_EVENT:
+      return getFormatedTimeString(
+        parseInt(JSON.parse(localMemory.eventsData).start) * 1000,
+        parseInt(JSON.parse(localMemory.eventsData).end) * 1000,
+      );
+    case EventTypes.PHOTO_GROUP:
+      var eventsData = JSON.parse(localMemory.eventsData);
+      return getFormatedTimeString(
+        parseInt(eventsData[0].creation),
+        parseInt(eventsData[eventsData.length - 1].creation),
+      );
+    default:
+      return getFormatedTimeString(parseInt(localMemory.time));
+  }
+};
+
 const getMemories = async () => {
   try {
     console.log('LOADING MEMORIES DATA');
@@ -28,14 +47,7 @@ const getMemories = async () => {
           emotion: parseInt(localMemory.emotion),
           eventsData: JSON.parse(localMemory.eventsData),
           time: parseInt(localMemory.time),
-          formattedTime: [EventTypes.CALENDAR_EVENT].includes(
-            parseInt(localMemory.type),
-          )
-            ? getFormatedTimeString(
-                parseInt(JSON.parse(localMemory.eventsData).start) * 1000,
-                parseInt(JSON.parse(localMemory.eventsData).end) * 1000,
-              )
-            : getFormatedTimeString(parseInt(localMemory.time)),
+          formattedTime: formatTime({localMemory}),
           vote: parseInt(localMemory.vote),
         };
       })
