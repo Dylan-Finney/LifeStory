@@ -937,7 +937,7 @@ const MainNavigator = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F6F6F6',
+    backgroundColor: 'rgb(251,251,251)',
   },
 });
 
