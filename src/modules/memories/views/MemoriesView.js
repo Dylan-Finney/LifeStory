@@ -72,7 +72,7 @@ import {
   emotionToColor,
 } from '../../../utils/emotionFuncs';
 import {getEventIcon} from '../../../utils/getEventIcon';
-
+const itemHeights2 = new Array();
 export default MemoriesView = ({}) => {
   const {
     loadingEntries,
@@ -100,6 +100,7 @@ export default MemoriesView = ({}) => {
   } = useDatabaseHooks();
 
   const [itemHeights, setItemHeights] = useState([]);
+
   // var itemHeights = {};
   const [layoutCounter, setLayoutCounter] = useState(0);
   const [forceCheck, setForceCheck] = useState(false);
@@ -183,6 +184,11 @@ export default MemoriesView = ({}) => {
       console.log('reordered itemHeights', {layoutCounter, itemHeights});
     }
   }, [layoutCounter]);
+
+  // useEffect(() => {
+  //   itemHeights2 = itemHeights2.sort((a, b) => a.index - b.index);
+  //   console.log('reordered', {itemHeights2});
+  // }, [itemHeights2]);
 
   const FlatListHeaderComponent = () => {
     return (
@@ -672,18 +678,18 @@ export default MemoriesView = ({}) => {
                   deleteMemoryData({
                     id: highlightedMemory.id,
                   });
-                  var newItemHeights = itemHeights;
-                  console.log({newItemHeights});
+                  // var newItemHeights = itemHeights2;
+                  // console.log({newItemHeights});
                   for (
                     var i = highlightedMemory.index + 1;
-                    i < newItemHeights.length;
+                    i < itemHeights2.length;
                     i++
                   ) {
-                    newItemHeights[i].index = newItemHeights[i].index - 1;
+                    itemHeights2[i].index = itemHeights2[i].index - 1;
                   }
-                  newItemHeights.splice(highlightedMemory.index, 1);
-                  console.log({newItemHeights});
-                  setItemHeights(newItemHeights);
+                  itemHeights2.splice(highlightedMemory.index, 1);
+                  console.log({itemHeights2});
+                  // itemHeights2 = newItemHeights;
                   closeActionSheet();
                 }}
               />
@@ -923,12 +929,13 @@ export default MemoriesView = ({}) => {
           onScroll={event => {
             const {contentOffset, layoutMeasurement, contentSize} =
               event.nativeEvent;
+            console.log({itemHeights2, contentOffset});
             const yOffset = contentOffset.y;
             const visibleHeight = layoutMeasurement.height;
 
             let totalHeight = 0;
             let visibleIndex = 0;
-            console.log({yOffset, previousYOffset, forceCheck});
+            // console.log({yOffset, previousYOffset, forceCheck});
 
             if (
               yOffset < -30 &&
@@ -950,8 +957,8 @@ export default MemoriesView = ({}) => {
               setForceCheck(false);
             }
 
-            for (let i = 0; i < itemHeights.length; i++) {
-              totalHeight += itemHeights[i].height;
+            for (let i = 0; i < itemHeights2.length; i++) {
+              totalHeight += itemHeights2[i].height;
               if (totalHeight >= yOffset) {
                 visibleIndex = i;
                 break;
@@ -963,11 +970,11 @@ export default MemoriesView = ({}) => {
             ) {
               visibleIndex = memories.length - 1;
             }
-            console.log({
-              yOffset,
-              visibleIndex,
-              itemHeights,
-            });
+            // console.log({
+            //   yOffset,
+            //   visibleIndex,
+            //   itemHeights,
+            // });
             setVisibleIndex(visibleIndex);
             setPreviousYOffset(yOffset);
             scrollOffsetY.setValue(event.nativeEvent.contentOffset.y);
@@ -990,65 +997,25 @@ export default MemoriesView = ({}) => {
               item={item}
               index={index}
               onLayout={event => {
-                // console.log({
-                //   item,
-                //   index,
-                //   length: memories.length,
-                //   layoutCounter,
-                //   itemHeights,
-                //   height: event.nativeEvent.layout.height,
-                // });
-                if (layoutCounter === memories.length) {
-                  console.log('RESET');
-                  // setLayoutCounter(1);
-                  if (index === 0) {
-                    setItemHeights([
-                      {
-                        height: event.nativeEvent.layout.height,
-                        index,
-                      },
-                      ...itemHeights.map(itemHeight => {
-                        return {
-                          ...itemHeight,
-                          index: itemHeight.index + 1,
-                        };
-                      }),
-                    ]);
-                  } else {
-                    setItemHeights([
-                      ...itemHeights,
-                      {
-                        height: event.nativeEvent.layout.height,
-                        index,
-                      },
-                    ]);
-                  }
-
-                  // setItemHeights(array);
-                } else {
-                  setLayoutCounter(layoutCounter + 1);
-                  // var array = itemHeights;
-                  setItemHeights([
-                    ...itemHeights,
-                    {
-                      height: event.nativeEvent.layout.height,
-                      index,
-                    },
-                  ]);
-                  // setItemHeights(array);
-                }
-                // if (index === 0) {
-                //   setItemHeights([]);
-                // } else {
-                //   setItemHeights([
-                //     ...itemHeights,
-                //     event.nativeEvent.layout.height +
-                //       itemHeights.reduce((partialSum, a) => partialSum + a, 0),
-                //   ]);
+                // if (
+                //   itemHeights2.findIndex(
+                //     itemHeight => itemHeight.index === index,
+                //   ) === -1
+                // ) {
+                //   itemHeights2.push({
+                //     height: event.nativeEvent.layout.height,
+                //     index,
+                //   });
                 // }
+                itemHeights2[index] = {
+                  height: event.nativeEvent.layout.height,
+                  index,
+                };
+
                 console.log(`onLayout inner ${index}`, {
                   nativeEvent: event.nativeEvent.layout.height,
                   itemHeights,
+                  itemHeights2,
                   layoutCounter,
                 });
               }}
