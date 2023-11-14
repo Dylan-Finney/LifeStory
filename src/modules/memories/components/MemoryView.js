@@ -19,6 +19,8 @@ import {CustomImage} from './image/CustomImage';
 import {ImageCollage} from './image/ImageCollage';
 import {MemoryEventHeader} from './event/MemoryEventHeader';
 import {LinkView} from './event/LinkView';
+import toDateString from '../../../utils/toDateString';
+import MemoryDivider from './MemoryDivider';
 
 export default MemoryView = ({
   item,
@@ -29,6 +31,7 @@ export default MemoryView = ({
   highlighted,
   devMode,
   lastItem,
+  nextDay,
 }) => {
   // console.log(item.body);
   var newBody = [];
@@ -115,6 +118,9 @@ export default MemoryView = ({
         borderRadius: 20,
         backgroundColor: '#F6F6F6',
       }}>
+      {index === 0 && (
+        <MemoryDivider time={toDateString(item.time).toLocaleUpperCase()} />
+      )}
       <Pressable
         onPressIn={onPressIn}
         onPress={onPress}
@@ -228,13 +234,9 @@ export default MemoryView = ({
         </Box>
       </Pressable>
       {!lastItem && (
-        <View
-          style={{
-            height: 1,
-            width: '100%',
-            marginTop: 20,
-            backgroundColor: 'rgba(11, 11, 11, 0.1)',
-          }}></View>
+        <>
+          <MemoryDivider time={nextDay} />
+        </>
       )}
     </View>
   );

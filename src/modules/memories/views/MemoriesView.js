@@ -996,6 +996,14 @@ export default MemoriesView = ({}) => {
               key={index}
               item={item}
               index={index}
+              nextDay={
+                index < memories.length - 1
+                  ? toDateString(memories[index + 1].time) !==
+                    toDateString(memories[index].time)
+                    ? toDateString(memories[index + 1].time).toLocaleUpperCase()
+                    : undefined
+                  : undefined
+              }
               onLayout={event => {
                 // if (
                 //   itemHeights2.findIndex(

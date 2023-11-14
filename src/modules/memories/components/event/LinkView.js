@@ -5,6 +5,7 @@ import {Pressable} from '@gluestack-ui/themed';
 import {useEffect, useState} from 'react';
 import {parseLink} from '../../../../utils/parseLink';
 import {SvgUri, SvgFromUri} from 'react-native-svg';
+import {decode} from 'html-entities';
 import {
   META_TAGS_REGEX,
   TAGS_CONTENT_REGEX,
@@ -69,7 +70,7 @@ export const LinkView = ({url, body, onPressIn}) => {
         setData({
           ...newData,
           title: getAttribute(titleKeywords),
-          description: getAttribute(descKeywords),
+          description: decode(getAttribute(descKeywords), {level: 'html5'}),
           image: getAttribute(imageKeywords),
         });
 
@@ -114,7 +115,7 @@ export const LinkView = ({url, body, onPressIn}) => {
               style={{
                 justifyContent: 'center',
                 alignContent: 'center',
-                backgroundColor: '#E0E0E0',
+                // backgroundColor: '#E5F1FF',
                 height: 200,
                 borderRadius: 20,
               }}>
@@ -139,6 +140,7 @@ export const LinkView = ({url, body, onPressIn}) => {
                 width: 330,
                 height: 200,
                 borderRadius: 20,
+                // backgroundColor: 'white',
                 // transform: [{scale: 0.5}],
               }}
             />

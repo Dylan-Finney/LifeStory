@@ -488,41 +488,41 @@ const MainNavigator = () => {
           );
         });
 
-        await new Promise((resolve, reject) => {
-          Alert.alert(
-            'Include Other Photos',
-            'Photos downloaded or from Third Party apps WILL be included in your entries.\nDo you wish to proceed? Select no to exclude these photos.',
+        // await new Promise((resolve, reject) => {
+        //   Alert.alert(
+        //     'Include Other Photos',
+        //     'Photos downloaded or from Third Party apps WILL be included in your entries.\nDo you wish to proceed? Select no to exclude these photos.',
 
-            [
-              {
-                text: 'Yes',
-                style: 'default',
-                onPress: () => {
-                  // setIncludeDownloadedPhotos(true);
-                  useSettingsHooks.set(
-                    'settings.includeDownloadedPhotos',
-                    true,
-                  );
-                  includeDownloadedPhotosCheck = true;
-                  resolve(true);
-                },
-              },
-              {
-                text: 'No',
-                style: 'cancel',
-                onPress: () => {
-                  // setIncludeDownloadedPhotos(false);
-                  useSettingsHooks.set(
-                    'settings.includeDownloadedPhotos',
-                    false,
-                  );
-                  includeDownloadedPhotosCheck = false;
-                  resolve(false);
-                },
-              },
-            ],
-          );
-        });
+        //     [
+        //       {
+        //         text: 'Yes',
+        //         style: 'default',
+        //         onPress: () => {
+        //           // setIncludeDownloadedPhotos(true);
+        //           useSettingsHooks.set(
+        //             'settings.includeDownloadedPhotos',
+        //             true,
+        //           );
+        //           includeDownloadedPhotosCheck = true;
+        //           resolve(true);
+        //         },
+        //       },
+        //       {
+        //         text: 'No',
+        //         style: 'cancel',
+        //         onPress: () => {
+        //           // setIncludeDownloadedPhotos(false);
+        //           useSettingsHooks.set(
+        //             'settings.includeDownloadedPhotos',
+        //             false,
+        //           );
+        //           includeDownloadedPhotosCheck = false;
+        //           resolve(false);
+        //         },
+        //       },
+        //     ],
+        //   );
+        // });
       }
     } catch (e) {
       console.error({e});
