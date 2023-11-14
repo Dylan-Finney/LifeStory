@@ -12,9 +12,9 @@ export default isMemoryReadyToGenerate = () => {
   if (date.getHours() >= 22 || date.getHours() < 8) {
     // to generate 15-21:59
     //check if can
-    console.log('current time between 10:00PM and 08:00AM');
+    // console.log('current time between 10:00PM and 08:00AM');
 
-    console.log(lastMemoryCheckTime.toLocaleString());
+    // console.log(lastMemoryCheckTime.toLocaleString());
     const yesterday = new Date(date.getTime());
     yesterday.setDate(yesterday.getDate() - 1);
     if (

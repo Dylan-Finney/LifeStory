@@ -1035,6 +1035,9 @@ export default FullHomeView = ({route, navigation}) => {
     var includeDownloadedPhotosCheck =
       useSettingsHooks.getBoolean('settings.includeDownloadedPhotos') || false;
 
+    var photoAnalysis =
+      useSettingsHooks.getBoolean('settings.photoAnalysis') || false;
+
     try {
       if (onboarding === false) {
         photos = await Location.getPhotosFromNative(

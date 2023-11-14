@@ -1,336 +1,24 @@
 import {EventTypes, emotionAttributes} from '../../../utils/Enums';
 // import CalendarEventIcon from '../../../assets/calendar-event.svg';
-import LabelIcon from '../../../assets/Labelling.svg';
-import AngerIcon from '../../../assets/emotions/Anger.svg';
-import FrownIcon from '../../../assets/emotions/Frown.svg';
-import GrinIcon from '../../../assets/emotions/Grin.svg';
-import NeutralIcon from '../../../assets/emotions/Neutral.svg';
-import SmileIcon from '../../../assets/emotions/Smile.svg';
-import LocationEventIcon from '../../../assets/event-location.svg';
-import PhotoEventIcon from '../../../assets/event-photo.svg';
-import CalendarEventIcon from '../../../assets/calendar-event.svg';
 import SingleMapMemo from '../../../components/SingleMapMemo';
-import {ImageAsset} from '../../../utils/native-modules/NativeImage';
 import {EmotionBadge, LabelBadge, VoteBadge} from '../../../components/Badge';
 import {
   emotionToColor,
   emotionToIcon,
   emotionToString,
 } from '../../../utils/emotionFuncs';
-import {View, Text, ScrollView} from 'react-native';
+import {View, Text, Linking} from 'react-native';
 import {Pressable, Box} from '@gluestack-ui/themed';
-
-const CustomImage = ({identifier, index, length}) => {
-  const baseValues = {
-    width: {
-      base: 165,
-    },
-    height: {
-      base: 200,
-      small: 67,
-    },
-  };
-
-  const width = () => {
-    switch (index) {
-      case 0:
-        return baseValues.width.base;
-      case 1:
-      case 2:
-        switch (length) {
-          case 1:
-          case 2:
-          case 3:
-            return baseValues.width.base;
-          case 4:
-          case 5:
-            return baseValues.width.base / 2;
-          default:
-            return baseValues.width.base / 3;
-        }
-      case 3:
-        switch (length) {
-          case 1:
-          case 2:
-          case 3:
-          case 4:
-            return baseValues.width.base;
-          case 5:
-            return baseValues.width.base / 2;
-          default:
-            return baseValues.width.base / 3;
-        }
-      case 4:
-        switch (length) {
-          case 5:
-            return baseValues.width.base / 2;
-          case 6:
-            return baseValues.width.base / 2;
-          default:
-            return baseValues.width.base / 3;
-        }
-      case 5:
-      case 6:
-        switch (length) {
-          case 0:
-            return baseValues.width.base / 3;
-          case 1:
-            return baseValues.width.base;
-          case 6:
-            return baseValues.width.base / 2;
-          default:
-            return baseValues.width.base / 3;
-        }
-      case 7:
-      case 8:
-      case 9:
-        switch ((length - 1) % 3) {
-          case 0:
-            return baseValues.width.base / 3;
-          case 1:
-            return baseValues.width.base;
-          case 2:
-            return baseValues.width.base / 2;
-        }
-    }
-  };
-
-  const height = () => {
-    switch (length) {
-      case 1:
-      case 2:
-        return baseValues.height.base;
-      case 3:
-      case 4:
-      case 5:
-      case 6:
-      case 7:
-        switch (index) {
-          case 0:
-            return baseValues.height.base;
-          default:
-            return baseValues.height.base / 2;
-        }
-      case 7:
-        switch (index) {
-          case 0:
-            return baseValues.height.base;
-          default:
-            return baseValues.height.base / 2;
-        }
-      case 9:
-        switch (index) {
-          case 0:
-            return baseValues.height.base;
-          default:
-            return baseValues.height.small;
-        }
-      default:
-        switch (index) {
-          case 0:
-            return baseValues.height.base;
-          default:
-            return baseValues.height.small;
-        }
-    }
-  };
-
-  const bordersTopLeft = () => {
-    if (index === 0 || index === undefined) {
-      return true;
-    } else {
-      return false;
-    }
-  };
-
-  const bordersTopRight = () => {
-    switch (length) {
-      case 3:
-        switch (index) {
-          case 1:
-            return true;
-          default:
-            return false;
-        }
-      default:
-        switch (index) {
-          case length - 1:
-            return true;
-          default:
-            return false;
-        }
-    }
-  };
-
-  const bordersBottomLeft = () => {
-    if (index === 0 || index === undefined) {
-      return true;
-    } else {
-      return false;
-    }
-  };
-
-  const bordersBottomRight = () => {
-    switch (length) {
-      case 1:
-        return true;
-      case 2:
-        switch (index) {
-          case 1:
-            return true;
-          default:
-            return false;
-        }
-      case 4:
-      case 3:
-      case 5:
-        switch (index) {
-          case 2:
-            return true;
-          default:
-            return false;
-        }
-      default:
-        switch (index) {
-          case 3:
-            return true;
-          default:
-            return false;
-        }
-    }
-  };
-  return (
-    <View
-      style={{
-        height: height(),
-        // width: '100%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        // backgroundColor: 'green',
-        overflow: 'hidden',
-        // borderRadius: 20,
-      }}>
-      <View
-        style={{
-          height: height(),
-          width: width(),
-          // backgroundColor: 'red',
-          borderRadius: 20,
-          borderTopLeftRadius: bordersTopLeft() === true ? 20 : 0,
-          borderTopRightRadius: bordersTopRight() === true ? 20 : 0,
-          borderBottomLeftRadius: bordersBottomLeft() === true ? 20 : 0,
-          borderBottomRightRadius: bordersBottomRight() === true ? 20 : 0,
-          overflow: 'hidden',
-        }}>
-        <ImageAsset
-          localIdentifier={identifier}
-          setHeight={height()}
-          setWidth={width()}
-          // height={1}
-          style={{
-            // flex: 1,
-            height: height(),
-            width: width(),
-          }}
-        />
-      </View>
-    </View>
-  );
-};
-
-const ImageCollage = ({photoGroupData}) => {
-  const length = photoGroupData.length;
-  switch (length) {
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-      return (
-        <View style={{flexDirection: 'row'}}>
-          <CustomImage
-            identifier={photoGroupData[0].localIdentifier}
-            index={0}
-            length={length}
-          />
-          <View style={{flexDirection: 'column'}}>
-            {length > 3 && (
-              <View style={{flexDirection: 'row'}}>
-                {[...Array(length - 3 > 2 ? 2 : length - 3)].map((e, i) => (
-                  <CustomImage
-                    key={i}
-                    identifier={photoGroupData[3 + i].localIdentifier}
-                    index={3 + i}
-                    length={length}
-                  />
-                ))}
-              </View>
-            )}
-            {length > 1 && (
-              <View style={{flexDirection: length === 3 ? 'column' : 'row'}}>
-                {[...Array(length - 1 > 2 ? 2 : length - 1)].map((e, i) => (
-                  <CustomImage
-                    key={i}
-                    identifier={photoGroupData[1 + i].localIdentifier}
-                    index={1 + i}
-                    length={length}
-                  />
-                ))}
-              </View>
-            )}
-          </View>
-        </View>
-      );
-    default:
-      return (
-        <View style={{flexDirection: 'row'}}>
-          <CustomImage
-            identifier={photoGroupData[0].localIdentifier}
-            index={0}
-            length={length}
-          />
-          <View style={{flexDirection: 'column'}}>
-            {length > 7 && (
-              <View style={{flexDirection: 'row'}}>
-                {[...Array(length - 7 > 3 ? 3 : length - 7)].map((e, i) => (
-                  <CustomImage
-                    key={i}
-                    identifier={photoGroupData[7 + i].localIdentifier}
-                    index={7 + i}
-                    length={length}
-                  />
-                ))}
-              </View>
-            )}
-
-            {length > 4 && (
-              <View style={{flexDirection: 'row'}}>
-                {[...Array(length - 4 > 3 ? 3 : length - 4)].map((e, i) => (
-                  <CustomImage
-                    key={i}
-                    identifier={photoGroupData[4 + i].localIdentifier}
-                    index={4 + i}
-                    length={length}
-                  />
-                ))}
-              </View>
-            )}
-            {length > 1 && (
-              <View style={{flexDirection: 'row'}}>
-                {[...Array(length - 1 > 3 ? 3 : length - 1)].map((e, i) => (
-                  <CustomImage
-                    key={i}
-                    identifier={photoGroupData[1 + i].localIdentifier}
-                    index={1 + i}
-                    length={length}
-                  />
-                ))}
-              </View>
-            )}
-          </View>
-        </View>
-      );
-  }
-};
+import {
+  TITLE_REGEX,
+  URL_REGEX,
+  CUSTOM_HYPERLINK_REGEX,
+} from '../../../utils/regex';
+import {parseLink} from '../../../utils/parseLink';
+import {CustomImage} from './image/CustomImage';
+import {ImageCollage} from './image/ImageCollage';
+import {MemoryEventHeader} from './event/MemoryEventHeader';
+import {LinkView} from './event/LinkView';
 
 export default MemoryView = ({
   item,
@@ -342,17 +30,80 @@ export default MemoryView = ({
   devMode,
   lastItem,
 }) => {
-  const getEventIcon = type => {
-    switch (type) {
-      case EventTypes.LOCATION:
-        return <LocationEventIcon />;
-      case EventTypes.PHOTO:
-      case EventTypes.PHOTO_GROUP:
-        return <PhotoEventIcon />;
-      case EventTypes.CALENDAR_EVENT:
-        return <CalendarEventIcon />;
-    }
-  };
+  // console.log(item.body);
+  var newBody = [];
+  var newBody2 = [];
+  var matches2 = [];
+  var splitBody2 = [];
+  var formattedText2 = [];
+  var links2 = [];
+  var linksFinal = [];
+  // var match;
+  // while ((match = /\[([^\]]+)\]\([^)]+\)/g.exec(item.body)) !== null) {
+  //   console.log({match});
+  //   if (match !== null) {
+  //     newBody.push(match);
+  //   }
+  // }
+
+  //Example Body: "This is a text based from the www.google.com website. This [image](www.imageurl.com) is from the internet."
+
+  //Splits the memory body everytime there is a custom hyperlink
+  //E.g. ["This is a text based from the www.google.com website. This ", "image", " is from the internet."]
+  newBody = item.body.split(CUSTOM_HYPERLINK_REGEX);
+
+  //Get all custom hyperlinks ([text](link)) from the memory
+  //E.g. ["[image](www.imageurl.com)"]
+  newBody2 = item.body.match(CUSTOM_HYPERLINK_REGEX);
+
+  //Get all the either the first URL from the hyperlink or return null
+  //E.g. ["www.imageurl.com"]
+  newBody2?.map((test, testIndex) => {
+    var newLinkStr = test.substring(
+      `[${newBody[1 + 2 * testIndex]}](`.length,
+      test.length - 1,
+    );
+    var matches = newLinkStr.match(URL_REGEX);
+    links2.push(matches?.length > 0 ? matches[0] : null);
+    // links2.push(test.match(URL_REGEX));
+  });
+
+  //For all parts of the body that is not a hyperlink, get all of the urls and split the part based on the url
+  // E.g. ["This is a text based from the www.google.com website. This ", " is from the internet."] ->
+  // [["www.google.com"], null]
+  // [["This is a text based from the " , " website. This "], [" is from the internet."]]
+  for (var i = 0; i < newBody.length; i = i + 2) {
+    matches2.push(newBody[i].match(URL_REGEX));
+    splitBody2.push(newBody[i].split(URL_REGEX));
+  }
+
+  //Creates an array of the formatted Text, every even index should be normal text. Every odd index should be either hyperlink or URL.
+  //["This is a text based from the", "www.google.com", " website. This ","image", " is from the internet."]
+  splitBody2.map((splitBody, index) => {
+    splitBody.map((part, index2) => {
+      formattedText2.push(part);
+      if (matches2[index]?.length > 0 && index2 !== splitBody.length - 1) {
+        formattedText2.push(matches2[index][index2]);
+      }
+    });
+    // if (index % 2 === 1) {
+    formattedText2.push(newBody[1 + 2 * index]);
+    // }
+    // formattedText2.push(matches2[index][index2]);
+  });
+
+  //Ordered array of links ordered as they appear in memory
+  // ["www.google.com","www.imageurl.com"]
+  for (var i = 0; i < Math.floor(newBody.length / 2); i++) {
+    matches2[i]?.map(link => {
+      linksFinal.push(link !== null && link);
+    });
+    // if (links2[i] !== null) linksFinal.push(links2[i]);
+    linksFinal.push(links2[i]);
+  }
+  matches2[Math.floor(newBody.length / 2)]?.map(link => {
+    linksFinal.push(link);
+  });
 
   return (
     <View
@@ -371,76 +122,50 @@ export default MemoryView = ({
         py={15}
         rounded={'$md'}
         backgroundColor={highlighted ? '#E9E9E9' : '#F6F6F6'}>
-        <Text
-          allowFontScaling={false}
-          style={{
-            fontSize: 18,
-            lineHeight: 24,
-            fontWeight: 400,
-            color: '#0b0b0bcc',
-          }}>
-          {item.body}
+        <Text>
+          {formattedText2.map((text, index) => {
+            var baseStyles = {
+              fontSize: 18,
+              lineHeight: 24,
+              fontWeight: 400,
+              color: '#0b0b0bcc',
+            };
+            const isLink = index % 2 === 1;
+            return (
+              <Text
+                key={index}
+                allowFontScaling={false}
+                onPress={
+                  isLink && linksFinal[Math.floor(index / 2)] !== null
+                    ? () => {
+                        Linking.openURL(
+                          parseLink(linksFinal[Math.floor(index / 2)]),
+                        );
+                      }
+                    : null
+                }
+                style={{
+                  ...baseStyles,
+                  color: isLink ? '#118ED1' : '#0b0b0bcc',
+                  textDecorationLine: isLink ? 'underline' : 'none',
+                }}>
+                {text}
+              </Text>
+            );
+          })}
         </Text>
-        {/* <Text
-                  allowFontScaling={false}
-                  style={{
-                    fontSize: 18,
-                    lineHeight: 24,
-                    fontWeight: 400,
-                    color: '#0b0b0bcc',
-                  }}>
-                  {new Date(item.time).toLocaleString()}
-                </Text> */}
         {devMode === true && (
           <Text allowFontScaling={false} style={{paddingVertical: 5}}>
             {JSON.stringify(item)}
           </Text>
         )}
         {item.type > -1 && (
-          <View style={{marginTop: 20}}>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 10,
-              }}>
-              <View
-                style={{
-                  padding: 5,
-                  borderRadius: 30,
-                  borderWidth: 2,
-                  borderColor: '#EAEAEA',
-                  backgroundColor: 'white',
-                }}>
-                {getEventIcon(item.type)}
-              </View>
-              <View>
-                <Text
-                  numberOfLines={item.type === EventTypes.PHOTO ? 1 : undefined}
-                  style={{
-                    color: 'rgba(11, 11, 11, 0.8)',
-                    fontWeight: 600,
-                    marginRight: 50,
-                  }}>
-                  {item.type === EventTypes.LOCATION &&
-                    item.eventsData.description}
-                  {item.type === EventTypes.PHOTO && `1 Photo`}
-                  {item.type === EventTypes.PHOTO_GROUP &&
-                    `${item.eventsData.length} Photos`}
-                  {item.type === EventTypes.CALENDAR_EVENT &&
-                    item.eventsData.title}
-                </Text>
-                <Text
-                  style={{
-                    color: 'rgba(11, 11, 11, 0.6)',
-                  }}>
-                  {item.formattedTime}
-                </Text>
-              </View>
-            </View>
-          </View>
+          <MemoryEventHeader
+            desc={item.formattedTime}
+            type={item.type}
+            eventsData={item.eventsData}
+          />
         )}
-
         {[EventTypes.LOCATION].includes(item.type) && (
           <SingleMapMemo
             lat={item.eventsData.lat}
@@ -448,56 +173,28 @@ export default MemoryView = ({
           />
         )}
         {[EventTypes.PHOTO].includes(item.type) && (
-          <View
-            style={{
-              height: 200,
-              width: '100%',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-              borderRadius: 20,
-            }}>
-            <View
-              style={{
-                height: 200,
-                width: 400,
-                borderRadius: 20,
-                overflow: 'hidden',
-              }}>
-              <ImageAsset
-                localIdentifier={item.eventsData.localIdentifier}
-                setHeight={200}
-                setWidth={400}
-                // height={1}
-                style={{
-                  // flex: 1,
-                  height: 200,
-                  width: 200,
-                }}
-              />
-            </View>
-          </View>
+          <CustomImage
+            identifier={item.eventsData.localIdentifier}
+            index={0}
+            length={1}
+          />
         )}
         {[EventTypes.PHOTO_GROUP].includes(item.type) && (
           <>
             <ImageCollage photoGroupData={item.eventsData.slice(0, 10)} />
           </>
         )}
-        {/* {[EventTypes.CALENDAR_EVENT].includes(item.type) &&
-          item.eventsData.notes !== undefined && (
-            <ScrollView style={{height: 200}}>
-              <Text
-                style={
-                  {
-                    // overflow: 'scroll',
-                    // width: '100%',
-                    // height: 200,
-                  }
-                }>
-                {item.eventsData.notes}
-              </Text>
-            </ScrollView>
-          )} */}
+        {linksFinal?.map(
+          (url, index) =>
+            url !== null && (
+              <LinkView
+                url={url}
+                body={item.body}
+                key={index}
+                onPressIn={onPressIn}
+              />
+            ),
+        )}
         <Box flexDirection="row" gap={10} my={20}>
           {item.emotion > 0 && (
             <>

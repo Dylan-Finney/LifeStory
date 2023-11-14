@@ -66,6 +66,12 @@ import EmptyMemoriesView from '../components/EmptyMemoriesView';
 import getNextMemoryTime from '../../../utils/getNextMemoryTime';
 import EmotionButton from '../../../components/EmotionButton';
 import MemoryView from '../components/MemoryView';
+import {
+  emotionToIcon,
+  emotionToString,
+  emotionToColor,
+} from '../../../utils/emotionFuncs';
+import {getEventIcon} from '../../../utils/getEventIcon';
 
 export default MemoriesView = ({}) => {
   const {
@@ -136,8 +142,14 @@ export default MemoriesView = ({}) => {
   const timeToSegment = time => {
     const date = new Date(time);
     const hour = date.getHours();
+    const dateStr = toDateString(time);
     if (hour < 2) {
-      return 'Night';
+      switch (dateStr) {
+        case 'Today':
+          return 'Last Night';
+        default:
+          return 'Night';
+      }
     } else if (hour < 12) {
       return 'Morning';
     } else if (hour < 17) {
@@ -150,145 +162,6 @@ export default MemoriesView = ({}) => {
   };
   const scrollRef = createRef();
   const [highlightedMemory, setHighlightedMemory] = useState(baseHighlight);
-  const getEventIcon = type => {
-    switch (type) {
-      case EventTypes.LOCATION:
-        return <LocationEventIcon />;
-      case EventTypes.PHOTO:
-        return <PhotoEventIcon />;
-      case EventTypes.CALENDAR_EVENT:
-        return <CalendarEventIcon />;
-    }
-  };
-  const emotions = {
-    NA: 0,
-    HORRIBLE: 1,
-    BAD: 2,
-    NEUTRAL: 3,
-    GOOD: 4,
-    GREAT: 5,
-  };
-
-  const emotionAttributes = {
-    BORDER: 0,
-    BACKGROUND: 1,
-    STROKE: 2,
-  };
-
-  const emotionToColor = ({emotion, need}) => {
-    switch (emotion) {
-      case emotions.HORRIBLE:
-        switch (need) {
-          case emotionAttributes.BORDER:
-            return '#E7E7E7';
-          case emotionAttributes.STROKE:
-            return '#E93535';
-          case emotionAttributes.BACKGROUND:
-            return '#FDEBEB';
-          default:
-            return 'black';
-        }
-      case emotions.BAD:
-        switch (need) {
-          case emotionAttributes.BORDER:
-            return '#E7E7E7';
-          case emotionAttributes.STROKE:
-            return '#C839D4';
-          case emotionAttributes.BACKGROUND:
-            return '#F9EBFB';
-          default:
-            return 'black';
-        }
-      case emotions.NEUTRAL:
-        switch (need) {
-          case emotionAttributes.BORDER:
-            return '#E7E7E7';
-          case emotionAttributes.STROKE:
-            return '#6D6D6D';
-          case emotionAttributes.BACKGROUND:
-            return '#E7E7E7';
-          default:
-            return 'black';
-        }
-      case emotions.GOOD:
-        switch (need) {
-          case emotionAttributes.BORDER:
-            return '#E7E7E7';
-          case emotionAttributes.STROKE:
-            return '#118ED1';
-          case emotionAttributes.BACKGROUND:
-            return '#E7F4FA';
-          default:
-            return 'black';
-        }
-      case emotions.GREAT:
-        switch (need) {
-          case emotionAttributes.BORDER:
-            return '#E7E7E7';
-          case emotionAttributes.STROKE:
-            return '#11A833';
-          case emotionAttributes.BACKGROUND:
-            return '#E7F6EB';
-          default:
-            return 'black';
-        }
-      default:
-        switch (need) {
-          case emotionAttributes.BORDER:
-            return '#E7E7E7';
-          case emotionAttributes.STROKE:
-            return 'black';
-          case emotionAttributes.BACKGROUND:
-            return 'black';
-          default:
-            return 'black';
-        }
-    }
-  };
-
-  const emotionToIcon = ({emotion, active, color}) => {
-    const primaryColor =
-      color === undefined
-        ? active
-          ? emotionToColor({
-              emotion,
-              need: emotionAttributes.STROKE,
-            })
-          : '#0b0b0b99'
-        : color;
-    switch (emotion) {
-      case emotions.HORRIBLE:
-        return <AngerIcon primaryColor={primaryColor} />;
-      case emotions.BAD:
-        return <FrownIcon primaryColor={primaryColor} />;
-      case emotions.NEUTRAL:
-        return <NeutralIcon primaryColor={primaryColor} />;
-      case emotions.GOOD:
-        return <SmileIcon primaryColor={primaryColor} />;
-      case emotions.GREAT:
-        return <GrinIcon primaryColor={primaryColor} />;
-      default:
-        return <></>;
-    }
-  };
-
-  const emotionToString = emotion => {
-    switch (emotion) {
-      case emotions.HORRIBLE:
-        return 'Bad';
-      case emotions.BAD:
-        return 'Sad';
-      case emotions.NEUTRAL:
-        return 'Neutral';
-      case emotions.GOOD:
-        return 'Glad';
-      case emotions.GREAT:
-        return 'Happy';
-
-      default:
-        return 'N/A';
-    }
-  };
 
   useEffect(() => {
     const test = async () => {
@@ -778,38 +651,6 @@ export default MemoriesView = ({}) => {
                   ).flat().length
                 }
               />
-              {/* <NewModalItem
-                  boldText={'Redo'}
-                  normalText={''}
-                  icon={
-                    <DownvoteIcon
-                      stroke={theme.entry.buttons.toggle.icon.inactive}
-                    />
-                  }
-                  onPress={() => {
-                    var updatedMemories = [...memories];
-                    var memory = updatedMemories[highlightedMemory.index];
-                    memory.tags = {
-                      roles: [],
-                      modes: [],
-                      other: [],
-                    };
-                    updatedMemories[highlightedMemory.index] = memory;
-                    setMemories(updatedMemories);
-                    updateMemoryData({
-                      tags: JSON.stringify(memory.tags),
-                      type: memory.type,
-                      body: memory.body,
-                      bodyModifiedAt: memory.bodyModifiedAt,
-                      bodyModifiedSource: memory.bodyModifiedSource,
-                      emotion: memory.emotion,
-                      eventsData: JSON.stringify(memory.eventsData),
-                      time: memory.time,
-                      vote: memory.vote,
-                      id: highlightedMemory.id,
-                    });
-                  }}
-                /> */}
               <NewModalItem
                 boldText={'Edit'}
                 normalText={'manually or with the help of AI'}

@@ -1,6 +1,3 @@
-import useSettingsHooks from '../../../utils/hooks/useSettingsHooks';
-import AMImage from '../../../assets/AMImage.png';
-import PMImage from '../../../assets/PMImage.png';
 import {Box} from '@gluestack-ui/themed';
 import {
   ScrollView,
