@@ -89,10 +89,10 @@ export default LabellingSheet = ({
   console.log({activeLabels});
   const [selectedLabels, setSelectedLabels] = useState({
     roles: activeLabels.roles || [],
-    modes: activeLabels.roles || [],
-    other: activeLabels.roles || [],
+    modes: activeLabels.modes || [],
+    other: activeLabels.other || [],
   });
-
+  console.log({selectedLabels});
   const handleLabelClick = ({item, type}) => {
     console.log({item, type, selectedLabels});
     var indexInSelectedLabels = selectedLabels[type].findIndex(

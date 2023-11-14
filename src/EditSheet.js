@@ -328,7 +328,7 @@ const rewriteRequest = async ({attr, action, tempVal, tone, emotion}) => {
             {
               role: 'system',
               content:
-                'Your job is to rewrite the contents of a diary entry to adhere to the provided emotion and tone, and lengthen the entry such that it provides the same information in more characters. The diary entry should be based on the current contents of the diary entry. Respond with just the diary entry contents, e.g. Today was a good day.',
+                'Your job is to rewrite the contents of a diary entry to adhere to the provided emotion and tone, and lengthen the entry such that it provides the same information in more characters. Be reasonable in the increase of characters. DO NOT write a novel. Only aim to add 50-200 more words. The diary entry should only be based on the current contents of the diary entry. Respond with just the diary entry contents, e.g. Today was a good day.',
             },
             {
               role: 'user',
@@ -400,7 +400,7 @@ const EditTextArea = ({
             backgroundColor={
               loadingAction.action === actions.REWRITE &&
               loadingAction.attr === attr
-                ? 'green'
+                ? '#E7F4FA'
                 : 'white'
             }
             rounded={'$md'}
@@ -431,9 +431,9 @@ const EditTextArea = ({
           </Pressable>
           <Pressable
             backgroundColor={
-              loadingAction.action === actions.REWRITE &&
+              loadingAction.action === actions.LENGTHEN &&
               loadingAction.attr === attr
-                ? 'green'
+                ? '#E7F4FA'
                 : 'white'
             }
             rounded={'$md'}
@@ -463,9 +463,9 @@ const EditTextArea = ({
           </Pressable>
           <Pressable
             backgroundColor={
-              loadingAction.action === actions.REWRITE &&
+              loadingAction.action === actions.SHORTEN &&
               loadingAction.attr === attr
-                ? 'green'
+                ? '#E7F4FA'
                 : 'white'
             }
             rounded={'$md'}
@@ -498,7 +498,7 @@ const EditTextArea = ({
               backgroundColor={
                 loadingAction.action === actions.REVERSE &&
                 loadingAction.attr === attr
-                  ? 'green'
+                  ? '#E7F4FA'
                   : 'white'
               }
               rounded={'$md'}
