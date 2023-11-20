@@ -106,7 +106,7 @@ const OtherModal = ({visible, onClose}) => {
             allowFontScaling={false}
             style={{
               color: theme.colors.error,
-              fontWeight: 500,
+              fontWeight: 700,
               fontSize: 14,
             }}
             onPress={() => {
@@ -144,7 +144,7 @@ const OtherModal = ({visible, onClose}) => {
             allowFontScaling={false}
             style={{
               color: theme.colors.error,
-              fontWeight: 500,
+              fontWeight: 700,
               fontSize: 14,
             }}
             onPress={() => {
