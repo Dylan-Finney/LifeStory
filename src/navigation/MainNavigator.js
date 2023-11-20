@@ -33,6 +33,9 @@ import Location from '../../src/utils/native-modules/NativeFuncs.js';
 import generateMemories from '../utils/generateMemories';
 import {decode, encode} from 'base-64';
 
+import {ThemeProvider} from '../theme/ThemeContext';
+import {ModalProvider} from '../contexts/ModalContext';
+
 const RootStack = createNativeStackNavigator();
 const {Configuration, OpenAIApi} = require('openai');
 
@@ -900,37 +903,41 @@ const MainNavigator = () => {
   };
 
   return (
-    <NavigationContainer>
-      <RootStack.Navigator
-        initialRouteName="AnimatedLaunchScreen"
-        screenOptions={{headerShown: false}}>
-        <RootStack.Screen
-          name="AnimatedLaunchScreen"
-          component={AnimatedLaunchScreen}
-        />
+    <ThemeProvider isDarkMode={false}>
+      <ModalProvider>
+        <NavigationContainer>
+          <RootStack.Navigator
+            initialRouteName="AnimatedLaunchScreen"
+            screenOptions={{headerShown: false}}>
+            <RootStack.Screen
+              name="AnimatedLaunchScreen"
+              component={AnimatedLaunchScreen}
+            />
 
-        <RootStack.Screen
-          name="MainApp"
-          children={() => (
-            <SafeAreaView
-              edges={['top', 'left', 'right']}
-              style={styles.safeArea}>
-              {isAuthenticated ? (
-                <AppContext.Provider value={contextValues}>
-                  {onBoarding === true || firstEntryGenerated === true ? (
-                    <OnboardingView />
+            <RootStack.Screen
+              name="MainApp"
+              children={() => (
+                <SafeAreaView
+                  edges={['top', 'left', 'right']}
+                  style={styles.safeArea}>
+                  {isAuthenticated ? (
+                    <AppContext.Provider value={contextValues}>
+                      {onBoarding === true || firstEntryGenerated === true ? (
+                        <OnboardingView />
+                      ) : (
+                        <AppNavigator />
+                      )}
+                    </AppContext.Provider>
                   ) : (
-                    <AppNavigator />
+                    <AuthNavigator />
                   )}
-                </AppContext.Provider>
-              ) : (
-                <AuthNavigator />
+                </SafeAreaView>
               )}
-            </SafeAreaView>
-          )}
-        />
-      </RootStack.Navigator>
-    </NavigationContainer>
+            />
+          </RootStack.Navigator>
+        </NavigationContainer>
+      </ModalProvider>
+    </ThemeProvider>
   );
 };
 
