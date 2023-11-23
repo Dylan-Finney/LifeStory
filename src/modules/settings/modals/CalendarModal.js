@@ -18,6 +18,7 @@ import CalendarIcon from '../../../assets/settings/calendar.svg';
 
 import CustomModalWrapper from '../../../components/modals/CustomModalWrapper';
 import {useTheme} from '../../../theme/ThemeContext';
+import LabeledButton from '../../../components/LabeledButton';
 
 const CalendarModal = ({visible, onUpdate, onClose}) => {
   const {theme} = useTheme();
@@ -60,36 +61,24 @@ const CalendarModal = ({visible, onUpdate, onClose}) => {
           paddingHorizontal: horizontalScale(24),
           paddingVertical: verticalScale(16),
         }}>
-        <View
-          style={{
-            borderBottomWidth: 1,
-            borderColor: theme.colors.border,
-            paddingVertical: verticalScale(16),
-          }}>
-          <Text
-            allowFontScaling={false}
-            style={{
-              color: theme.colors.tertiary,
-              fontWeight: 500,
-              fontSize: 14,
-            }}
-            onPress={() => {
-              NativeModules.Location.chooserOpen();
-              CalendarEvents.addListener('calendarChange', event => {
-                console.log('calendarChange EVENT', {event});
-                if (event !== 'null') {
-                  // setCalendars(JSON.stringify(event));
-                  useSettingsHooks.set(
-                    'settings.calendars',
-                    JSON.stringify(event),
-                  );
-                }
-                CalendarEvents.removeAllListeners('calendarChange');
-              });
-            }}>
-            Change Connected Calendars
-          </Text>
-        </View>
+        <LabeledButton
+          label="Change Connected Calendars"
+          color={theme.colors.tertiary}
+          onPress={() => {
+            NativeModules.Location.chooserOpen();
+            CalendarEvents.addListener('calendarChange', event => {
+              console.log('calendarChange EVENT', {event});
+              if (event !== 'null') {
+                // setCalendars(JSON.stringify(event));
+                useSettingsHooks.set(
+                  'settings.calendars',
+                  JSON.stringify(event),
+                );
+              }
+              CalendarEvents.removeAllListeners('calendarChange');
+            });
+          }}
+        />
       </ScrollView>
     </CustomModalWrapper>
   );

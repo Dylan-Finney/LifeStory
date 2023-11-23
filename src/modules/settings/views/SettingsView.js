@@ -160,8 +160,19 @@ export default SettingsView = ({route, navigation}) => {
       <SettingsListItem
         icon={<CalendarIcon />}
         title="Calendar"
+        // onPress={() => {
+        //   openModal(MODAL_TYPES.CALENDAR);
+        // }}
         onPress={() => {
-          openModal(MODAL_TYPES.CALENDAR);
+          NativeModules.Location.chooserOpen();
+          CalendarEvents.addListener('calendarChange', event => {
+            console.log('calendarChange EVENT', {event});
+            if (event !== 'null') {
+              // setCalendars(JSON.stringify(event));
+              useSettingsHooks.set('settings.calendars', JSON.stringify(event));
+            }
+            CalendarEvents.removeAllListeners('calendarChange');
+          });
         }}
       />
       <SettingsListItem
@@ -436,9 +447,9 @@ export default SettingsView = ({route, navigation}) => {
           onClose={closeModal}
         />
       )}
-      {modalState.type === MODAL_TYPES.CALENDAR && (
+      {/* {modalState.type === MODAL_TYPES.CALENDAR && (
         <CalendarModal isVisible={modalState.isVisible} onClose={closeModal} />
-      )}
+      )} */}
       {modalState.type === MODAL_TYPES.OTHER && (
         <OtherModal isVisible={modalState.isVisible} onClose={closeModal} />
       )}

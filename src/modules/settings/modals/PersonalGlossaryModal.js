@@ -263,39 +263,6 @@ const PersonalGlossaryModal = ({visible, onClose}) => {
           </TouchableOpacity>
         </View>
         {/* LOCATION ALIASES */}
-        <View
-          style={{
-            borderBottomWidth: 1,
-            borderColor: theme.colors.border,
-            paddingVertical: verticalScale(16),
-          }}>
-          <Text
-            allowFontScaling={false}
-            style={{
-              color: theme.colors.error,
-              fontWeight: 700,
-              fontSize: 14,
-            }}
-            onPress={() => {
-              Alert.alert(
-                'Delete Location Data',
-                'Are you sure you want to delete all of your LifeStory Location Data?\nThis app can only gets your data from the point it has access and starts recording it.\nThis action is irreversible.',
-                [
-                  {
-                    text: 'Confirm',
-                    style: 'default',
-                    onPress: () => {
-                      resetTable('Visits');
-                      // createVisitsTable();
-                    },
-                  },
-                  {text: 'Cancel', style: 'cancel'},
-                ],
-              );
-            }}>
-            Delete Location History
-          </Text>
-        </View>
       </ScrollView>
     </CustomModalWrapper>
   );

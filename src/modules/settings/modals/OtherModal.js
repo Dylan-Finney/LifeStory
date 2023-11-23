@@ -19,6 +19,7 @@ import OtherIcon from '../../../assets/settings/other.svg';
 import CustomModalWrapper from '../../../components/modals/CustomModalWrapper';
 import LabeledSwitch from '../../../components/LabeledSwitch';
 import {useTheme} from '../../../theme/ThemeContext';
+import LabeledButton from '../../../components/LabeledButton';
 
 const OtherModal = ({visible, onClose}) => {
   const {theme} = useTheme();
@@ -96,86 +97,83 @@ const OtherModal = ({visible, onClose}) => {
           }}
           value={devMode}
         />
-        <View
-          style={{
-            borderBottomWidth: 1,
-            borderColor: theme.colors.border,
-            paddingVertical: verticalScale(16),
-          }}>
-          <Text
-            allowFontScaling={false}
-            style={{
-              color: theme.colors.error,
-              fontWeight: 700,
-              fontSize: 14,
-            }}
-            onPress={() => {
-              Alert.alert(
-                'Delete Entries',
-                'Are you sure you want to delete all of your entries?\nThis action is irreversible.',
-                [
-                  {
-                    text: 'Confirm',
-                    style: 'default',
-                    onPress: () => {
-                      resetTable('Entries');
-                      // resetTable('Memories');
-                      deleteTable('Entries');
-                      createEntryTable();
-                      // deleteTable('Memories');
-                      // useSettingsHooks.set('settings.lastMemoryCheckTime', 0);
-                      setEntries([]);
-                    },
+        <LabeledButton
+          label="Delete Location History"
+          color={theme.colors.error}
+          onPress={() => {
+            Alert.alert(
+              'Delete Location Data',
+              'Are you sure you want to delete all of your LifeStory Location Data?\nThis app can only gets your data from the point it has access and starts recording it.\nThis action is irreversible.',
+              [
+                {
+                  text: 'Confirm',
+                  style: 'default',
+                  onPress: () => {
+                    resetTable('Visits');
+                    // createVisitsTable();
                   },
-                  {text: 'Cancel', style: 'cancel'},
-                ],
-              );
-            }}>
-            Delete Entries
-          </Text>
-        </View>
-        <View
-          style={{
-            borderBottomWidth: 1,
-            borderColor: theme.colors.border,
-            paddingVertical: verticalScale(16),
-          }}>
-          <Text
-            allowFontScaling={false}
-            style={{
-              color: theme.colors.error,
-              fontWeight: 700,
-              fontSize: 14,
-            }}
-            onPress={() => {
-              Alert.alert(
-                'Warning!',
-                'This will reset the App to its inital state.\nAll Data associated with the App, that the App owns, will be deleted.\nThis action is irreversible.\nDo you wish to proceed?',
-                [
-                  {
-                    text: 'Confirm',
-                    style: 'default',
-                    onPress: () => {
-                      resetTable('Visits');
-                      resetTable('Entries');
-                      setEntries([]);
-                      // setOnBoarding(true);
-                      useSettingsHooks.set('onboarding', true);
-                      setOnBoarding(true);
+                },
+                {text: 'Cancel', style: 'cancel'},
+              ],
+            );
+          }}
+        />
+        <LabeledButton
+          label="Delete Entries"
+          color={theme.colors.error}
+          onPress={() => {
+            Alert.alert(
+              'Delete Entries',
+              'Are you sure you want to delete all of your entries?\nThis action is irreversible.',
+              [
+                {
+                  text: 'Confirm',
+                  style: 'default',
+                  onPress: () => {
+                    resetTable('Entries');
+                    // resetTable('Memories');
+                    deleteTable('Entries');
+                    createEntryTable();
+                    // deleteTable('Memories');
+                    // useSettingsHooks.set('settings.lastMemoryCheckTime', 0);
+                    setEntries([]);
+                  },
+                },
+                {text: 'Cancel', style: 'cancel'},
+              ],
+            );
+          }}
+        />
+        <LabeledButton
+          label="Reset All Data"
+          color={theme.colors.error}
+          onPress={() => {
+            Alert.alert(
+              'Warning!',
+              'This will reset the App to its inital state.\nAll Data associated with the App, that the App owns, will be deleted.\nThis action is irreversible.\nDo you wish to proceed?',
+              [
+                {
+                  text: 'Confirm',
+                  style: 'default',
+                  onPress: () => {
+                    resetTable('Visits');
+                    resetTable('Entries');
+                    setEntries([]);
+                    // setOnBoarding(true);
+                    useSettingsHooks.set('onboarding', true);
+                    setOnBoarding(true);
 
-                      notifee.cancelAllNotifications();
-                      navigation.navigate({
-                        name: 'MainApp',
-                      });
-                    },
+                    notifee.cancelAllNotifications();
+                    navigation.navigate({
+                      name: 'MainApp',
+                    });
                   },
-                  {text: 'Cancel', style: 'cancel'},
-                ],
-              );
-            }}>
-            Reset All Data
-          </Text>
-        </View>
+                },
+                {text: 'Cancel', style: 'cancel'},
+              ],
+            );
+          }}
+        />
 
         {devMode === true && (
           <>
