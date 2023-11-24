@@ -203,7 +203,7 @@ export default MemoryView = ({
         )}
         {[EventTypes.PHOTO_GROUP].includes(item.type) && (
           <>
-            <ImageCollage photoGroupData={item.eventsData.slice(0, 10)} />
+            <ImageCollage photoGroupData={item.eventsData.slice(0, 5)} />
           </>
         )}
         {linksFinal?.map(

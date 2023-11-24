@@ -13,70 +13,24 @@ export const CustomImage = ({identifier, index, length}) => {
   };
 
   const width = () => {
-    switch (index) {
-      case 0:
-        switch (length) {
-          case 1:
-            return 330;
-          default:
-            baseValues.width.base;
-        }
+    switch (length) {
       case 1:
+        return 330;
       case 2:
-        switch (length) {
-          case 1:
-          case 2:
-          case 3:
-            return baseValues.width.base;
-          case 4:
-          case 5:
-            return baseValues.width.base / 2;
-          default:
-            return baseValues.width.base / 3;
-        }
+        return 160;
       case 3:
-        switch (length) {
-          case 1:
-          case 2:
-          case 3:
-          case 4:
-            return baseValues.width.base;
-          case 5:
-            return baseValues.width.base / 2;
-          default:
-            return baseValues.width.base / 3;
-        }
-      case 4:
-        switch (length) {
-          case 5:
-            return baseValues.width.base / 2;
-          case 6:
-            return baseValues.width.base / 2;
-          default:
-            return baseValues.width.base / 3;
-        }
-      case 5:
-      case 6:
-        switch (length) {
+        switch (index) {
           case 0:
-            return baseValues.width.base / 3;
-          case 1:
-            return baseValues.width.base;
-          case 6:
-            return baseValues.width.base / 2;
+            return 160;
           default:
-            return baseValues.width.base / 3;
+            return 160;
         }
-      case 7:
-      case 8:
-      case 9:
-        switch ((length - 1) % 3) {
+      default:
+        switch (index) {
           case 0:
-            return baseValues.width.base / 3;
-          case 1:
-            return baseValues.width.base;
-          case 2:
-            return baseValues.width.base / 2;
+            return 170;
+          default:
+            return 70;
         }
     }
   };
@@ -84,39 +38,15 @@ export const CustomImage = ({identifier, index, length}) => {
   const height = () => {
     switch (length) {
       case 1:
-      case 2:
         return baseValues.height.base;
-      case 3:
-      case 4:
-      case 5:
-      case 6:
-      case 7:
-        switch (index) {
-          case 0:
-            return baseValues.height.base;
-          default:
-            return baseValues.height.base / 2;
-        }
-      case 7:
-        switch (index) {
-          case 0:
-            return baseValues.height.base;
-          default:
-            return baseValues.height.base / 2;
-        }
-      case 9:
-        switch (index) {
-          case 0:
-            return baseValues.height.base;
-          default:
-            return baseValues.height.small;
-        }
+      case 2:
+        return baseValues.height.base - 30;
       default:
         switch (index) {
           case 0:
-            return baseValues.height.base;
+            return 150;
           default:
-            return baseValues.height.small;
+            return 70;
         }
     }
   };
@@ -202,10 +132,11 @@ export const CustomImage = ({identifier, index, length}) => {
           width: width(),
           // backgroundColor: 'red',
           borderRadius: 20,
-          borderTopLeftRadius: bordersTopLeft() === true ? 20 : 0,
-          borderTopRightRadius: bordersTopRight() === true ? 20 : 0,
-          borderBottomLeftRadius: bordersBottomLeft() === true ? 20 : 0,
-          borderBottomRightRadius: bordersBottomRight() === true ? 20 : 0,
+          // borderTopLeftRadius: bordersTopLeft() === true ? 20 : 0,
+          // borderTopRightRadius: bordersTopRight() === true ? 20 : 0,
+          // borderBottomLeftRadius: bordersBottomLeft() === true ? 20 : 0,
+          // borderBottomRightRadius: bordersBottomRight() === true ? 20 : 0,
+          marginRight: length > 1 && index === 0 ? 10 : 0,
           overflow: 'hidden',
         }}>
         <ImageAsset
@@ -218,6 +149,7 @@ export const CustomImage = ({identifier, index, length}) => {
             height: height(),
             width: width(),
             backgroundColor: 'red',
+
             // marginLeft: -150,
             // marginTop: -100,
           }}

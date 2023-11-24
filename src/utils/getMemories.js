@@ -17,6 +17,9 @@ const formatTime = ({localMemory}) => {
       );
     case EventTypes.LOCATION:
       var eventsData = JSON.parse(localMemory.eventsData);
+      if (eventsData.start === undefined) {
+        return getFormatedTimeString(parseInt(localMemory.time));
+      }
       if (eventsData.end === null) {
         return getFormatedTimeString(
           parseInt(JSON.parse(localMemory.eventsData).start),
