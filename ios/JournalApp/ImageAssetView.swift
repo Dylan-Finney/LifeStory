@@ -49,9 +49,9 @@ class ImageAssetView: UIView {
   }
 
   lazy var imageView: UIImageView = {
-    let imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
-
-    return imageView
+    let imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: 500, height: 500))
+    imageView.contentMode = .scaleAspectFill;
+        return imageView
     
   }()
   
@@ -72,6 +72,8 @@ class ImageAssetView: UIView {
 
          PHImageManager.default().requestImage(for: asset, targetSize: imageView.frame.size, contentMode: .aspectFill, options: requestOptions) { image, _ in
            self.imageView.image = image
+
+
           print("hello")
          }
 

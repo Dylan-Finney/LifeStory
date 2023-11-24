@@ -217,6 +217,9 @@ export const CustomImage = ({identifier, index, length}) => {
             // flex: 1,
             height: height(),
             width: width(),
+            backgroundColor: 'red',
+            // marginLeft: -150,
+            // marginTop: -100,
           }}
         />
       </View>
