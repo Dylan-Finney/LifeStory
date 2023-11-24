@@ -109,7 +109,9 @@ const OtherModal = ({visible, onClose}) => {
                   text: 'Confirm',
                   style: 'default',
                   onPress: () => {
-                    resetTable('Visits');
+                    // resetTable('Visits');
+                    deleteTable('Visits');
+                    deleteTable('RoutePoints');
                     // createVisitsTable();
                   },
                 },

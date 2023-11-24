@@ -1,9 +1,15 @@
 export const EventTypes = {
   PHOTO: 0,
   LOCATION: 1,
+  // LOCATIONS: {
+  //   ROUTE: 1.1,
+  //   ARRIVAL: 1.2,
+  //   STAY: 1.3,
+  // },
   CALENDAR_EVENT: 2,
   PHOTO_GROUP: 3,
   LINK: 4,
+  LOCATION_ROUTE: 5,
 };
 
 export const Screens = {

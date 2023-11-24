@@ -25,13 +25,6 @@ import {
 import Svg, {Defs, Rect, LinearGradient, Stop} from 'react-native-svg';
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
-import AIRewriteIcon from '../../../assets/ai-rewrite-icon.svg';
-import FirstEntryIcon from '../../../assets/first-entry.svg';
-import AngerIcon from '../../../assets/emotions/Anger.svg';
-import FrownIcon from '../../../assets/emotions/Frown.svg';
-import GrinIcon from '../../../assets/emotions/Grin.svg';
-import NeutralIcon from '../../../assets/emotions/Neutral.svg';
-import SmileIcon from '../../../assets/emotions/Smile.svg';
 
 import notifee, {
   EventType,
@@ -48,58 +41,16 @@ import useDatabaseHooks from '../../../utils/hooks/useDatabaseHooks';
 import Location from '../../../utils/native-modules/NativeFuncs';
 
 import useSettingsHooks from '../../../utils/hooks/useSettingsHooks';
-import Config from 'react-native-config';
-import CreateEntryButton from '../../../modules/entries/components/CreateEntryButton';
-import {theme} from '../../../theme/styling';
-import Onboarding from '../../../components/Onboarding';
-import HomeTop from '../../../components/HomeTop';
-import HomeHeading from '../../../components/HomeHeading';
-import EntryList from '../../../modules/entries/components/EntryList';
-import * as RNLocalize from 'react-native-localize';
-import {NativeModules} from 'react-native';
 
-import {
-  horizontalScale,
-  moderateScale,
-  verticalScale,
-} from '../../../utils/metrics';
-
-import DatePicker from 'react-native-date-picker';
-import AMImage from '../../../assets/AMImage.png';
-import PMImage from '../../../assets/PMImage.png';
-
-import {decode, encode} from 'base-64';
-import {useAppState} from '@react-native-community/hooks';
-import onCreateTriggerNotification from '../../../utils/createNotification';
-import {Swipeable} from 'react-native-gesture-handler';
 import toDateString from '../../../utils/toDateString';
-import DownvoteIcon from '../../../assets/ModalDownvote.svg';
-import UpvoteIcon from '../../../assets/ModalUpvote.svg';
-import NewEntryIcon from '../../../assets/NewEntry.svg';
-import SettingsIcon from '../../../assets/Settings.svg';
-import CalendarEventIcon from '../../../assets/calendar-event.svg';
-import LabelIcon from '../../../assets/Labelling.svg';
-import DaysMenuIcon from '../../../assets/days-menu.svg';
-import MomentsMenuIcon from '../../../assets/moments-menu.svg';
-import SearchMenuIcon from '../../../assets/search-menu.svg';
-import LocationEventIcon from '../../../assets/event-location.svg';
-import PhotoEventIcon from '../../../assets/event-photo.svg';
-import BinIcon from '../../../assets/Bin.svg';
-import PenIcon from '../../../assets/Pen.svg';
-import WritingAnimation from '../../../assets/writing.gif';
 
-import {emotions} from '../../../utils/utils';
-import {ImageAsset} from '../../../utils/native-modules/NativeImage';
-import MapView, {Marker} from 'react-native-maps';
-import OnboardingButton from '../../../components/OnboardingButton';
-import OnboardingBackground from '../../../components/OnboardingBackground';
-import onCreateTriggerReminder from '../../../utils/createOpenReminder';
-import SingleMapMemo from '../../../components/SingleMapMemo';
-import generateMemories from '../../../utils/generateMemories';
+import LabelIcon from '../../../assets/Labelling.svg';
+
+import PenIcon from '../../../assets/Pen.svg';
 import generateEntry from '../../../utils/generateEntry';
 import {ActionSheetScreens, EventTypes} from '../../../utils/Enums';
 import getMemories from '../../../utils/getMemories';
-import NewModalItem from '../../../NewModalItem';
+import NewModalItem from '../../../components/ActionSheet/NewModalItem';
 import {
   Actionsheet,
   ActionsheetBackdrop,
@@ -110,9 +61,9 @@ import {
   Box,
   Divider,
 } from '@gluestack-ui/themed';
-import LabellingSheet from '../../../LabellingSheet';
+import LabellingSheet from '../../../components/ActionSheet/LabellingSheet';
 import {KeyboardAvoidingView} from '@gluestack-ui/themed';
-import EditSheet from '../../../EditSheet';
+import EditSheet from '../../../components/ActionSheet/EditSheet';
 import {Pressable} from '@gluestack-ui/themed';
 import {baseHighlight} from '../../../utils/baseObjects';
 import EmptyStoriesView from '../components/EmptyStoriesView';

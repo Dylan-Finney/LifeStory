@@ -10,6 +10,22 @@ const formatTime = ({localMemory}) => {
         parseInt(JSON.parse(localMemory.eventsData).start) * 1000,
         parseInt(JSON.parse(localMemory.eventsData).end) * 1000,
       );
+    case EventTypes.LOCATION_ROUTE:
+      return getFormatedTimeString(
+        parseInt(JSON.parse(localMemory.eventsData).start.end),
+        parseInt(JSON.parse(localMemory.eventsData).end.start),
+      );
+    case EventTypes.LOCATION:
+      var eventsData = JSON.parse(localMemory.eventsData);
+      if (eventsData.end === null) {
+        return getFormatedTimeString(
+          parseInt(JSON.parse(localMemory.eventsData).start),
+        );
+      }
+      return getFormatedTimeString(
+        parseInt(JSON.parse(localMemory.eventsData).start),
+        parseInt(JSON.parse(localMemory.eventsData).end),
+      );
     case EventTypes.PHOTO_GROUP:
       var eventsData = JSON.parse(localMemory.eventsData);
       return getFormatedTimeString(
@@ -51,7 +67,21 @@ const getMemories = async () => {
           vote: parseInt(localMemory.vote),
         };
       })
-      .sort((a, b) => b.time - a.time);
+      .sort((a, b) => {
+        if (b.time > a.time) {
+          return 1;
+        } else if (b.time < a.time) {
+          return -1;
+        }
+
+        if (b.id > a.id) {
+          return 1;
+        } else if (b.id < a.id) {
+          return -1;
+        }
+
+        return 0;
+      });
     console.log({updatedMemories});
     return updatedMemories;
     // setMemories(updatedMemories);

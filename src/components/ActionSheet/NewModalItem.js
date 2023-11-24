@@ -2,8 +2,8 @@ import React from 'react';
 import {TouchableOpacity, View, StyleSheet} from 'react-native';
 import {Text} from '@gluestack-ui/themed';
 import {ActionsheetItem, Box} from '@gluestack-ui/themed';
-import UpvoteIcon from './assets/ModalUpvote.svg';
-import {theme} from './theme/styling';
+import UpvoteIcon from '../../assets/ModalUpvote.svg';
+import {theme} from '../../theme/styling';
 
 export default NewModalItem = ({
   icon,

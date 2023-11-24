@@ -53,8 +53,14 @@ const configuration = new Configuration({
 });
 
 const MainNavigator = () => {
-  const {createVisitsTable, insertData, retrieveData, retrieveSpecificData} =
-    useDatabaseHooks();
+  const {
+    createVisitsTable,
+    insertData,
+    retrieveData,
+    retrieveSpecificData,
+    createRoutePointsTable,
+    insertRoutePointsData,
+  } = useDatabaseHooks();
   // const {calendars} = useSettingsHooks();
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -258,9 +264,11 @@ const MainNavigator = () => {
           (locations = res.map(obj => {
             return {
               description: obj.description.split(',')[0],
-              time: obj.date,
-              lat: obj.lat,
-              long: obj.lon,
+              start: obj.start,
+              end: obj.end,
+              latitude: obj.lat,
+              longitude: obj.lon,
+              id: obj.id,
             };
           })),
             console.log(locations);
@@ -860,16 +868,31 @@ const MainNavigator = () => {
       CounterEvents.removeAllListeners('locationChange');
       CounterEvents.addListener('locationChange', res => {
         console.log('locationChange event', res);
-        createVisitsTable();
-        insertData(
-          Math.floor(parseInt(res.arrivalTime)) * 1000 || Date.now(),
-          res.lat,
-          res.lon,
-          res.description,
-        );
-        retrieveData('Visits', steps => {
-          console.log({steps});
-        });
+        if (res.type === 'stay') {
+          createVisitsTable();
+          insertData(
+            Math.floor(parseInt(res.arrivalTime)) * 1000 || Date.now(),
+            Math.floor(parseInt(res.departureTime)) * 1000,
+            res.lat,
+            res.lon,
+            res.description,
+          );
+          retrieveData('Visits', steps => {
+            console.log({steps});
+          });
+        } else {
+          createRoutePointsTable();
+          insertRoutePointsData(
+            Math.floor(parseInt(res.arrivalTime)) * 1000 || Date.now(),
+            res.speed,
+            res.lat,
+            res.lon,
+            res.description,
+          );
+          retrieveData('RoutePoints', steps => {
+            console.log({steps});
+          });
+        }
       });
     })
     .catch(e => console.log(e.message, e.code));

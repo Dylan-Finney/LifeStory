@@ -59,21 +59,57 @@ const useDatabaseHooks = () => {
   const createVisitsTable = () => {
     db.transaction(tx => {
       tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS Visits (id INTEGER PRIMARY KEY AUTOINCREMENT, date DATE, lat DECIMAL, lon DEMICAL, description TEXT);`,
+        `CREATE TABLE IF NOT EXISTS Visits (id INTEGER PRIMARY KEY AUTOINCREMENT, start DATE, end DATE, lat DECIMAL, lon DEMICAL, description TEXT);`,
       );
     });
   };
 
-  const insertData = (date, lat, lon, description) => {
+  const createRoutePointsTable = () => {
     db.transaction(tx => {
       tx.executeSql(
-        `INSERT INTO Visits (date, lat, lon, description) VALUES (?, ?, ?, ?)`,
-        [date, lat, lon, description],
+        `CREATE TABLE IF NOT EXISTS RoutePoints (id INTEGER PRIMARY KEY AUTOINCREMENT, date DATE, speed DECIMAL, lat DECIMAL, lon DEMICAL, description TEXT);`,
+      );
+    });
+  };
+
+  const insertData = (start, end, lat, lon, description) => {
+    db.transaction(tx => {
+      if (end === 0) {
+        tx.executeSql(
+          `INSERT INTO Visits (start, lat, lon, description) VALUES (?, ?, ?, ?)`,
+          [start, lat, lon, description],
+          (_, result) => {
+            console.log('Visit inserted successfully', result);
+          },
+          (_, error) => {
+            console.log('Error inserting Visit:', error);
+          },
+        );
+      } else {
+        tx.executeSql(
+          `INSERT INTO Visits (start, end, lat, lon, description) VALUES (?, ?, ?, ?, ?)`,
+          [start, end, lat, lon, description],
+          (_, result) => {
+            console.log('Visit inserted successfully', result);
+          },
+          (_, error) => {
+            console.log('Error inserting Visit:', error);
+          },
+        );
+      }
+    });
+  };
+
+  const insertRoutePointsData = (date, speed, lat, lon, description) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `INSERT INTO RoutePoints (date, speed, lat, lon, description) VALUES (?, ?, ?, ?, ?)`,
+        [date, speed, lat, lon, description],
         (_, result) => {
-          console.log('Data inserted successfully', result);
+          console.log('RoutePoint successfully', result);
         },
         (_, error) => {
-          console.log('Error inserting data:', error);
+          console.log('Error inserting RoutePoint:', error);
         },
       );
     });
@@ -309,6 +345,30 @@ const useDatabaseHooks = () => {
     });
   };
 
+  const retrieveSpecificRecord = async (tableName, id) => {
+    return new Promise((resolve, reject) => {
+      db.transaction(
+        tx => {
+          tx.executeSql(
+            `SELECT * FROM ${tableName} WHERE id = ?`,
+            [id],
+            (tx, results) => {
+              console.log({results});
+              let data = null;
+              for (let i = 0; i < results.rows.length; i++) {
+                data = results.rows.item(i);
+              }
+              resolve(data);
+            },
+          );
+        },
+        error => {
+          reject(error);
+        },
+      );
+    });
+  };
+
   const resetTable = tableName => {
     db.transaction(tx => {
       tx.executeSql(`DELETE FROM ${tableName}`, [], (tx, results) => {
@@ -320,14 +380,62 @@ const useDatabaseHooks = () => {
   const retrieveSpecificData = (startDate, endDate, callback) => {
     db.transaction(tx => {
       tx.executeSql(
-        `SELECT * FROM Visits WHERE Visits.date BETWEEN ? AND ?`,
-        [startDate, endDate],
+        `SELECT * FROM Visits WHERE (Visits.end IS NULL AND Visits.start BETWEEN ? AND ?) OR (Visits.end IS NOT NULL AND Visits.end BETWEEN ? AND ?)`,
+        [startDate, endDate, startDate, endDate],
         (tx, results) => {
           let data = [];
           for (let i = 0; i < results.rows.length; i++) {
             data.push(results.rows.item(i));
           }
           callback(data);
+        },
+      );
+    });
+  };
+
+  const retrievePreviousVisitWithDeparture = id => {
+    return new Promise((resolve, reject) => {
+      db.transaction(
+        tx => {
+          tx.executeSql(
+            `SELECT * FROM Visits WHERE id = (SELECT MAX(id) FROM Visits WHERE id < ? AND (Visits.end IS NOT NULL))`,
+            [id],
+            (tx, results) => {
+              console.log({results});
+              let data = [];
+              for (let i = 0; i < results.rows.length; i++) {
+                data.push(results.rows.item(i));
+              }
+              resolve(data);
+            },
+          );
+        },
+        error => {
+          reject(error);
+        },
+      );
+    });
+  };
+
+  const retrieveRoutePointsForVisitData = (startDate, endDate, callback) => {
+    return new Promise((resolve, reject) => {
+      db.transaction(
+        tx => {
+          tx.executeSql(
+            `SELECT * FROM RoutePoints WHERE RoutePoints.date BETWEEN ? AND ?`,
+            [startDate, endDate],
+            (tx, results) => {
+              console.log({results});
+              let data = [];
+              for (let i = 0; i < results.rows.length; i++) {
+                data.push(results.rows.item(i));
+              }
+              resolve(data);
+            },
+          );
+        },
+        error => {
+          reject(error);
         },
       );
     });
@@ -347,9 +455,13 @@ const useDatabaseHooks = () => {
 
   return {
     createVisitsTable,
+    createRoutePointsTable,
     deleteTable,
     insertData,
+    insertRoutePointsData,
     retrieveData,
+    retrieveSpecificRecord,
+    retrievePreviousVisitWithDeparture,
     createEntryTable,
     createMemoriesTable,
     saveMemoryData,
@@ -357,6 +469,7 @@ const useDatabaseHooks = () => {
     updateEntryData,
     retrieveSpecificData,
     resetTable,
+    retrieveRoutePointsForVisitData,
     deleteMemoryData,
     updateMemoryData,
   };

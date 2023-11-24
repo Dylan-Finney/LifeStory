@@ -21,6 +21,7 @@ import {MemoryEventHeader} from './event/MemoryEventHeader';
 import {LinkView} from './event/LinkView';
 import toDateString from '../../../utils/toDateString';
 import MemoryDivider from './MemoryDivider';
+import RouteMapMemo from '../../../components/RouteMapMemo';
 
 export default MemoryView = ({
   item,
@@ -174,8 +175,23 @@ export default MemoryView = ({
         )}
         {[EventTypes.LOCATION].includes(item.type) && (
           <SingleMapMemo
-            lat={item.eventsData.lat}
-            long={item.eventsData.long}
+            lat={
+              item.eventsData.lat === undefined
+                ? item.eventsData.latitude
+                : item.eventsData.lat
+            }
+            long={
+              item.eventsData.long === undefined
+                ? item.eventsData.longitude
+                : item.eventsData.long
+            }
+          />
+        )}
+        {[EventTypes.LOCATION_ROUTE].includes(item.type) && (
+          <RouteMapMemo
+            coordinates={item.eventsData.points}
+            start={item.eventsData.start}
+            end={item.eventsData.end}
           />
         )}
         {[EventTypes.PHOTO].includes(item.type) && (

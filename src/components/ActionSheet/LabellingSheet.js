@@ -13,12 +13,12 @@ import {InputSlot} from '@gluestack-ui/themed';
 import {HStack, Text, Divider} from '@gluestack-ui/themed';
 import {Box} from '@gluestack-ui/themed';
 import {useState} from 'react';
-import useSettingsHooks from './utils/hooks/useSettingsHooks';
+import useSettingsHooks from '../../utils/hooks/useSettingsHooks';
 import LabelStack from './LabelStack';
-import ModesIcon from '../src/assets/categories/Modes.svg';
-import RolesIcon from '../src/assets/categories/Roles.svg';
-import OtherIcon from '../src/assets/categories/Other.svg';
-import LabelIcon from '../src/assets/Labelling.svg';
+import ModesIcon from '../../assets/categories/Modes.svg';
+import RolesIcon from '../../assets/categories/Roles.svg';
+import OtherIcon from '../../assets/categories/Other.svg';
+import LabelIcon from '../../assets/Labelling.svg';
 
 export default LabellingSheet = ({
   update,

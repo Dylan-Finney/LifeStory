@@ -24,7 +24,13 @@ export const MemoryEventHeader = ({type, eventsData, desc}) => {
         <View>
           <Text
             numberOfLines={
-              [EventTypes.PHOTO, EventTypes.LINK].includes(type) ? 1 : undefined
+              [
+                EventTypes.PHOTO,
+                EventTypes.LINK,
+                EventTypes.LOCATION_ROUTE,
+              ].includes(type)
+                ? 1
+                : undefined
             }
             style={{
               color: 'rgba(11, 11, 11, 0.8)',
@@ -32,6 +38,8 @@ export const MemoryEventHeader = ({type, eventsData, desc}) => {
               marginRight: 50,
             }}>
             {type === EventTypes.LOCATION && eventsData.description}
+            {type === EventTypes.LOCATION_ROUTE &&
+              `${eventsData.start.description} → ${eventsData.end.description}`}
             {type === EventTypes.PHOTO && `1 Photo`}
             {type === EventTypes.PHOTO_GROUP && `${eventsData.length} Photos`}
             {type === EventTypes.CALENDAR_EVENT && eventsData.title}

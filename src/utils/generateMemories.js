@@ -3,6 +3,7 @@ import useSettingsHooks from './hooks/useSettingsHooks';
 import Config from 'react-native-config';
 import moment from 'moment';
 import {EventTypes} from './Enums';
+
 const {Configuration, OpenAIApi} = require('openai');
 const configuration = new Configuration({
   apiKey: Config.OPENAI_KEY,
@@ -16,6 +17,8 @@ const {
   createEntryTable,
   createMemoriesTable,
   saveMemoryData,
+  retrieveRoutePointsForVisitData,
+  retrievePreviousVisitWithDeparture,
 } = useDatabaseHooks();
 
 const getAddressName = address => {
@@ -30,6 +33,12 @@ const getAddressName = address => {
   } else {
     return '';
   }
+};
+
+const getAverage = arr => {
+  let reducer = (total, currentValue) => total + currentValue;
+  let sum = arr.reduce(reducer);
+  return sum / arr.length;
 };
 
 const getBestLocationTag = description => {
@@ -64,29 +73,200 @@ const generateGenericMemory = async ({data, type, time}) => {
   var userPrompt = '';
 
   switch (type) {
-    case EventTypes.LOCATION:
+    case EventTypes.LOCATION_ROUTE:
       messages = [
         {
           role: 'system',
-          content: `Your role is to write text entries without titles from the data provided, based on these instructions:
+          content: `You are a facts writer to write text entries without titles from the previous data, based on these instructions:
+1. Write in first person, in today's past tense, but don't say 'today'
+2. Don't write about things that are not described in data provided
+3. Don't write about the weather
+4. Mention times as 'early morning',  'around noon', etc. Ie. as we would refer times in a typical conversation (not exact times)
+5. Write about approximate duration.
+6. Write location by area name, based on cross roads, or nearby landmark. Ie. as we would refer places in a typical conversation. (Don't use exact addresses and don't mention country).
+7. Don't mention Latitude or Longitude coordinates
+8. Guess at the travel method based on the average speed of the journey
+9. Don't mention dates.
+10. Use up to 100 characters 
+-----
 
-1. Write in first person
-2. Don’t write about things that are not described in data provided
-3. Text should be written in neutral, informative and descriptive tone, while also keeping it short and to the point
-4. Don’t write about ending times, rather refer to approximate duration
-5. Don’t refer time as exacts but rather ‘early morning’, ‘around noon’, etc. Ie. as we would refer times in a typical conversation
-6. Don’t use exact addresses, but refer to location and/or popular landmarks names. Ie. as we would refer places in a typical conversation
-7. Write in past tent
-8. Don't mention timezones
-9. Don't mention latitude or longitude coordinates
-10. Don't mention dates
-11. Use up to 150 characters
+Examples:
 
------`,
+I walked to Central Park from Manhattan, which took 2.5 hours in the afternoon.
+
+----`,
         },
         {
           role: 'user',
           content: `{
+ "routeDetails": {
+"avgSpeed": 17.8816, //m/s
+ "start": {
+ "locationTag": "Central Park",
+ "time": "2023-10-30T14:00:00--4:00"
+},
+"end": {
+ "locationTag": "Manhattan",
+"time": "2023-10-30T16:30:00--4:00"
+}
+
+}
+}`,
+        },
+        {
+          role: 'assistant',
+          content: `I left Central Park in the early afternoon and drove to Manhattan, which took approximately 2.5 hours. `,
+        },
+        {
+          role: 'user',
+          content: `{
+          "routeDetails": {
+          "avgSpeed": ${getAverage(
+            data.points.map(point => point.speed),
+          )}, //m/s
+          "start": {
+          "locationTag": "${getBestLocationTag(
+            data.start.description?.split('@')[0] || undefined,
+          )}",
+          "time": "${new Date(data.start.end).toLocaleString()}",
+          },
+          "end": {
+          "locationTag": "${getBestLocationTag(
+            data.end.description?.split('@')[0] || undefined,
+          )}",
+          "time": "${new Date(data.end.start).toLocaleString()}",
+          }
+
+          }
+          }`,
+          //           content: `{
+          //  "routeDetails": {
+          // "avgSpeed": 17.8816, //m/s
+          //  "start": {
+          //  "locationTag": "Central Park",
+          //  "time": "2023-10-30T14:00:00--4:00"
+          // },
+          // "end": {
+          //  "locationTag": "Manhattan",
+          // "time": "2023-10-30T16:30:00--4:00"
+          // }
+
+          // }
+          // }`,
+        },
+      ];
+      break;
+    case EventTypes.LOCATION:
+      if (data.end === null) {
+        messages = [
+          {
+            role: 'system',
+            content: `You are a facts writer to write text entries without titles from the provided data, based on these instructions:
+
+1. Write in first person, in today's past tent, but don't say 'today'.
+2. Don’t write about things that are not described in data provided.
+3. Don't write about weather!
+4. Mention times as ‘early. morning’, ‘around noon’, etc. Ie. as we would refer times in a typical conversation (not exact times)
+5. Write about approximate duration.
+6. Write location by area name, based on cross roads, or nearby landmark. Ie. as we would refer places in a typical conversation. (Don’t use exact addresses and don't mention country). 
+7. Don't mention latitude or longitude coordinates.
+8. Don't mention dates.
+9. Use up to 100 characters.
+10. This entry is only about arriving at a location
+
+-----
+
+Examples:
+
+I got to Central Park in the morning's early hours
+
+----`,
+          },
+          {
+            role: 'user',
+            content: `{
+  "geoLocationStay": {
+    "locationTag": "Central Park, New York, US",
+    "location":
+      "latitude": "40.7829° N",
+      "longitude": "73.9654° W"
+    },
+    "time": {
+      "start": "2023-10-30T14:00:00-04:00"
+    },
+    "timezone": "EDT"
+  }
+}`,
+          },
+          {
+            role: 'assistant',
+            content: `I arrived near Central Park in the early afternoon.`,
+          },
+          {
+            role: 'user',
+            content: `{
+  "geoLocationStay": {
+    "locationTag": "${getBestLocationTag(
+      data.description?.split('@')[0] || undefined,
+    )}",
+    "location":
+      "latitude": "${data.latitude}",
+      "longitude": "${data.longitude}"
+    },
+    "time": {
+      "start": "${new Date(data.start).toLocaleString()}",
+    }
+  }
+}`,
+          },
+        ];
+      } else {
+        messages = [
+          {
+            role: 'system',
+            content: `You are a facts writer to write text entries without titles from the provided data, based on these instructions:
+
+1. Write in first person, in today's past tent, but don't say 'today'.
+2. Don’t write about things that are not described in data provided.
+3. Don't write about weather!
+4. Mention times as ‘early. morning’, ‘around noon’, etc. Ie. as we would refer times in a typical conversation (not exact times)
+5. Write about approximate duration.
+6. Write location by area name, based on cross roads, or nearby landmark. Ie. as we would refer places in a typical conversation. (Don’t use exact addresses and don't mention country). 
+7. Don't mention latitude or longitude coordinates.
+8. Don't mention dates.
+9. Use up to 100 characters.
+
+-----
+
+Examples:
+
+I visited a place near 350 Fifth Avenue, New York. I spent about an hour there in the early afternoon.
+
+I spent a good three hours in the evening at Yoyogi-Kamizono-cho, Shibuya.
+
+I spent a good part of my evening, around three hours, in the Yoyogi-Kamizono-cho area of Shibuya.
+
+I spent a couple of hours in the late afternoon at a place near Via Baccina.
+
+I spent about an hour late afternoon near Rue du Faubourg Saint-Honoré.
+
+I spent afternoon exploring the charming streets near Rue du Faubourg Saint-Honoré in Paris. I wandered around for about an hour.
+
+I spent about an hour late afternoon near Rue du Faubourg Saint-Honoré.
+
+I spent about an hour late this afternoon near Rue du Faubourg Saint-Honoré.
+
+I spent a couple of hours around mid-morning near the intersection of G St NW.
+
+I spent about half an hour in the mid-afternoon at a place near Pall Mall in St. James's.
+
+I spent about half an hour in the afternoon at a place near St. James's area, close to Pall Mall.
+
+----`,
+          },
+          {
+            role: 'user',
+            content: `{
   "geoLocationStay": {
     "locationTag": "Central Park, New York, US",
     "location":
@@ -100,29 +280,32 @@ const generateGenericMemory = async ({data, type, time}) => {
     "timezone": "EDT"
   }
 }`,
-        },
-        {
-          role: 'assistant',
-          content: `I spent a pleasant afternoon near Central Park, soaking in the ambiance of the area, which was alive with the hustle and bustle that's so characteristic of the place. I arrived around early afternoon and stayed for about two and a half hours, watching the city's rhythm, with joggers passing by and the distant hum of street musicians adding a lively soundtrack to the scene. It was a refreshing break from my usual routine, with the greenery of the park providing a stark contrast to the concrete jungle that surrounds it.`,
-        },
-        {
-          role: 'user',
-          content: `{
+          },
+          {
+            role: 'assistant',
+            content: `I spent a pleasant afternoon near Central Park, soaking in the ambiance of the area, which was alive with the hustle and bustle that's so characteristic of the place. I stayed for around 2 and a half hours.`,
+          },
+          {
+            role: 'user',
+            content: `{
   "geoLocationStay": {
     "locationTag": "${getBestLocationTag(
       data.description?.split('@')[0] || undefined,
     )}",
     "location":
-      "latitude": "${data.lat}",
-      "longitude": "${data.lon}"
+      "latitude": "${data.latitude}",
+      "longitude": "${data.longitude}"
     },
     "time": {
-      "start": "${new Date(data.time).toLocaleString()}",
+      "start": "${new Date(data.start).toLocaleString()}",
+      "end": "${new Date(data.end).toLocaleString()}",
     }
   }
 }`,
-        },
-      ];
+          },
+        ];
+      }
+
       break;
     case EventTypes.CALENDAR_EVENT:
       userPrompt = `Calendar Event: ${data.title} @${
@@ -461,17 +644,63 @@ const generateMemories = async ({data, date}) => {
   //   }),
   // );
 
+  // const uniqueLocations = locations.reduce(
+  //   (acc, obj) => {
+  //     const attrValue = getBestLocationTag(
+  //       obj.description?.split('@')[0] || undefined,
+  //     );
+  //     if (!acc[attrValue]) {
+  //       acc[attrValue] = true;
+
+  //       acc.resultArray.push(obj);
+  //     }
+  //     return acc;
+  //   },
+  //   {resultArray: []},
+  // ).resultArray;
+
+  const uniqueLocations = locations;
+  const uniqueLocationDepartures = uniqueLocations.filter(
+    uniqueLocation => uniqueLocation.end === null,
+  );
   await Promise.allSettled(
-    locations.map(async (location, index) => {
+    //The reduce functions acts as a way to only use location events that have a unique address to prevent several similar memories being generated
+
+    uniqueLocations.map(async (location, index) => {
       // setLoadingMessage(
       //   `Creating Location Events - ${index + 1}/${locations.length}`,
       // );
-      var newLocationMemory = await generateGenericMemory({
-        data: location,
-        type: EventTypes.LOCATION,
-        time: location.time,
-      });
-      newMemories.push(newLocationMemory);
+      console.log('TEST LOCATION', {location});
+      if (location.end === null) {
+        // console.log('NO END', {location});
+        const test = await retrievePreviousVisitWithDeparture(location.id);
+        if (test.length > 0) {
+          const previousLocation = test[0];
+          const routePoints = await retrieveRoutePointsForVisitData(
+            previousLocation.end,
+            location.start,
+          );
+          console.log('NO END', {location, test, routePoints});
+          const route = {
+            start: previousLocation,
+            end: location,
+            points: routePoints,
+          };
+          console.log('I HAVE A ROUTE', {route});
+          var newRouteMemory = await generateGenericMemory({
+            data: route,
+            type: EventTypes.LOCATION_ROUTE,
+            time: route.end.start,
+          });
+          newMemories.push(newRouteMemory);
+        }
+        var newLocationMemory = await generateGenericMemory({
+          data: location,
+          type: EventTypes.LOCATION,
+          time: location.end,
+        });
+        newMemories.push(newLocationMemory);
+      }
     }),
   ).then(async () => {
     console.log('location finished');

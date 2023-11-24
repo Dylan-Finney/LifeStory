@@ -43,7 +43,7 @@ import SingleMapMemo from '../../../components/SingleMapMemo';
 
 import {ActionSheetScreens, EventTypes} from '../../../utils/Enums';
 
-import NewModalItem from '../../../NewModalItem';
+import NewModalItem from '../../../components/ActionSheet/NewModalItem';
 import {
   Actionsheet,
   ActionsheetBackdrop,
@@ -54,9 +54,9 @@ import {
   Box,
   Divider,
 } from '@gluestack-ui/themed';
-import LabellingSheet from '../../../LabellingSheet';
+import LabellingSheet from '../../../components/ActionSheet/LabellingSheet';
 import {KeyboardAvoidingView} from '@gluestack-ui/themed';
-import EditSheet from '../../../EditSheet';
+import EditSheet from '../../../components/ActionSheet/EditSheet';
 import {Pressable} from '@gluestack-ui/themed';
 import checkIfMemoryReadyToGenerate from '../../../utils/isMemoryReadyToGenerate';
 import FloatingActionButton from '../../../components/FloatingActionButton';
@@ -72,6 +72,7 @@ import {
   emotionToColor,
 } from '../../../utils/emotionFuncs';
 import {getEventIcon} from '../../../utils/getEventIcon';
+import RouteMapMemo from '../../../components/RouteMapMemo';
 const itemHeights2 = new Array();
 export default MemoriesView = ({}) => {
   const {
@@ -90,10 +91,17 @@ export default MemoriesView = ({}) => {
   } = useContext(AppContext);
   const {
     retrieveSpecificData,
+    retrievePreviousVisitWithDeparture,
     saveEntryData,
     updateEntryData,
     createEntryTable,
     createMemoriesTable,
+    createVisitsTable,
+    createRoutePointsTable,
+    insertData,
+    insertRoutePointsData,
+    retrieveSpecificRecord,
+    retrieveData,
     saveMemoryData,
     updateMemoryData,
     deleteMemoryData,
@@ -801,7 +809,8 @@ export default MemoriesView = ({}) => {
               onPress={async () => {
                 var start = new Date(Date.now());
                 var end = new Date(Date.now());
-                start.setHours(start.getHours() - 3);
+                start.setHours(0);
+                start.setMinutes(0);
                 await readyToGenerateMemory({
                   start,
                   end,
@@ -958,9 +967,16 @@ export default MemoriesView = ({}) => {
             }
 
             for (let i = 0; i < itemHeights2.length; i++) {
-              totalHeight += itemHeights2[i].height;
-              if (totalHeight >= yOffset) {
-                visibleIndex = i;
+              //On Saving App Changes, Array might get re-initialzed with undefined values that are not updated until refresh
+              //This doesn't fix the problem, but does prevent crash
+              if (itemHeights2[i] !== undefined) {
+                totalHeight += itemHeights2[i].height;
+                if (totalHeight >= yOffset) {
+                  visibleIndex = i;
+                  break;
+                }
+              } else {
+                visibleIndex = 0;
                 break;
               }
             }

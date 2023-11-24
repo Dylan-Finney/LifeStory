@@ -25,7 +25,6 @@ import {
 import Svg, {Defs, Rect, LinearGradient, Stop} from 'react-native-svg';
 import 'react-native-get-random-values';
 import 'react-native-url-polyfill/auto';
-import AIRewriteIcon from './src/assets/ai-rewrite-icon.svg';
 import FirstEntryIcon from './src/assets/first-entry.svg';
 import AngerIcon from './src/assets/emotions/Anger.svg';
 import FrownIcon from './src/assets/emotions/Frown.svg';
@@ -49,12 +48,8 @@ import Location from './src/utils/native-modules/NativeFuncs';
 
 import useSettingsHooks from './src/utils/hooks/useSettingsHooks';
 import Config from 'react-native-config';
-import CreateEntryButton from './src/modules/entries/components/CreateEntryButton';
 import {theme} from './src/theme/styling';
 import Onboarding from './src/components/Onboarding';
-import HomeTop from './src/components/HomeTop';
-import HomeHeading from './src/components/HomeHeading';
-import EntryList from './src/modules/entries/components/EntryList';
 import * as RNLocalize from 'react-native-localize';
 import {NativeModules} from 'react-native';
 
@@ -81,7 +76,7 @@ import generateMemories from './src/utils/generateMemories';
 import generateEntry from './src/utils/generateEntry';
 import {ActionSheetScreens, EventTypes} from './src/utils/Enums';
 import getMemories from './src/utils/getMemories';
-import NewModalItem from './src/NewModalItem';
+import NewModalItem from './src/components/ActionSheet/NewModalItem';
 
 const {RNShare} = NativeModules;
 const {Configuration, OpenAIApi} = require('openai');

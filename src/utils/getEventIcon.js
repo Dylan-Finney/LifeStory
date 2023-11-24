@@ -7,6 +7,7 @@ import {EventTypes} from './Enums';
 export const getEventIcon = type => {
   switch (type) {
     case EventTypes.LOCATION:
+    case EventTypes.LOCATION_ROUTE:
       return <LocationEventIcon />;
     case EventTypes.PHOTO:
     case EventTypes.PHOTO_GROUP:

@@ -261,24 +261,35 @@ for localIdentifier in calendarIdentifiers {
     locationManager.requestWhenInUseAuthorization()
     locationManager.requestAlwaysAuthorization()
     locationManager.desiredAccuracy = kCLLocationAccuracyBest
-    locationManager.distanceFilter = kCLDistanceFilterNone
+    locationManager.distanceFilter = 50
     locationManager.allowsBackgroundLocationUpdates = true
-     locationManager.startMonitoringVisits() //Make Sure this is active for release
-  //  locationManager.startUpdatingLocation() //Simulator Debug as Visits doesn't work
+      locationManager.startMonitoringVisits() //Make Sure this is active for release
+   locationManager.startUpdatingLocation() //Simulator Debug as Visits doesn't work
     resolve(true)
 
   }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+//      let stationarySpeedThreshold: CLLocationSpeed = 0.5
+//      let stationaryTimeThreshold: TimeInterval = 60
+      
+      
+      
+//      if locations.last!.speed > stationarySpeedThreshold {
+        geoCoder.reverseGeocodeLocation(locations.last!) { placemarks, _ in
+          if let place = placemarks?.first {
+                    
+                    let description = "\(place)"
+            self.sendEvent(withName: "locationChange", body: ["lat": locations.last?.coordinate.latitude as Any, "lon": locations.last?.coordinate.longitude as Any, "description": description, "arrivalTime": String(locations.last?.timestamp.timeIntervalSince1970 ?? 0), "departureTime" : "", "type": "route", "speed": String(locations.last?.speed ?? 0)] as [String : Any])
+
+          }
+        }
+//      }
+
+
 
     
-    geoCoder.reverseGeocodeLocation(locations.last!) { placemarks, _ in
-      if let place = placemarks?.first {
-        let description = "\(place)"
-        self.sendEvent(withName: "locationChange", body: ["lat": locations.last?.coordinate.latitude as Any, "lon": locations.last?.coordinate.longitude as Any, "description": description, "arrivalTime": String(locations.last?.timestamp.timeIntervalSince1970 ?? 0), "departureTime" : ""] as [String : Any])
-
-      }
-    }
+    
 
 
   }
@@ -289,7 +300,7 @@ for localIdentifier in calendarIdentifiers {
     geoCoder.reverseGeocodeLocation(clLocation) { placemarks, _ in
       if let place = placemarks?.first {
         let description = "\(place)"
-        self.sendEvent(withName: "locationChange", body: ["lat": clLocation.coordinate.latitude as Any, "lon": clLocation.coordinate.longitude as Any, "description": description, "arrivalTime": String(visit.arrivalDate.timeIntervalSince1970 ?? 0), "departureTime" : String(visit.departureDate.timeIntervalSince1970 ?? 0)] as [String : Any])
+        self.sendEvent(withName: "locationChange", body: ["lat": clLocation.coordinate.latitude as Any, "lon": clLocation.coordinate.longitude as Any, "description": description, "arrivalTime": String(visit.arrivalDate.timeIntervalSince1970 ?? 0), "departureTime" : String(visit.departureDate.timeIntervalSince1970 ?? 0), "type": "visit"] as [String : Any])
 
       }
     }

@@ -4,8 +4,8 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 
-import Home from '../../Home';
-import EntryView from '../modules/entries/views/EntryView';
+// import Home from '../../Home';
+// import EntryView from '../modules/entries/views/EntryView';
 
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
@@ -24,7 +24,13 @@ const AppNavigator = ({routes}) => {
   return (
     <Tab.Navigator
       initialRouteName="Entry"
-      screenOptions={{headerShown: false}}>
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          borderTopRightRadius: 20,
+          borderTopLeftRadius: 20,
+        },
+      }}>
       <Tab.Screen
         name="Stories"
         options={{
