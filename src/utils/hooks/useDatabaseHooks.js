@@ -417,6 +417,30 @@ const useDatabaseHooks = () => {
     });
   };
 
+  const retrieveLastVisit = async () => {
+    return new Promise((resolve, reject) => {
+      db.transaction(
+        tx => {
+          tx.executeSql(
+            `SELECT * FROM Visits WHERE id = (SELECT MAX(id) FROM Visits WHERE (Visits.end IS NULL))`,
+            [],
+            (tx, results) => {
+              console.log({results});
+              let data = [];
+              for (let i = 0; i < results.rows.length; i++) {
+                data.push(results.rows.item(i));
+              }
+              resolve(data);
+            },
+          );
+        },
+        error => {
+          reject(error);
+        },
+      );
+    });
+  };
+
   const retrieveRoutePointsForVisitData = (startDate, endDate, callback) => {
     return new Promise((resolve, reject) => {
       db.transaction(
@@ -472,6 +496,7 @@ const useDatabaseHooks = () => {
     retrieveRoutePointsForVisitData,
     deleteMemoryData,
     updateMemoryData,
+    retrieveLastVisit,
   };
 };
 

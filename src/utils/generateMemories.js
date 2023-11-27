@@ -3,6 +3,7 @@ import useSettingsHooks from './hooks/useSettingsHooks';
 import Config from 'react-native-config';
 import moment from 'moment';
 import {EventTypes} from './Enums';
+import getBestLocationTag from './getBestLocationTag';
 
 const {Configuration, OpenAIApi} = require('openai');
 const configuration = new Configuration({
@@ -21,45 +22,10 @@ const {
   retrievePreviousVisitWithDeparture,
 } = useDatabaseHooks();
 
-const getAddressName = address => {
-  var locationAliasesArray = JSON.parse(
-    useSettingsHooks.getString('settings.locationAliases'),
-  );
-  var aliasObj = locationAliasesArray.find(
-    locationAliasObj => locationAliasObj.address === address,
-  );
-  if (aliasObj !== undefined) {
-    return aliasObj.alias;
-  } else {
-    return '';
-  }
-};
-
 const getAverage = arr => {
   let reducer = (total, currentValue) => total + currentValue;
   let sum = arr.reduce(reducer);
   return sum / arr.length;
-};
-
-const getBestLocationTag = description => {
-  if (description === undefined) {
-    return '';
-  }
-
-  var addressArray = description?.split(',');
-  var index = 0;
-  var alias = getAddressName(addressArray[0].trim());
-  if (alias === '') {
-    for (var i = 0; i < addressArray.length; i++) {
-      if (!/^\d$/.test(addressArray[i].trim().charAt(0))) {
-        index = i;
-        break;
-      }
-    }
-    return addressArray[index].trim();
-  } else {
-    return alias;
-  }
 };
 
 const generateGenericMemory = async ({data, type, time}) => {
