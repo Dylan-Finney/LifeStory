@@ -835,31 +835,35 @@ const generateMemories = async ({data, date}) => {
     ).then(async () => {
       console.log('event finished');
       console.log({photosGroups});
-      await Promise.allSettled(
-        photosGroups.map(async (photoGroup, index) => {
-          try {
-            if (photoGroup.length > 1) {
-              var newPhotoGroupMemory = await generateGenericMemory({
-                data: photoGroup,
-                type: EventTypes.PHOTO_GROUP,
-                time: photoGroup[0].creation,
-              });
-              newMemories.push(newPhotoGroupMemory);
-            } else {
-              var newPhotoMemory = await generateGenericMemory({
-                data: photoGroup[0],
-                type: EventTypes.PHOTO,
-                time: photoGroup[0].creation,
-              });
-              newMemories.push(newPhotoMemory);
+      try {
+        await Promise.allSettled(
+          photosGroups.map(async (photoGroup, index) => {
+            try {
+              if (photoGroup.length > 1) {
+                var newPhotoGroupMemory = await generateGenericMemory({
+                  data: photoGroup,
+                  type: EventTypes.PHOTO_GROUP,
+                  time: photoGroup[0].creation,
+                });
+                newMemories.push(newPhotoGroupMemory);
+              } else {
+                var newPhotoMemory = await generateGenericMemory({
+                  data: photoGroup[0],
+                  type: EventTypes.PHOTO,
+                  time: photoGroup[0].creation,
+                });
+                newMemories.push(newPhotoMemory);
+              }
+            } catch (e) {
+              console.error(e);
             }
-          } catch (e) {
-            console.error(e);
-          }
-        }),
-      ).then(() => {
+          }),
+        );
+      } catch (e) {
+        console.error('photosGroups error', e);
+      } finally {
         console.log('photosGroups finished');
-      });
+      }
     });
   });
 

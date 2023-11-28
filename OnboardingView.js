@@ -165,6 +165,7 @@ export default OnboardingView = ({route, navigation}) => {
     devMode,
     firstEntryGenerated,
     setFirstEntryGenerated,
+    checkIfReadyToGenerate,
   } = useContext(AppContext);
   // console.log({entries, memories});
 
@@ -492,221 +493,220 @@ export default OnboardingView = ({route, navigation}) => {
 
   console.log(Dimensions.get('window'));
 
-  const checkIfReadyToGenerate = async () => {
-    const date = new Date(Date.now());
-    const lastMemoryCheckTime = new Date(
-      useSettingsHooks.getNumber('settings.lastMemoryCheckTime'),
-      // 0,
-    );
+  // const checkIfReadyToGenerate = async () => {
+  //   const date = new Date(Date.now());
+  //   const lastMemoryCheckTime = new Date(
+  //     useSettingsHooks.getNumber('settings.lastMemoryCheckTime'),
+  //     // 0,
+  //   );
 
-    //SAME DAY
+  //   //SAME DAY
 
-    /*DIFFERENT DAYS
-    if did past 22 night before and time is now above 8{
+  //   /*DIFFERENT DAYS
+  //   if did past 22 night before and time is now above 8{
 
-    } else {
+  //   } else {
 
-    }
-      */
-    // if (lastMemoryCheckTime.toDateString() !== date.toDateString()) {
-    // } else {
-    //   if (lastMemoryCheckTime.getHours() < 8 && date.getHours() >= 8) {
-    //     // 0-8
-    //   } else if (lastMemoryCheckTime.getHours() < 15 && date.getHours() >= 15) {
-    //     //15-22
-    //   } else if (lastMemoryCheckTime.getHours() < 22 && date.getHours() >= 22) {
-    //   }
-    // }
+  //   }
+  //     */
+  //   // if (lastMemoryCheckTime.toDateString() !== date.toDateString()) {
+  //   // } else {
+  //   //   if (lastMemoryCheckTime.getHours() < 8 && date.getHours() >= 8) {
+  //   //     // 0-8
+  //   //   } else if (lastMemoryCheckTime.getHours() < 15 && date.getHours() >= 15) {
+  //   //     //15-22
+  //   //   } else if (lastMemoryCheckTime.getHours() < 22 && date.getHours() >= 22) {
+  //   //   }
+  //   // }
 
-    const readyToGenerateMemory = async ({start, end}) => {
-      setMemoryLoadingMessage('Generating');
-      setMemoryLoadingState(true);
-      const eventData = await getPermissionsAndData({start, end});
-      console.log('Event Data For Memory Generation', eventData);
-      const newMemories = await generateMemories({
-        data: eventData,
-        date: date.getTime(),
-      });
-      const updatedMemories = await getMemories();
-      setMemories(updatedMemories);
-      useSettingsHooks.set('settings.lastMemoryCheckTime', Date.now());
-    };
+  //   const readyToGenerateMemory = async ({start, end}) => {
+  //     setMemoryLoadingMessage('Generating');
+  //     setMemoryLoadingState(true);
+  //     const eventData = await getPermissionsAndData({start, end});
+  //     console.log('Event Data For Memory Generation', eventData);
+  //     const newMemories = await generateMemories({
+  //       data: eventData,
+  //       date: date.getTime(),
+  //     });
+  //     const updatedMemories = await getMemories();
+  //     setMemories(updatedMemories);
+  //     useSettingsHooks.set('settings.lastMemoryCheckTime', Date.now());
+  //   };
 
-    const checkIfMemoryReadyToGenerate = async () => {
-      setMemoryLoadingMessage('Checking');
-      /*
-      MEMORY GENERATION
-    */
-      console.log('Check if memory can be generated');
-      console.log(date.getHours());
-      console.log(lastMemoryCheckTime.getHours());
-      console.log(lastMemoryCheckTime.toDateString());
-      console.log(date.getHours());
-      //If current time between 22:00:00 and 07:59:59
-      if (date.getHours() >= 22 || date.getHours() < 8) {
-        // to generate 15-21:59
-        //check if can
-        console.log('current time between 10:00PM and 08:00AM');
+  //   const checkIfMemoryReadyToGenerate = async () => {
+  //     setMemoryLoadingMessage('Checking');
+  //     /*
+  //     MEMORY GENERATION
+  //   */
+  //     console.log('Check if memory can be generated');
+  //     console.log(date.getHours());
+  //     console.log(lastMemoryCheckTime.getHours());
+  //     console.log(lastMemoryCheckTime.toDateString());
+  //     console.log(date.getHours());
+  //     //If current time between 22:00:00 and 07:59:59
+  //     if (date.getHours() >= 22 || date.getHours() < 8) {
+  //       // to generate 15-21:59
+  //       //check if can
+  //       console.log('current time between 10:00PM and 08:00AM');
 
-        console.log(lastMemoryCheckTime.toLocaleString());
-        const yesterday = new Date(date.getTime());
-        yesterday.setDate(yesterday.getDate() - 1);
-        if (
-          (date.getHours() >= 22 &&
-            ((lastMemoryCheckTime.getHours() < 22 &&
-              lastMemoryCheckTime.toDateString() === date.toDateString()) ||
-              lastMemoryCheckTime.toDateString() !== date.toDateString())) ||
-          (date.getHours() < 8 &&
-            ((lastMemoryCheckTime.getHours() < 22 &&
-              lastMemoryCheckTime.toDateString() ===
-                yesterday.toDateString()) ||
-              (lastMemoryCheckTime.toDateString() !== date.toDateString() &&
-                lastMemoryCheckTime.toDateString() !==
-                  yesterday.toDateString())))
-        ) {
-          console.log('generate 15-21:59');
-          const start = new Date(Date.now());
-          if (date.getHours() >= 0 && date.getHours() < 22) {
-            start.setDate(start.getDate() - 1);
-          }
-          start.setHours(15);
-          start.setMinutes(0);
-          start.setSeconds(0);
-          start.setMilliseconds(0);
-          const end = new Date(start.getTime());
-          end.setHours(22);
-          end.setMilliseconds(end.getMilliseconds() - 1);
-          await readyToGenerateMemory({start, end});
-        }
-      }
-      //If current time between 08:00:00 and 14:59:59
-      else if (
-        date.getHours() < 15 &&
-        ((lastMemoryCheckTime.getHours() < 8 &&
-          lastMemoryCheckTime.toDateString() === date.toDateString()) ||
-          lastMemoryCheckTime.toDateString() !== date.toDateString())
-      ) {
-        // to generate 22-7:59
-        console.log('generate 22-7:59');
-        const start = new Date(Date.now());
-        start.setHours(22);
-        start.setMinutes(0);
-        start.setSeconds(0);
-        start.setMilliseconds(0);
-        const end = new Date(start.getTime());
-        start.setDate(start.getDate() - 1);
-        end.setHours(8);
-        end.setMilliseconds(end.getMilliseconds() - 1);
-        await readyToGenerateMemory({start, end});
-      }
-      //If current time between 15:00:00 and 21:59:59
-      else if (
-        date.getHours() >= 15 &&
-        ((lastMemoryCheckTime.getHours() < 15 &&
-          lastMemoryCheckTime.toDateString() === date.toDateString()) ||
-          lastMemoryCheckTime.toDateString() !== date.toDateString())
-      ) {
-        // to generate 8-14:59
-        console.log('generate 8-14:59');
-        const start = new Date(Date.now());
-        start.setHours(8);
-        start.setMinutes(0);
-        start.setSeconds(0);
-        start.setMilliseconds(0);
-        const end = new Date(start.getTime());
-        end.setHours(15);
-        end.setMilliseconds(end.getMilliseconds() - 1);
-        await readyToGenerateMemory({start, end});
-      } else {
-        console.log('Not Ready To Generate Memory');
-      }
-      console.log('Finished checking If Memory is Ready');
-      setMemoryLoadingMessage('Finished');
-      setMemoryLoadingState(false);
-    };
+  //       console.log(lastMemoryCheckTime.toLocaleString());
+  //       const yesterday = new Date(date.getTime());
+  //       yesterday.setDate(yesterday.getDate() - 1);
+  //       if (
+  //         (date.getHours() >= 22 &&
+  //           ((lastMemoryCheckTime.getHours() < 22 &&
+  //             lastMemoryCheckTime.toDateString() === date.toDateString()) ||
+  //             lastMemoryCheckTime.toDateString() !== date.toDateString())) ||
+  //         (date.getHours() < 8 &&
+  //           ((lastMemoryCheckTime.getHours() < 22 &&
+  //             lastMemoryCheckTime.toDateString() ===
+  //               yesterday.toDateString()) ||
+  //             (lastMemoryCheckTime.toDateString() !== date.toDateString() &&
+  //               lastMemoryCheckTime.toDateString() !==
+  //                 yesterday.toDateString())))
+  //       ) {
+  //         console.log('generate 15-21:59');
+  //         const start = new Date(Date.now());
+  //         if (date.getHours() >= 0 && date.getHours() < 22) {
+  //           start.setDate(start.getDate() - 1);
+  //         }
+  //         start.setHours(15);
+  //         start.setMinutes(0);
+  //         start.setSeconds(0);
+  //         start.setMilliseconds(0);
+  //         const end = new Date(start.getTime());
+  //         end.setHours(22);
+  //         end.setMilliseconds(end.getMilliseconds() - 1);
+  //         await readyToGenerateMemory({start, end});
+  //       }
+  //     }
+  //     //If current time between 08:00:00 and 14:59:59
+  //     else if (
+  //       date.getHours() < 15 &&
+  //       ((lastMemoryCheckTime.getHours() < 8 &&
+  //         lastMemoryCheckTime.toDateString() === date.toDateString()) ||
+  //         lastMemoryCheckTime.toDateString() !== date.toDateString())
+  //     ) {
+  //       // to generate 22-7:59
+  //       console.log('generate 22-7:59');
+  //       const start = new Date(Date.now());
+  //       start.setHours(22);
+  //       start.setMinutes(0);
+  //       start.setSeconds(0);
+  //       start.setMilliseconds(0);
+  //       const end = new Date(start.getTime());
+  //       start.setDate(start.getDate() - 1);
+  //       end.setHours(8);
+  //       end.setMilliseconds(end.getMilliseconds() - 1);
+  //       await readyToGenerateMemory({start, end});
+  //     }
+  //     //If current time between 15:00:00 and 21:59:59
+  //     else if (
+  //       date.getHours() >= 15 &&
+  //       ((lastMemoryCheckTime.getHours() < 15 &&
+  //         lastMemoryCheckTime.toDateString() === date.toDateString()) ||
+  //         lastMemoryCheckTime.toDateString() !== date.toDateString())
+  //     ) {
+  //       // to generate 8-14:59
+  //       console.log('generate 8-14:59');
+  //       const start = new Date(Date.now());
+  //       start.setHours(8);
+  //       start.setMinutes(0);
+  //       start.setSeconds(0);
+  //       start.setMilliseconds(0);
+  //       const end = new Date(start.getTime());
+  //       end.setHours(15);
+  //       end.setMilliseconds(end.getMilliseconds() - 1);
+  //       await readyToGenerateMemory({start, end});
+  //     } else {
+  //       console.log('Not Ready To Generate Memory');
+  //     }
+  //     console.log('Finished checking If Memory is Ready');
+  //     setMemoryLoadingMessage('Finished');
+  //     setMemoryLoadingState(false);
+  //   };
 
-    const checkIfStoryReadyToGenerate = async () => {
-      setStoryLoadingMessage('Checking');
-      if (entries.length > 0) {
-        /*
-          If today is >8AM, check if last entry is before 8AM today.
-          If today is <8AM, check if last entry is before 8AM previous day.
-          If today is >8PM, check if last entry is before 8PM today
-          if today is <8PM, check if last is before 8PM the previous day. 
+  //   const checkIfStoryReadyToGenerate = async () => {
+  //     setStoryLoadingMessage('Checking');
+  //     if (entries.length > 0) {
+  //       /*
+  //         If today is >8AM, check if last entry is before 8AM today.
+  //         If today is <8AM, check if last entry is before 8AM previous day.
+  //         If today is >8PM, check if last entry is before 8PM today
+  //         if today is <8PM, check if last is before 8PM the previous day.
 
+  //       */
+  //       const entriesTest = entries.map(entry =>
+  //         new Date(entry.time).toLocaleString(),
+  //       );
+  //       console.log(entriesTest);
 
-        */
-        const entriesTest = entries.map(entry =>
-          new Date(entry.time).toLocaleString(),
-        );
-        console.log(entriesTest);
+  //       const lastEntry = entries.sort((a, b) => b.time - a.time)[0];
+  //       const lastEntryDate = new Date(lastEntry.time);
+  //       const hourThreshold = useSettingsHooks.getNumber(
+  //         'settings.createEntryTime',
+  //       );
+  //       const todayHour = new Date(Date.now()).getHours();
+  //       const todayTimeThreshold = new Date(Date.now());
+  //       todayTimeThreshold.setHours(hourThreshold);
+  //       todayTimeThreshold.setMinutes(0);
+  //       todayTimeThreshold.setMinutes(0);
+  //       todayTimeThreshold.setMinutes(0);
+  //       console.log(hourThreshold);
+  //       console.log(lastEntryDate.toLocaleString());
 
-        const lastEntry = entries.sort((a, b) => b.time - a.time)[0];
-        const lastEntryDate = new Date(lastEntry.time);
-        const hourThreshold = useSettingsHooks.getNumber(
-          'settings.createEntryTime',
-        );
-        const todayHour = new Date(Date.now()).getHours();
-        const todayTimeThreshold = new Date(Date.now());
-        todayTimeThreshold.setHours(hourThreshold);
-        todayTimeThreshold.setMinutes(0);
-        todayTimeThreshold.setMinutes(0);
-        todayTimeThreshold.setMinutes(0);
-        console.log(hourThreshold);
-        console.log(lastEntryDate.toLocaleString());
+  //       const yesterdayTimeThreshold = new Date(todayTimeThreshold.getTime());
+  //       yesterdayTimeThreshold.setDate(yesterdayTimeThreshold.getDate() - 1);
+  //       if (
+  //         (todayHour >=
+  //           useSettingsHooks.getNumber('settings.createEntryTime') &&
+  //           lastEntryDate.getTime() < todayTimeThreshold.getTime()) ||
+  //         (todayHour < useSettingsHooks.getNumber('settings.createEntryTime') &&
+  //           lastEntryDate.getTime() < yesterdayTimeThreshold.getTime())
+  //       ) {
+  //         console.log('Ready To Generate Story');
+  //         setStoryLoadingMessage('Generating');
+  //         const newEntry = await generateEntry({memories});
+  //         setEntries([newEntry, ...entries]);
+  //       } else {
+  //         console.log('Not Ready To Generate Story');
+  //       }
+  //     } else {
+  //       if (
+  //         useSettingsHooks.getNumber('settings.onboardingTime') < Date.now()
+  //       ) {
+  //         console.log('Time to generate entry');
+  //         // setFirstEntryGenerated(true);
+  //         console.log('Ready abc123');
+  //         setStoryLoadingMessage('Generating');
+  //         const newEntry = await generateEntry({memories});
+  //         setEntries([newEntry, ...entries]);
+  //         onCreateTriggerNotification({
+  //           first: false,
+  //           createEntryTime: useSettingsHooks.getNumber(
+  //             'settings.createEntryTime',
+  //           ),
+  //           time: null,
+  //         });
+  //       } else {
+  //         console.log('Not Ready');
+  //       }
+  //     }
+  //     setStoryLoadingMessage('Finished');
+  //   };
+  //   console.log(memories.length);
 
-        const yesterdayTimeThreshold = new Date(todayTimeThreshold.getTime());
-        yesterdayTimeThreshold.setDate(yesterdayTimeThreshold.getDate() - 1);
-        if (
-          (todayHour >=
-            useSettingsHooks.getNumber('settings.createEntryTime') &&
-            lastEntryDate.getTime() < todayTimeThreshold.getTime()) ||
-          (todayHour < useSettingsHooks.getNumber('settings.createEntryTime') &&
-            lastEntryDate.getTime() < yesterdayTimeThreshold.getTime())
-        ) {
-          console.log('Ready To Generate Story');
-          setStoryLoadingMessage('Generating');
-          const newEntry = await generateEntry({memories});
-          setEntries([newEntry, ...entries]);
-        } else {
-          console.log('Not Ready To Generate Story');
-        }
-      } else {
-        if (
-          useSettingsHooks.getNumber('settings.onboardingTime') < Date.now()
-        ) {
-          console.log('Time to generate entry');
-          // setFirstEntryGenerated(true);
-          console.log('Ready abc123');
-          setStoryLoadingMessage('Generating');
-          const newEntry = await generateEntry({memories});
-          setEntries([newEntry, ...entries]);
-          onCreateTriggerNotification({
-            first: false,
-            createEntryTime: useSettingsHooks.getNumber(
-              'settings.createEntryTime',
-            ),
-            time: null,
-          });
-        } else {
-          console.log('Not Ready');
-        }
-      }
-      setStoryLoadingMessage('Finished');
-    };
-    console.log(memories.length);
-
-    await checkIfMemoryReadyToGenerate();
-    //Create Local Notifications to go off at 08:00, 15:00 && 22:0
-    try {
-      // onCreateTriggerReminder({remindTime: 8});
-      // onCreateTriggerReminder({remindTime: 15});
-      // onCreateTriggerReminder({remindTime: 22});
-    } catch (e) {
-      console.error({e});
-    }
-    await checkIfStoryReadyToGenerate();
-  };
+  //   await checkIfMemoryReadyToGenerate();
+  //   //Create Local Notifications to go off at 08:00, 15:00 && 22:0
+  //   try {
+  //     // onCreateTriggerReminder({remindTime: 8});
+  //     // onCreateTriggerReminder({remindTime: 15});
+  //     // onCreateTriggerReminder({remindTime: 22});
+  //   } catch (e) {
+  //     console.error({e});
+  //   }
+  //   await checkIfStoryReadyToGenerate();
+  // };
 
   useEffect(() => {
     console.log({loadingEntries});
