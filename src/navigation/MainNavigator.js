@@ -111,34 +111,36 @@ const MainNavigator = () => {
         console.log('LOADING ENTRIES DATA');
         const localEntries = await retrieveData('Entries');
         console.log({localEntries});
-        var updatedEntries = localEntries.map(localEntry => {
-          return {
-            ...localEntry,
-            tags: JSON.parse(localEntry.tags),
-            time: parseInt(localEntry.time),
-            emotion: parseInt(localEntry.emotion),
-            vote: parseInt(localEntry.vote),
-            // emotions:
-            //   localEntry.emotions === '' ? [] : JSON.parse(localEntry.emotions),
-            // votes: localEntry.votes === '' ? [] : JSON.parse(localEntry.votes),
-            title: localEntry.title,
-            origins: {
-              entry: {
-                time: parseInt(localEntry.bodyModifiedAt),
-                source: localEntry.bodyModifiedSource,
+        var updatedEntries = localEntries
+          .map(localEntry => {
+            return {
+              ...localEntry,
+              tags: JSON.parse(localEntry.tags),
+              time: parseInt(localEntry.time),
+              emotion: parseInt(localEntry.emotion),
+              vote: parseInt(localEntry.vote),
+              // emotions:
+              //   localEntry.emotions === '' ? [] : JSON.parse(localEntry.emotions),
+              // votes: localEntry.votes === '' ? [] : JSON.parse(localEntry.votes),
+              title: localEntry.title,
+              origins: {
+                entry: {
+                  time: parseInt(localEntry.bodyModifiedAt),
+                  source: localEntry.bodyModifiedSource,
+                },
+                title: {
+                  time: parseInt(localEntry.titleModifiedAt),
+                  source: localEntry.titleModifiedSource,
+                },
               },
-              title: {
-                time: parseInt(localEntry.titleModifiedAt),
-                source: localEntry.titleModifiedSource,
-              },
-            },
-            events: JSON.parse(localEntry.events),
-            entry: localEntry.body,
-            showAsYesterday:
-              parseInt(localEntry.showAsYesterday) === 1 ? true : false,
-            generated: parseInt(localEntry.generated) === 0 ? false : true,
-          };
-        });
+              events: JSON.parse(localEntry.events),
+              entry: localEntry.body,
+              showAsYesterday:
+                parseInt(localEntry.showAsYesterday) === 1 ? true : false,
+              generated: parseInt(localEntry.generated) === 0 ? false : true,
+            };
+          })
+          .sort((a, b) => b.time - a.time);
         console.log({updatedEntries});
         setEntries(updatedEntries);
         setLoadingEntries(false);
@@ -578,32 +580,32 @@ const MainNavigator = () => {
         console.log(entriesTest);
 
         const lastEntry = entries.sort((a, b) => b.time - a.time)[0];
-        const lastEntryDate = new Date(lastEntry.time);
-        const hourThreshold = useSettingsHooks.getNumber(
-          'settings.createEntryTime',
+        var lastEntryDate = new Date(lastEntry.time);
+        lastEntryDate.setDate(lastEntryDate.getDate() + 1);
+        lastEntryDate.setHours(
+          useSettingsHooks.getNumber('settings.createEntryTime'),
         );
-        const todayHour = new Date(Date.now()).getHours();
-        const todayTimeThreshold = new Date(Date.now());
-        todayTimeThreshold.setHours(hourThreshold);
-        todayTimeThreshold.setMinutes(0);
-        todayTimeThreshold.setMinutes(0);
-        todayTimeThreshold.setMinutes(0);
-        console.log(hourThreshold);
-        console.log(lastEntryDate.toLocaleString());
+        lastEntryDate.setMinutes(0);
+        lastEntryDate.setSeconds(0);
+        // const hourThreshold = useSettingsHooks.getNumber(
+        //   'settings.createEntryTime',
+        // );
+        // const todayHour = new Date(Date.now()).getHours();
+        // const todayTimeThreshold = new Date(Date.now());
+        // todayTimeThreshold.setHours(hourThreshold);
+        // todayTimeThreshold.setMinutes(0);
+        // todayTimeThreshold.setMinutes(0);
+        // todayTimeThreshold.setMinutes(0);
+        // console.log(hourThreshold);
+        // console.log(lastEntryDate.toLocaleString());
 
-        const yesterdayTimeThreshold = new Date(todayTimeThreshold.getTime());
-        yesterdayTimeThreshold.setDate(yesterdayTimeThreshold.getDate() - 1);
-        if (
-          (todayHour >=
-            useSettingsHooks.getNumber('settings.createEntryTime') &&
-            lastEntryDate.getTime() < todayTimeThreshold.getTime()) ||
-          (todayHour < useSettingsHooks.getNumber('settings.createEntryTime') &&
-            lastEntryDate.getTime() < yesterdayTimeThreshold.getTime())
-        ) {
+        // const yesterdayTimeThreshold = new Date(todayTimeThreshold.getTime());
+        // yesterdayTimeThreshold.setDate(yesterdayTimeThreshold.getDate() - 1);
+        if (Date.now() >= lastEntryDate.getTime()) {
           console.log('Ready To Generate Story');
           setStoryLoadingMessage('Generating');
           const newEntry = await generateEntry({
-            memories: await getMemories(),
+            // memories: await getMemories(),
             showAsYesterday:
               useSettingsHooks.getNumber('settings.createEntryTime') === 8,
           });
@@ -649,7 +651,9 @@ const MainNavigator = () => {
     } catch (e) {
       console.error({e});
     }
-    await checkIfStoryReadyToGenerate();
+    if (storyLoadingMessage === 'Finished' || storyLoadingMessage === 'Busy') {
+      await checkIfStoryReadyToGenerate();
+    }
   };
 
   const [clickedNotification, setClickedNotification] = useState(null);

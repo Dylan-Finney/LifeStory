@@ -705,6 +705,7 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
     messages,
   });
   const response = completion.data.choices[0].message?.content;
+  // const response = `This morning I took a photo of a red bird outside.`;
   console.log(response);
   createMemoriesTable();
   saveMemoryData({
