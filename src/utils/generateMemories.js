@@ -4,6 +4,17 @@ import Config from 'react-native-config';
 import moment from 'moment';
 import {EventTypes} from './Enums';
 import getBestLocationTag from './getBestLocationTag';
+import {decode, encode} from 'base-64';
+// import Config from 'react-native-config';
+const AWS = require('aws-sdk');
+
+AWS.config.update({
+  accessKeyId: Config.AWS_ACCESS_KEY,
+  secretAccessKey: Config.AWS_SECRET_KEY,
+  region: Config.AWS_REGION,
+});
+
+const Rekognition = new AWS.Rekognition();
 
 const {Configuration, OpenAIApi} = require('openai');
 const configuration = new Configuration({
@@ -28,6 +39,77 @@ const getAverage = arr => {
   return sum / arr.length;
 };
 
+const analyzePhoto = async photo => {
+  return new Promise(async (resolve, reject) => {
+    console.log(photo);
+    const image = decode(photo.data);
+    const length = image.length;
+    const imageBytes = new ArrayBuffer(length);
+    const ua = new Uint8Array(imageBytes);
+    for (var i = 0; i < length; i++) {
+      ua[i] = image.charCodeAt(i);
+    }
+    var responseLabels;
+    var responseOCR;
+    var labelsWithTitle;
+    var textDetections;
+
+    try {
+      responseOCR = await Rekognition.detectText({
+        Image: {Bytes: ua},
+      }).promise();
+      console.log('Rekognition.detectText Response', responseOCR);
+      responseOCR = responseOCR.TextDetections.filter(
+        textDetection =>
+          textDetection.Confidence >= 80 && textDetection.Type === 'LINE',
+      );
+      textDetections = responseOCR.map(textDetection => {
+        return {
+          Text: textDetection.DetectedText,
+          Confidence: textDetection.Confidence,
+        };
+      });
+    } catch (e) {
+      console.error('Error with AWS OCR', e);
+    }
+    try {
+      responseLabels = await Rekognition.detectLabels({
+        Image: {Bytes: ua},
+      }).promise();
+      const labels = responseLabels.Labels;
+      const labelsFiltered = labels.filter(label => label.Confidence >= 80);
+      labelsWithTitle = labelsFiltered.map(label => {
+        if (
+          label.Categories.filter(category => category.Name).some(
+            r =>
+              [
+                'Person Description',
+                'Actions',
+                'Events and Attractions',
+              ].indexOf(r) >= 0,
+          )
+        ) {
+          return {
+            ...label,
+            title: `${label.Instances.length}x${label.Name}`,
+          };
+        } else {
+          return {
+            ...label,
+            title: label.Name,
+          };
+        }
+      });
+    } catch (e) {
+      console.error('Error with AWS Labelling', e);
+    }
+    resolve({
+      labelsWithTitle,
+      textDetections,
+    });
+  });
+};
+
 const generateGenericMemory = async ({data, type, time}) => {
   var messages = [];
   var systemPrompt = `You are my assistant. I will give you an event that happened today (location visit, photo taken, route, etc) and I want you to write a brief concise natural description as if it were apart of a diary. Assume that other entries could exist before and after. Write in the ${useSettingsHooks.getString(
@@ -37,6 +119,10 @@ const generateGenericMemory = async ({data, type, time}) => {
       .generate
   }`;
   var userPrompt = '';
+  var photoAnalysis =
+    useSettingsHooks.getBoolean('settings.photoAnalysis') || false;
+
+  console.log('photoAnalysis', {photoAnalysis});
 
   switch (type) {
     case EventTypes.LOCATION_ROUTE:
@@ -342,7 +428,23 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
       ];
       break;
     case EventTypes.PHOTO:
-      data.data = '';
+      // data.data = '';
+      // var photo = data;
+      if (photoAnalysis === true) {
+        const {labelsWithTitle, textDetections} = await analyzePhoto(data);
+        console.log({labelsWithTitle});
+        data = {
+          ...data,
+          data: '',
+          labels: labelsWithTitle,
+          text: textDetections,
+        };
+      } else {
+        data = {
+          ...data,
+          data: '',
+        };
+      }
 
       var alias = getBestLocationTag(
         data.description?.split('@')[0] || undefined,
@@ -444,6 +546,35 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
       console.log('photo message', JSON.stringify(messages));
       break;
     case EventTypes.PHOTO_GROUP:
+      const MAX_PHOTO_GROUP_LENGTH = 10;
+      const processGroup = async data => {
+        if (photoAnalysis === true) {
+          return await Promise.all(
+            data.map(async photo => {
+              const {labelsWithTitle, textDetections} = await analyzePhoto(
+                photo,
+              );
+              return {
+                ...photo,
+                data: '',
+                labels: labelsWithTitle,
+                text: textDetections,
+              };
+            }),
+          );
+        } else {
+          return data.map(photo => {
+            return {
+              ...photo,
+              data: '',
+            };
+          });
+        }
+      };
+      const photoGroup = await processGroup(
+        data.slice(0, MAX_PHOTO_GROUP_LENGTH),
+      );
+      console.log({photoGroup});
       messages = [
         {
           role: 'system',
@@ -502,7 +633,7 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
         {
           role: 'user',
           content: `[
-            ${data.slice(0, 10).map(
+            ${photoGroup.map(
               photo => `{
   "photo": {
     "fileName": "${photo.name}",
@@ -529,10 +660,27 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
   }
 },
 `,
-            )}
+            )} ${
+            data.length > MAX_PHOTO_GROUP_LENGTH &&
+            `...${data.length - MAX_PHOTO_GROUP_LENGTH} more`
+          }
           ]`,
         },
       ];
+
+      if (data.length > MAX_PHOTO_GROUP_LENGTH) {
+        data = [
+          ...photoGroup,
+          ...data.slice(MAX_PHOTO_GROUP_LENGTH, data.length - 1).map(photo => {
+            return {
+              ...photo,
+              data: '',
+            };
+          }),
+        ];
+      } else {
+        data = photoGroup;
+      }
 
       console.log('photo message', JSON.stringify(messages));
       break;
