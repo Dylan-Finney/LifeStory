@@ -4,7 +4,7 @@ import {EventTypes} from '../../../../utils/Enums';
 
 export const MemoryEventHeader = ({type, eventsData, desc}) => {
   return (
-    <View style={{marginTop: 20, marginRight: 30}}>
+    <View style={{marginTop: 20, marginRight: 30, marginBottom: 12}}>
       <View
         style={{
           flexDirection: 'row',

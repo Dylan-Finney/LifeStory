@@ -43,7 +43,7 @@ export const ImageCollage = ({photoGroupData}) => {
               style={{
                 flexDirection: length === 3 ? 'column' : 'row',
                 justifyContent: 'space-between',
-                gap: 10,
+                // gap: 10,
               }}>
               {[...Array(length - 1 > 2 ? 2 : length - 1)].map((e, i) => (
                 <CustomImage

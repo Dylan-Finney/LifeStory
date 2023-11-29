@@ -3,34 +3,32 @@ import {ImageAsset} from '../../../../utils/native-modules/NativeImage';
 
 export const CustomImage = ({identifier, index, length}) => {
   const baseValues = {
-    width: {
-      base: 165,
-    },
-    height: {
-      base: 200,
-      small: 67,
-    },
+    width: 330,
+
+    height: 200,
   };
 
   const width = () => {
     switch (length) {
       case 1:
-        return 330;
+        return baseValues.width;
       case 2:
-        return 160;
       case 3:
+        return baseValues.width / 2;
+      case 4:
         switch (index) {
           case 0:
-            return 160;
+          case 3:
+            return baseValues.width / 2;
           default:
-            return 160;
+            return baseValues.width / 4;
         }
       default:
         switch (index) {
           case 0:
-            return 170;
+            return baseValues.width / 2;
           default:
-            return 70;
+            return baseValues.width / 4;
         }
     }
   };
@@ -38,15 +36,14 @@ export const CustomImage = ({identifier, index, length}) => {
   const height = () => {
     switch (length) {
       case 1:
-        return baseValues.height.base;
       case 2:
-        return baseValues.height.base - 30;
+        return baseValues.height;
       default:
         switch (index) {
           case 0:
-            return 150;
+            return baseValues.height;
           default:
-            return 70;
+            return baseValues.height / 2;
         }
     }
   };
@@ -122,7 +119,6 @@ export const CustomImage = ({identifier, index, length}) => {
         // width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
-        // backgroundColor: 'green',
         overflow: 'hidden',
         // borderRadius: 20,
       }}>
@@ -131,12 +127,12 @@ export const CustomImage = ({identifier, index, length}) => {
           height: height(),
           width: width(),
           // backgroundColor: 'red',
-          borderRadius: 20,
-          // borderTopLeftRadius: bordersTopLeft() === true ? 20 : 0,
-          // borderTopRightRadius: bordersTopRight() === true ? 20 : 0,
-          // borderBottomLeftRadius: bordersBottomLeft() === true ? 20 : 0,
-          // borderBottomRightRadius: bordersBottomRight() === true ? 20 : 0,
-          marginRight: length > 1 && index === 0 ? 10 : 0,
+          // borderRadius: 20,
+          borderTopLeftRadius: bordersTopLeft() === true ? 20 : 0,
+          borderTopRightRadius: bordersTopRight() === true ? 20 : 0,
+          borderBottomLeftRadius: bordersBottomLeft() === true ? 20 : 0,
+          borderBottomRightRadius: bordersBottomRight() === true ? 20 : 0,
+          // marginRight: length > 1 && index === 0 ? 10 : 0,
           overflow: 'hidden',
         }}>
         <ImageAsset

@@ -108,7 +108,6 @@ export default MemoryView = ({
   matches2[Math.floor(newBody.length / 2)]?.map(link => {
     linksFinal.push(link);
   });
-
   return (
     <View
       onLayout={onLayout}
