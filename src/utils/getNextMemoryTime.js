@@ -1,3 +1,4 @@
+import getFormatedTimeString from './getFormattedTimeString';
 import useSettingsHooks from './hooks/useSettingsHooks';
 
 export default getNextMemoryTime = () => {
@@ -35,5 +36,7 @@ export default getNextMemoryTime = () => {
     // timeStr = lastMemoryCheckTime.toLocaleString();
     timeStr = lastMemoryCheckTime.getHours();
   }
+
+  timeStr = getFormatedTimeString(lastMemoryCheckTime.getTime());
   return timeStr;
 };

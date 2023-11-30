@@ -24,13 +24,16 @@ export default NewModalItem = ({
       <Box style={styles.boxContainer}>{icon}</Box>
       <Box flexDirection="row">
         <Text
+          allowFontScaling={false}
           style={[
             styles.boldText,
             {color: danger ? styles.dangerText.color : 'black'},
           ]}>
           {boldText}{' '}
         </Text>
-        <Text style={styles.normalText}>{normalText}</Text>
+        <Text allowFontScaling={false} style={styles.normalText}>
+          {normalText}
+        </Text>
       </Box>
       {num !== undefined && (
         <Box
@@ -39,6 +42,7 @@ export default NewModalItem = ({
             numStyle === 1 && styles.numContainerActive,
           ]}>
           <Text
+            allowFontScaling={false}
             style={[styles.numText, numStyle === 1 && styles.numTextActive]}>
             {num}
           </Text>
@@ -51,6 +55,8 @@ export default NewModalItem = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
+    paddingHorizontal: 0,
+    width: '100%',
   },
   boxContainer: {
     paddingHorizontal: 6,
@@ -65,14 +71,17 @@ const styles = StyleSheet.create({
     height: 40,
   },
   boldText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
   },
   normalText: {
+    fontSize: 14,
     fontWeight: 'normal',
   },
   numContainer: {
     backgroundColor: '#E7F4FA',
+    justifyContent: 'flex-end',
+    marginLeft: 'auto',
 
     paddingHorizontal: 10,
     paddingVertical: 5,

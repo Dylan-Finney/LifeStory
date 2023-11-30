@@ -37,7 +37,7 @@ export default LabellingSheet = ({
   const [newCustomLabel, setNewCustomLabel] = useState('');
 
   const defaultLabels = {
-    roles: [
+    modes: [
       'Free Time',
       'Travel',
       'Vacation',
@@ -52,7 +52,7 @@ export default LabellingSheet = ({
       'Outdoor',
       'Event',
     ],
-    modes: [
+    roles: [
       'Professional',
       'Parent',
       'Sibling',
@@ -136,42 +136,95 @@ export default LabellingSheet = ({
 
   return (
     <Box>
-      <Box
-        alignItems="center"
-        justifyContent="center"
-        flexDirection="row"
-        gap={5}>
+      <Box width="100vw" justifyContent="center" alignItems="center">
         <Box
-          paddingHorizontal={4}
-          paddingVertical={4}
           alignItems="center"
           justifyContent="center"
-          backgroundColor="white"
-          borderColor="#E7E7E7"
-          borderRadius={5}
-          borderWidth={3}>
-          <LabelIcon height={20} width={20} primaryColor={'#6D6D6D'} />
+          flexDirection="row"
+          gap={5}>
+          <Box
+            paddingHorizontal={4}
+            paddingVertical={4}
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor="white"
+            borderColor="#E7E7E7"
+            borderRadius={5}
+            borderWidth={2}>
+            <LabelIcon height={15} width={15} primaryColor={'#6D6D6D'} />
+          </Box>
+          <Text
+            fontSize={20}
+            allowFontScaling={false}
+            fontWeight={'$bold'}
+            textAlign={'center'}>
+            Add Labels
+          </Text>
         </Box>
+
         <Text
-          fontSize={20}
           allowFontScaling={false}
-          fontWeight={'$bold'}
-          textAlign={'center'}>
-          Add Labels
+          textAlign={'center'}
+          fontSize={13}
+          width={'75%'}>
+          Labels help add meaning and find content more easily
         </Text>
       </Box>
-
-      <Text allowFontScaling={false} textAlign={'center'}>
-        Labels help add meaning and find content more easily
-      </Text>
       <Divider height={1} width={'$100'} mt={20} mb={20} />
       <ScrollView contentContainerStyle={{paddingHorizontal: 25}}>
-        <Text allowFontScaling={false} fontWeight={'$bold'}>
+        <Box alignItems="center" flexDirection="row" gap={5}>
+          <ModesIcon primaryColor={'#B6B6B6'} />
+          <Text allowFontScaling={false} fontWeight={'$bold'}>
+            Modes
+          </Text>
+        </Box>
+
+        <Text allowFontScaling={false}>
+          Select the mode(s) that best describe this entry.
+        </Text>
+
+        <LabelStack
+          includes={item => selectedLabels.modes?.includes(item)}
+          handle={item => handleLabelClick({item, type: 'modes'})}
+          labels={[...defaultLabels.modes, ...customLabels.modes]}
+          type={categories.MODES}
+        />
+        <Divider height={1} width={'$100'} mt={20} mb={20} />
+        <Box alignItems="center" flexDirection="row" gap={5}>
+          <RolesIcon primaryColor={'#B6B6B6'} />
+          <Text allowFontScaling={false} fontWeight={'$bold'}>
+            Roles
+          </Text>
+        </Box>
+        <Text allowFontScaling={false}>
+          Select your life role(s) that best define this entry.
+        </Text>
+
+        <LabelStack
+          includes={item => selectedLabels.roles?.includes(item)}
+          handle={item => handleLabelClick({item, type: 'roles'})}
+          labels={[...defaultLabels.roles, ...customLabels.roles]}
+          type={categories.ROLES}
+        />
+        <Divider height={1} width={'$100'} mt={20} mb={20} />
+        <Box alignItems="center" flexDirection="row" gap={5}>
+          <OtherIcon primaryColor={'#B6B6B6'} />
+          <Text allowFontScaling={false} fontWeight={'$bold'}>
+            Other
+          </Text>
+        </Box>
+        <LabelStack
+          includes={item => selectedLabels.other?.includes(item)}
+          handle={item => handleLabelClick({item, type: 'other'})}
+          labels={[...defaultLabels.other, ...customLabels.other]}
+          type={categories.OTHER}
+        />
+        <Divider height={1} width={'$100'} mt={20} mb={20} />
+
+        {/* <Text allowFontScaling={false} fontWeight={'$bold'}>
           New
-        </Text>
-        <Text allowFontScaling={false} textAlign={'left'}>
-          Create new label and choose the category
-        </Text>
+        </Text> */}
+
         <Input textAlign="center" alignItems="center">
           <InputField
             value={newCustomLabel}
@@ -322,54 +375,13 @@ export default LabellingSheet = ({
             </Text>
           </Pressable>
         </HStack>
-        <Divider height={1} width={'$100'} mt={20} mb={20} />
-        <Box alignItems="center" flexDirection="row" gap={5}>
-          <ModesIcon primaryColor={'#B6B6B6'} />
-          <Text allowFontScaling={false} fontWeight={'$bold'}>
-            Modes
-          </Text>
-        </Box>
-
-        <Text allowFontScaling={false}>
-          Select the mode(s) that best describe this entry.
+        <Text
+          allowFontScaling={false}
+          textAlign={'center'}
+          fontSize={13}
+          marginVertical={10}>
+          Create new label and choose the category
         </Text>
-
-        <LabelStack
-          includes={item => selectedLabels.modes?.includes(item)}
-          handle={item => handleLabelClick({item, type: 'modes'})}
-          labels={[...defaultLabels.modes, ...customLabels.modes]}
-          type={categories.MODES}
-        />
-        <Divider height={1} width={'$100'} mt={20} mb={20} />
-        <Box alignItems="center" flexDirection="row" gap={5}>
-          <RolesIcon primaryColor={'#B6B6B6'} />
-          <Text allowFontScaling={false} fontWeight={'$bold'}>
-            Roles
-          </Text>
-        </Box>
-        <Text allowFontScaling={false}>
-          Select your life role(s) that best define this entry.
-        </Text>
-
-        <LabelStack
-          includes={item => selectedLabels.roles?.includes(item)}
-          handle={item => handleLabelClick({item, type: 'roles'})}
-          labels={[...defaultLabels.roles, ...customLabels.roles]}
-          type={categories.ROLES}
-        />
-        <Divider height={1} width={'$100'} mt={20} mb={20} />
-        <Box alignItems="center" flexDirection="row" gap={5}>
-          <OtherIcon primaryColor={'#B6B6B6'} />
-          <Text allowFontScaling={false} fontWeight={'$bold'}>
-            Other
-          </Text>
-        </Box>
-        <LabelStack
-          includes={item => selectedLabels.other?.includes(item)}
-          handle={item => handleLabelClick({item, type: 'other'})}
-          labels={[...defaultLabels.other, ...customLabels.other]}
-          type={categories.OTHER}
-        />
       </ScrollView>
     </Box>
   );

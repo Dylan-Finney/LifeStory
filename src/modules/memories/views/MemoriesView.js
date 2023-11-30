@@ -546,7 +546,12 @@ export default MemoriesView = ({}) => {
     <>
       <Actionsheet isOpen={showModal} onClose={closeActionSheet}>
         <ActionsheetBackdrop />
-        <ActionsheetContent pb={50} maxHeight={'80%'}>
+        <ActionsheetContent
+          pb={50}
+          maxHeight={'80%'}
+          paddingHorizontal={
+            actionsheetScreen === ActionSheetScreens.MEMORIES.BASE ? 30 : 0
+          }>
           <ActionsheetDragIndicatorWrapper pb={10}>
             <ActionsheetDragIndicator />
           </ActionsheetDragIndicatorWrapper>
@@ -585,7 +590,7 @@ export default MemoriesView = ({}) => {
                   );
                 })}
               </Box>
-              <Divider backgroundColor="black" height={1} />
+              <Divider color="#636363" height={1} />
               <NewModalItem
                 boldText={'Upvote'}
                 normalText={'as more meaningful'}
@@ -674,7 +679,7 @@ export default MemoriesView = ({}) => {
                 }
               />
 
-              <Divider backgroundColor="black" height={1} />
+              <Divider color="#636363" height={1} />
               <NewModalItem
                 boldText={'Delete Memory'}
                 icon={<BinIcon />}
@@ -899,8 +904,7 @@ export default MemoriesView = ({}) => {
                 />
               ) : (
                 <Text>
-                  Check back at {getNextMemoryTime()}:00 to create new
-                  memories...
+                  Next Memories will be created at {getNextMemoryTime()}.
                 </Text>
               )}
             </>
@@ -1073,7 +1077,7 @@ export default MemoriesView = ({}) => {
             setShowModal(true);
             setActionsheetScreen(ActionSheetScreens.MEMORIES.CREATE);
           }}>
-          <NewEntryIcon />
+          <NewEntryIcon width={25} height={25} />
         </FloatingActionButton>
       </>
     </>

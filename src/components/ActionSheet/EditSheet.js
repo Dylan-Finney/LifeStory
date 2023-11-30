@@ -9,6 +9,7 @@ import {
   VStack,
   Textarea,
 } from '@gluestack-ui/themed';
+import {Image} from 'react-native';
 import {InputField} from '@gluestack-ui/themed';
 import {InputSlot} from '@gluestack-ui/themed';
 import {HStack, Text, Divider} from '@gluestack-ui/themed';
@@ -275,7 +276,17 @@ const EditTextArea = ({
   time,
 }) => {
   return (
-    <Textarea height={150} mb={20} rounded={'$lg'}>
+    <Textarea height={150} mb={20} pt={20} rounded={'$lg'}>
+      <TextareaInput
+        //   maxHeight={'%'}
+        allowFontScaling={false}
+        placeholder="Enter text here..."
+        role="document"
+        onChangeText={text => {
+          update(text, 'manual', Date.now());
+        }}
+        value={attr === attribute.TITLE ? title : body}
+      />
       <Box
         justifyContent="space-between"
         flexDirection="row"
@@ -432,24 +443,28 @@ const EditTextArea = ({
             gap={5}
             // alignContent="flex-end"
           >
-            <HistoryIcon />
-            <Text fontWeight="500" color="#118ED1">
-              {different
-                ? 'Now'
-                : `${getDifferenceUnit(Math.abs(Date.now() - time))} ago`}
+            {loadingAction.attr === attr ? (
+              <Image
+                source={require('../../assets/rewrite/Processing.gif')}
+                style={{width: 20, height: 20}}
+              />
+            ) : (
+              <HistoryIcon />
+            )}
+            <Text allowFontScaling={false} fontWeight="500" color="#118ED1">
+              {loadingAction.attr === attr ? (
+                <>Processing...</>
+              ) : (
+                <>
+                  {different
+                    ? 'Now'
+                    : `${getDifferenceUnit(Math.abs(Date.now() - time))} ago`}
+                </>
+              )}
             </Text>
           </Box>
         )}
       </Box>
-      <TextareaInput
-        //   maxHeight={'%'}
-        placeholder="Enter text here..."
-        role="document"
-        onChangeText={text => {
-          update(text, 'manual', Date.now());
-        }}
-        value={attr === attribute.TITLE ? title : body}
-      />
     </Textarea>
   );
 };
@@ -523,7 +538,11 @@ export default EditSheet = ({
           onPress={() => {
             cancel();
           }}>
-          <Text color={'#E93535'} fontWeight="500" textAlign={'center'}>
+          <Text
+            allowFontScaling={false}
+            color={'#E93535'}
+            fontWeight="500"
+            textAlign={'center'}>
             Cancel
           </Text>
         </Pressable>
@@ -539,10 +558,14 @@ export default EditSheet = ({
             justifyContent="center"
             backgroundColor="white"
             borderColor="#E7E7E7"
-            borderRadius={5}
-            borderWidth={3}>
+            borderRadius={2}
+            borderWidth={2}>
             {/* <PenIcon height={15} width={15} primaryColor={'#6D6D6D'} /> */}
-            <NewEntryIcon />
+            {create === true ? (
+              <NewEntryIcon width={15} height={15} />
+            ) : (
+              <PenIcon height={15} width={15} />
+            )}
           </Box>
           <Text
             fontSize={20}
@@ -575,6 +598,7 @@ export default EditSheet = ({
             }
           }}>
           <Text
+            allowFontScaling={false}
             color={
               tempTitle !== title || tempBody !== body ? '#118ED1' : '#E7E7E7'
             }
@@ -670,7 +694,12 @@ export default EditSheet = ({
         </Box>
         <Divider height={1} width={'$100'} mt={20} mb={20} />
 
-        <Text allowFontScaling={false}>Tone</Text>
+        <Text allowFontScaling={false} fontWeight="600">
+          Tone
+        </Text>
+        <Text allowFontScaling={false} fontSize={13} mb={10}>
+          Customize provided outputs by using the provided options
+        </Text>
         <LabelStack
           includes={item => writingStyleSettings.tone === item}
           handle={item =>
