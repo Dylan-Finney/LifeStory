@@ -88,6 +88,7 @@ export default MemoriesView = ({}) => {
     readyToGenerateMemory,
     memoryLoadingMessage,
     setMemoryLoadingMessage,
+    checkIfMemoryReadyToGenerate,
   } = useContext(AppContext);
   const {
     retrieveSpecificData,
@@ -176,7 +177,8 @@ export default MemoriesView = ({}) => {
     const test = async () => {
       console.log('test1');
       setMemoryLoadingState(true);
-      await checkIfMemoryReadyToGenerate();
+      await checkIfReadyToGenerate();
+      // await checkIfMemoryReadyToGenerate();
       setMemoryLoadingState(false);
       setIsMemoryReadyToGenerate(false);
       // console.log('test2');
@@ -1092,7 +1094,7 @@ export default MemoriesView = ({}) => {
           )}
           // ListHeaderComponent={FlatListHeaderComponent}
         ></FlatList>
-        {refreshing && <WritingAnimation />}
+        {/* {refreshing && <WritingAnimation />} */}
         <FloatingActionButton
           onPress={async () => {
             // const date = new Date(Date.now());

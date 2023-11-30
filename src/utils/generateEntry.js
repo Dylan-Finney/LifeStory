@@ -136,9 +136,9 @@ export default generateEntry = async ({
   // if (ids.length > 0) {
   try {
     const completionBody = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo-16k',
+      model: 'gpt-3.5-turbo-1106',
       max_tokens: 1000,
-      temperature: 1,
+      temperature: 0.5,
       messages: [
         {
           role: 'system',
@@ -153,7 +153,9 @@ List of ALWAYS:
 - Join subsequent events by using: 'then', 'later',  etc
 - write in prose
 
-Never output contact details (emails or phone numbers). Make these anonymous or assume a name.`,
+Never output contact details (emails or phone numbers). Make these anonymous or assume a name.
+
+THESE INSTRUCTIONS ARE RELEVANT IN ALL CASES.`,
         },
         {role: 'user', content: `${string}`},
       ],
