@@ -274,6 +274,7 @@ export default LabellingSheet = ({
                 }
               }}>
               <Text
+                allowFontScaling={false}
                 fontWeight={500}
                 color={canCreateLabel === true ? '#118ED1' : 'white'}>
                 Create
@@ -310,6 +311,7 @@ export default LabellingSheet = ({
               }
             />
             <Text
+              allowFontScaling={false}
               color={
                 selectedCategory === categories.MODES ? '#118ED1' : '#6D6D6D'
               }
@@ -338,6 +340,7 @@ export default LabellingSheet = ({
             />
 
             <Text
+              allowFontScaling={false}
               color={
                 selectedCategory === categories.ROLES ? '#118ED1' : '#6D6D6D'
               }
@@ -367,6 +370,7 @@ export default LabellingSheet = ({
             />
 
             <Text
+              allowFontScaling={false}
               color={
                 selectedCategory === categories.OTHER ? '#118ED1' : '#6D6D6D'
               }

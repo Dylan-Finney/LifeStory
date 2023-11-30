@@ -20,13 +20,15 @@ export default EmptyStoriesView = () => {
   return (
     <Box alignItems="center" justifyContent="center" height="100%">
       {/* <Image source={require('../../../assets/am_image.svg')} /> */}
-      <Text style={{textAlign: 'center', fontWeight: 600, fontSize: 24}}>
+      <Text
+        allowFontScaling={false}
+        style={{textAlign: 'center', fontWeight: 600, fontSize: 24}}>
         No Memories yet
       </Text>
-      <Text style={{textAlign: 'center'}}>
+      <Text allowFontScaling={false} style={{textAlign: 'center'}}>
         Make sure that all permissions are granted for desired integration.
       </Text>
-      <Text style={{textAlign: 'center'}}>
+      <Text allowFontScaling={false} style={{textAlign: 'center'}}>
         Tune in at {getNextMemoryTime()}:00 to create new memories...
       </Text>
     </Box>

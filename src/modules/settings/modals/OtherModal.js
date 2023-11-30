@@ -229,7 +229,7 @@ const OtherModal = ({visible, onClose}) => {
               style={{color: 'red', fontWeight: 600}}>
               Photos Data: {loadingPhotos === true && 'Loading...'}
             </Text>
-            <Text>
+            <Text allowFontScaling={false}>
               Start: {new Date(startPhotosDate).toLocaleString()} End:
               {new Date(endPhotosDate).toLocaleString()}
             </Text>
@@ -257,7 +257,7 @@ const OtherModal = ({visible, onClose}) => {
                   }
                 })
               ) : (
-                <Text>No Photos Detected</Text>
+                <Text allowFontScaling={false}>No Photos Detected</Text>
               ))}
 
             <Divider title={'Calendar Events'} />
@@ -310,7 +310,7 @@ const OtherModal = ({visible, onClose}) => {
               style={{color: 'red', fontWeight: 600}}>
               Events Data: {loadingEvents === true && 'Loading...'}
             </Text>
-            <Text>
+            <Text allowFontScaling={false}>
               Start: {new Date(startPhotosDate).toLocaleString()} End:
               {new Date(endPhotosDate).toLocaleString()}
             </Text>
@@ -390,7 +390,7 @@ const OtherModal = ({visible, onClose}) => {
               style={{color: 'red', fontWeight: 600}}>
               Locations Data: {loadingLocations === true && 'Loading...'}
             </Text>
-            <Text>
+            <Text allowFontScaling={false}>
               Start: {new Date(startPhotosDate).toLocaleString()} End:
               {new Date(endPhotosDate).toLocaleString()}
             </Text>
@@ -425,7 +425,7 @@ const OtherModal = ({visible, onClose}) => {
                   }
                 })
               ) : (
-                <Text>No Locations Detected</Text>
+                <Text allowFontScaling={false}>No Locations Detected</Text>
               ))}
           </>
         )}

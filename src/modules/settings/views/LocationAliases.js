@@ -73,7 +73,7 @@ export default LocationAliasesView = ({route, navigation}) => {
         onPress={() => {
           setDeleteMode(!deleteMode);
         }}>
-        <Text>Delete Mode</Text>
+        <Text allowFontScaling={false}>Delete Mode</Text>
       </TouchableOpacity>
       <View style={{flexDirection: 'row'}}>
         <View
@@ -83,7 +83,7 @@ export default LocationAliasesView = ({route, navigation}) => {
             borderColor: 'black',
             padding: 5,
           }}>
-          <Text>Address</Text>
+          <Text allowFontScaling={false}>Address</Text>
         </View>
         <View
           style={{
@@ -92,7 +92,7 @@ export default LocationAliasesView = ({route, navigation}) => {
             borderColor: 'black',
             padding: 5,
           }}>
-          <Text>Alias</Text>
+          <Text allowFontScaling={false}>Alias</Text>
         </View>
         {deleteMode === true && (
           <View
@@ -137,6 +137,7 @@ export default LocationAliasesView = ({route, navigation}) => {
                   padding: 5,
                 }}>
                 <TextInput
+                  allowFontScaling={false}
                   value={data.address}
                   onChangeText={text => {
                     var dataCopy = data;
@@ -162,6 +163,7 @@ export default LocationAliasesView = ({route, navigation}) => {
                   padding: 5,
                 }}>
                 <TextInput
+                  allowFontScaling={false}
                   value={data.alias}
                   onChangeText={text => {
                     var dataCopy = data;
@@ -199,7 +201,11 @@ export default LocationAliasesView = ({route, navigation}) => {
                       // );
                       setDataArr([...dataArrCopy]);
                     }}>
-                    <Text style={{textAlign: 'center', color: 'red'}}>X</Text>
+                    <Text
+                      allowFontScaling={false}
+                      style={{textAlign: 'center', color: 'red'}}>
+                      X
+                    </Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -228,7 +234,9 @@ export default LocationAliasesView = ({route, navigation}) => {
           borderColor: 'black',
           padding: 5,
         }}>
-        <Text style={{textAlign: 'center'}}>+</Text>
+        <Text allowFontScaling={false} style={{textAlign: 'center'}}>
+          +
+        </Text>
       </TouchableOpacity>
     </View>
   );

@@ -23,6 +23,7 @@ export const MemoryEventHeader = ({type, eventsData, desc}) => {
         </View>
         <View>
           <Text
+            allowFontScaling={false}
             numberOfLines={
               [
                 EventTypes.PHOTO,
@@ -46,6 +47,7 @@ export const MemoryEventHeader = ({type, eventsData, desc}) => {
             {type === EventTypes.LINK && eventsData}
           </Text>
           <Text
+            allowFontScaling={false}
             numberOfLines={4}
             style={{
               color: 'rgba(11, 11, 11, 0.6)',

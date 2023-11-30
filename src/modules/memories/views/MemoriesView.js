@@ -341,6 +341,7 @@ export default MemoriesView = ({}) => {
                 </View>
                 <View>
                   <Text
+                    allowFontScaling={false}
                     numberOfLines={
                       item.type === EventTypes.PHOTO ? 1 : undefined
                     }
@@ -356,6 +357,7 @@ export default MemoriesView = ({}) => {
                       item.eventsData.title}
                   </Text>
                   <Text
+                    allowFontScaling={false}
                     style={{
                       color: 'rgba(11, 11, 11, 0.6)',
                     }}>
@@ -406,6 +408,7 @@ export default MemoriesView = ({}) => {
             item.eventsData.notes !== undefined && (
               <ScrollView style={{height: 200}}>
                 <Text
+                  allowFontScaling={false}
                   style={
                     {
                       // overflow: 'scroll',
@@ -451,6 +454,7 @@ export default MemoriesView = ({}) => {
                 </Box>
 
                 <Text
+                  allowFontScaling={false}
                   style={{
                     fontWeight: 600,
                     color: emotionToColor({
@@ -488,6 +492,7 @@ export default MemoriesView = ({}) => {
                   )}
                 </Box>
                 <Text
+                  allowFontScaling={false}
                   style={{
                     color: item.vote > 0 ? '#118ED1' : '#6D6D6D',
                     fontWeight: 600,
@@ -517,7 +522,9 @@ export default MemoriesView = ({}) => {
                   backgroundColor={'#118ED1'}>
                   <LabelIcon primaryColor={'white'} />
                 </Box>
-                <Text style={{color: '#118ED1', fontWeight: 600}}>
+                <Text
+                  allowFontScaling={false}
+                  style={{color: '#118ED1', fontWeight: 600}}>
                   {Object.values(item.tags).flat().length}
                 </Text>
               </Box>
@@ -822,20 +829,28 @@ export default MemoriesView = ({}) => {
                 });
                 setMemoryLoadingMessage('Finished');
               }}>
-              <Text>Generate</Text>
+              <Text allowFontScaling={false}>Generate</Text>
             </Pressable>
-            <Text>Next Memory Creation: {getNextMemoryTime()}</Text>
-            <Text>Memory Length: {memories?.length || 0}</Text>
-            <Text>
+            <Text allowFontScaling={false}>
+              Next Memory Creation: {getNextMemoryTime()}
+            </Text>
+            <Text allowFontScaling={false}>
+              Memory Length: {memories?.length || 0}
+            </Text>
+            <Text allowFontScaling={false}>
               Last Time Memories Generated:{' '}
               {new Date(
                 useSettingsHooks.getNumber('settings.lastMemoryCheckTime'),
                 // 0,
               ).toLocaleString()}
             </Text>
-            <Text>Generation Status: {memoryLoadingMessage}</Text>
-            <Text>Visible Memory: {memories[visibleIndex]?.time}</Text>
-            <Text>Visible Memory: {visibleIndex}</Text>
+            <Text allowFontScaling={false}>
+              Generation Status: {memoryLoadingMessage}
+            </Text>
+            <Text allowFontScaling={false}>
+              Visible Memory: {memories[visibleIndex]?.time}
+            </Text>
+            <Text allowFontScaling={false}>Visible Memory: {visibleIndex}</Text>
           </>
         )}
         {/* <WritingAnimation /> */}
@@ -903,13 +918,29 @@ export default MemoriesView = ({}) => {
                   style={{width: 75, height: 75}}
                 />
               ) : (
-                <Text>
+                <Text
+                  allowFontScaling={false}
+                  style={{
+                    fontSize: 13,
+                    lineHeight: 24,
+                    fontWeight: 400,
+                    color: '#0b0b0bcc',
+                  }}>
                   Next Memories will be created at {getNextMemoryTime()}.
                 </Text>
               )}
             </>
           ) : (
-            <Text>Try slow scrolling to see if works</Text>
+            <Text
+              allowFontScaling={false}
+              style={{
+                fontSize: 13,
+                lineHeight: 24,
+                fontWeight: 400,
+                color: '#0b0b0bcc',
+              }}>
+              Try slow scrolling to see if works
+            </Text>
           )}
         </Animated.View>
 

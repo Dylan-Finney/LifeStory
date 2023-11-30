@@ -128,7 +128,7 @@ export default MemoryView = ({
         py={15}
         rounded={'$md'}
         backgroundColor={highlighted ? '#E9E9E9' : '#F6F6F6'}>
-        <Text>
+        <Text allowFontScaling={false}>
           {formattedText2.map((text, index) => {
             var baseStyles = {
               fontSize: 18,

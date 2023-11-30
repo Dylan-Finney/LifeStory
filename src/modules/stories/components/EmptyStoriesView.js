@@ -29,6 +29,7 @@ export default EmptyStoriesView = () => {
         }
       />
       <Text
+        allowFontScaling={false}
         style={{
           textAlign: 'center',
           fontWeight: 600,
@@ -36,10 +37,10 @@ export default EmptyStoriesView = () => {
         }}>
         No Stories yet
       </Text>
-      <Text style={{textAlign: 'center'}}>
+      <Text allowFontScaling={false} style={{textAlign: 'center'}}>
         Make sure that all permissions are granted for desired integration.
       </Text>
-      <Text style={{textAlign: 'center'}}>
+      <Text allowFontScaling={false} style={{textAlign: 'center'}}>
         Tune in at {useSettingsHooks.getNumber('settings.createEntryTime')}:00
         to create new stories...
       </Text>

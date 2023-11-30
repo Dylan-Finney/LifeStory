@@ -97,6 +97,16 @@ export default StoriesView = () => {
     id: null,
   });
   const [showModal, setShowModal] = useState(false);
+  const [storyLoadingState, setStoryLoadingState] = useState(false);
+  const [isStoryReadyToGenerate, setIsStoryReadyToGenerate] = useState(false);
+  const scrollOffsetY = useRef(new Animated.Value(0)).current;
+  const [forceCheck, setForceCheck] = useState(false);
+  const gifScale = scrollOffsetY.interpolate({
+    inputRange: [-100, 0],
+    outputRange: [75, 0],
+    extrapolate: 'clamp',
+  });
+  const [previousYOffset, setPreviousYOffset] = useState(0);
   //   const [storyLoadingMessage, setStoryLoadingMessage] = useState('Busy');
   const [actionsheetScreen, setActionsheetScreen] = useState(
     ActionSheetScreens.STORIES.BASE,
@@ -105,6 +115,19 @@ export default StoriesView = () => {
     setShowModal(true);
     setActionsheetScreen(ActionSheetScreens.STORIES.BASE);
   };
+  useEffect(() => {
+    const test = async () => {
+      console.log('test1');
+      setStoryLoadingState(true);
+      // await checkIfMemoryReadyToGenerate();
+      setStoryLoadingState(false);
+      setIsStoryReadyToGenerate(false);
+      // console.log('test2');
+    };
+    if (isStoryReadyToGenerate) {
+      test();
+    }
+  }, [isStoryReadyToGenerate]);
   return (
     <>
       <Actionsheet
@@ -259,10 +282,12 @@ export default StoriesView = () => {
                     setStoryLoadingMessage('Finished');
                   }
                 }}>
-                <Text>Generate</Text>
+                <Text allowFontScaling={false}>Generate</Text>
               </TouchableOpacity>
-              <Text>Generation Status: {storyLoadingMessage}</Text>
-              <Text>
+              <Text allowFontScaling={false}>
+                Generation Status: {storyLoadingMessage}
+              </Text>
+              <Text allowFontScaling={false}>
                 Selected Entry Creation Time:{' '}
                 {useSettingsHooks.getNumber('settings.createEntryTime')}
                 {':00'}
@@ -283,7 +308,7 @@ export default StoriesView = () => {
               </Text>
             </Box>
           </Box> */}
-          {storyLoadingMessage === 'Busy' ||
+          {/* {storyLoadingMessage === 'Busy' ||
             (storyLoadingMessage === 'Generating' && (
               <View
                 style={{
@@ -303,7 +328,82 @@ export default StoriesView = () => {
                   style={{width: 75, height: 75}}
                 />
               </View>
-            ))}
+            ))} */}
+
+          <Animated.View
+            style={{
+              // backgroundColor: 'red',
+              justifyContent: 'center',
+              alignItems: 'center',
+              // aspectRatio: 1,
+              height:
+                storyLoadingState === true ||
+                (storyLoadingMessage !== 'Busy' &&
+                  storyLoadingMessage !== 'Finished')
+                  ? 75
+                  : gifScale || 0,
+              zIndex: 999,
+              left: 0,
+              right: 0,
+              top:
+                storyLoadingState === true ||
+                (storyLoadingMessage !== 'Busy' &&
+                  storyLoadingMessage !== 'Finished')
+                  ? -30
+                  : 20,
+              position:
+                storyLoadingState === true ||
+                (storyLoadingMessage !== 'Busy' &&
+                  storyLoadingMessage !== 'Finished')
+                  ? 'relative'
+                  : 'absolute',
+              overflow: 'hidden',
+            }}>
+            {forceCheck ||
+            (storyLoadingMessage !== 'Busy' &&
+              storyLoadingMessage !== 'Finished') ? (
+              <>
+                {isStoryReadyToGenerate ||
+                (storyLoadingMessage !== 'Busy' &&
+                  storyLoadingMessage !== 'Finished') ? (
+                  <Image
+                    source={require('../../../assets/writing.gif')}
+                    style={{width: 75, height: 75}}
+                  />
+                ) : (
+                  <Text
+                    allowFontScaling={false}
+                    style={{
+                      fontSize: 13,
+                      lineHeight: 24,
+                      fontWeight: 400,
+                      color: '#0b0b0bcc',
+                    }}>
+                    Next Story will be created at{' '}
+                    {useSettingsHooks.getNumber('settings.createEntryTime')}
+                    {':00'}{' '}
+                    {parseInt(
+                      useSettingsHooks.getNumber('settings.createEntryTime'),
+                    ) >= 12
+                      ? 'PM'
+                      : 'AM'}
+                    .
+                  </Text>
+                )}
+              </>
+            ) : (
+              <Text
+                allowFontScaling={false}
+                style={{
+                  fontSize: 13,
+                  lineHeight: 24,
+                  fontWeight: 400,
+                  color: '#0b0b0bcc',
+                }}>
+                Try slow scrolling to see if works
+              </Text>
+            )}
+          </Animated.View>
 
           <FlatList
             data={entries}
@@ -313,6 +413,32 @@ export default StoriesView = () => {
             maxToRenderPerBatch={1}
             updateCellsBatchingPeriod={100}
             windowSize={7}
+            onScroll={event => {
+              const {contentOffset, layoutMeasurement, contentSize} =
+                event.nativeEvent;
+              const yOffset = contentOffset.y;
+              if (
+                yOffset < -30 &&
+                previousYOffset <= -1 &&
+                previousYOffset >= -30 &&
+                !forceCheck
+              ) {
+                console.log('setForceCheck(true);');
+                // var test = isMemoryReadyToGenerateFunc();
+                setForceCheck(true);
+                // setIsMemoryReadyToGenerate(checkIfMemoryReadyToGenerate());
+                setIsStoryReadyToGenerate(true);
+              } else if (
+                yOffset >= 0 &&
+                isMemoryReadyToGenerate === false &&
+                forceCheck
+              ) {
+                console.log('setForceCheck(false);');
+                setForceCheck(false);
+              }
+              setPreviousYOffset(yOffset);
+              scrollOffsetY.setValue(event.nativeEvent.contentOffset.y);
+            }}
             onScrollEndDrag={() => {
               setHighlightedStory(baseHighlight);
             }}
