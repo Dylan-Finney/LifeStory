@@ -647,7 +647,6 @@ const MainNavigator = () => {
     //   }
     // }
 
-    
     console.log(memories.length);
 
     await checkIfMemoryReadyToGenerate();
@@ -755,7 +754,7 @@ const MainNavigator = () => {
       CounterEvents.removeAllListeners('locationChange');
       CounterEvents.addListener('locationChange', res => {
         console.log('locationChange event', res);
-        if (res.type === 'stay') {
+        if (res.type === 'visit') {
           createVisitsTable();
           insertData(
             Math.floor(parseInt(res.arrivalTime)) * 1000 || Date.now(),
