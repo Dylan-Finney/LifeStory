@@ -31,6 +31,7 @@ const {
   saveMemoryData,
   retrieveRoutePointsForVisitData,
   retrievePreviousVisitWithDeparture,
+  retrievePreviousVisitWithoutDeparture,
 } = useDatabaseHooks();
 
 const getAverage = arr => {
@@ -773,7 +774,7 @@ const generateMemories = async ({data, date}) => {
   //   },
   //   {resultArray: []},
   // ).resultArray;
-
+  var ignoreUntilEnd = false;
   const uniqueLocations = locations;
   const uniqueLocationDepartures = uniqueLocations.filter(
     uniqueLocation => uniqueLocation.end === null,
@@ -785,37 +786,151 @@ const generateMemories = async ({data, date}) => {
       // setLoadingMessage(
       //   `Creating Location Events - ${index + 1}/${locations.length}`,
       // );
-      console.log('TEST LOCATION', {location});
-      if (location.end === null) {
-        // console.log('NO END', {location});
-        const test = await retrievePreviousVisitWithDeparture(location.id);
-        if (test.length > 0) {
-          const previousLocation = test[0];
+
+      const test = await retrievePreviousVisitWithDeparture(location.id);
+      const test2 = await retrievePreviousVisitWithoutDeparture(location.id);
+
+      console.log('TEST LOCATION', {location, test, test2});
+
+      if (test.length > 0) {
+        const previousLocationWithDeparture = test[0];
+        console.log('TEST LOCATION > 1', {
+          location,
+          previousLocationWithDeparture,
+          test2,
+        });
+        if (location.end === null) {
+          // Generate Route
+          console.log('TEST LOCATION WITHOUT END', {location});
           const routePoints = await retrieveRoutePointsForVisitData(
-            previousLocation.end,
+            previousLocationWithDeparture.end,
             location.start,
           );
-          console.log('NO END', {location, test, routePoints});
           const route = {
-            start: previousLocation,
+            start: previousLocationWithDeparture,
             end: location,
             points: routePoints,
           };
-          console.log('I HAVE A ROUTE', {route});
-          var newRouteMemory = await generateGenericMemory({
-            data: route,
-            type: EventTypes.LOCATION_ROUTE,
-            time: route.end.start,
+          console.log('TEST LOCATION > 1 NO END route', {route});
+          try {
+            var newRouteMemory = await generateGenericMemory({
+              data: route,
+              type: EventTypes.LOCATION_ROUTE,
+              time: route.end.start,
+            });
+            console.log('TEST LOCATION > 1 NO END newRouteMemory', {
+              location,
+              previousLocationWithDeparture,
+              test2,
+              route,
+              newRouteMemory,
+            });
+            newMemories.push(newRouteMemory);
+          } catch (e) {
+            console.error(e);
+          }
+        } else {
+          console.log('TEST LOCATION WITH END', {location});
+          //Check if route has been generated before
+          //Generate route if not
+          //Generate Location
+          if (test2.length > 0) {
+            const previousLocationWithoutDeparture = test2[0];
+            if (previousLocationWithoutDeparture.id !== location.id - 1) {
+              const routePoints = await retrieveRoutePointsForVisitData(
+                previousLocationWithDeparture.end,
+                location.start,
+              );
+              const route = {
+                start: previousLocationWithDeparture,
+                end: location,
+                points: routePoints,
+              };
+              var newRouteMemory = await generateGenericMemory({
+                data: route,
+                type: EventTypes.LOCATION_ROUTE,
+                time: route.end.start,
+              });
+              newMemories.push(newRouteMemory);
+              var newLocationMemory = await generateGenericMemory({
+                data: location,
+                type: EventTypes.LOCATION,
+                time: location.end,
+              });
+              newMemories.push(newLocationMemory);
+            }
+          } else {
+            const routePoints = await retrieveRoutePointsForVisitData(
+              previousLocationWithDeparture.end,
+              location.start,
+            );
+            const route = {
+              start: previousLocationWithDeparture,
+              end: location,
+              points: routePoints,
+            };
+            var newRouteMemory = await generateGenericMemory({
+              data: route,
+              type: EventTypes.LOCATION_ROUTE,
+              time: route.end.start,
+            });
+            newMemories.push(newRouteMemory);
+            var newLocationMemory = await generateGenericMemory({
+              data: location,
+              type: EventTypes.LOCATION,
+              time: location.end,
+            });
+            newMemories.push(newLocationMemory);
+          }
+          var newLocationMemory = await generateGenericMemory({
+            data: location,
+            type: EventTypes.LOCATION,
+            time: location.end,
           });
-          newMemories.push(newRouteMemory);
+          newMemories.push(newLocationMemory);
         }
-        var newLocationMemory = await generateGenericMemory({
-          data: location,
-          type: EventTypes.LOCATION,
-          time: location.end,
-        });
-        newMemories.push(newLocationMemory);
+      } else {
+        if (location.end !== null && location.start !== null) {
+          var newLocationMemory = await generateGenericMemory({
+            data: location,
+            type: EventTypes.LOCATION,
+            time: location.end,
+          });
+          newMemories.push(newLocationMemory);
+        }
       }
+
+      // if (location.end === null) {
+      // console.log('NO END', {location});
+      // const test = await retrievePreviousVisitWithDeparture(location.id);
+      // if (test.length > 0) {
+      //   const previousLocation = test[0];
+      //   const routePoints = await retrieveRoutePointsForVisitData(
+      //     previousLocation.end,
+      //     location.start,
+      //   );
+      //   console.log('NO END', {location, test, routePoints});
+      //   const route = {
+      //     start: previousLocation,
+      //     end: location,
+      //     points: routePoints,
+      //   };
+      //   console.log('I HAVE A ROUTE', {route});
+      //   var newRouteMemory = await generateGenericMemory({
+      //     data: route,
+      //     type: EventTypes.LOCATION_ROUTE,
+      //     time: route.end.start,
+      //   });
+      //   newMemories.push(newRouteMemory);
+      // }
+      // var newLocationMemory = await generateGenericMemory({
+      //   data: location,
+      //   type: EventTypes.LOCATION,
+      //   time: location.end,
+      // });
+      // newMemories.push(newLocationMemory);
+      // } else {
+      // }
     }),
   ).then(async () => {
     console.log('location finished');

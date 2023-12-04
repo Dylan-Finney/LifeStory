@@ -300,7 +300,7 @@ for localIdentifier in calendarIdentifiers {
     geoCoder.reverseGeocodeLocation(clLocation) { placemarks, _ in
       if let place = placemarks?.first {
         let description = "\(place)"
-        self.sendEvent(withName: "locationChange", body: ["lat": clLocation.coordinate.latitude as Any, "lon": clLocation.coordinate.longitude as Any, "description": description, "arrivalTime": String(visit.arrivalDate.timeIntervalSince1970 ?? 0), "departureTime" : String(visit.departureDate.timeIntervalSince1970 ?? 0), "type": "visit"] as [String : Any])
+        self.sendEvent(withName: "locationChange", body: ["lat": visit.coordinate.latitude as Any, "lon": visit.coordinate.longitude as Any, "description": description, "arrivalTime": String(visit.arrivalDate.timeIntervalSince1970 ?? 0), "departureTime" : String(visit.departureDate.timeIntervalSince1970 ?? 0), "type": "visit"] as [String : Any])
 
       }
     }

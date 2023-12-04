@@ -183,7 +183,7 @@ export default SettingsView = ({route, navigation}) => {
         }}
       />
 
-      {devMode === true && (
+      {/* {devMode === true && (
         <>
           <Divider title={'Dev Mode'} />
 
@@ -235,7 +235,7 @@ export default SettingsView = ({route, navigation}) => {
             style={{color: 'red', fontWeight: 600}}>
             Photos Data: {loadingPhotos === true && 'Loading...'}
           </Text>
-          <Text>
+          <Text allowFontScaling={false}>
             Start: {new Date(startPhotosDate).toLocaleString()} End:
             {new Date(endPhotosDate).toLocaleString()}
           </Text>
@@ -261,7 +261,7 @@ export default SettingsView = ({route, navigation}) => {
                 }
               })
             ) : (
-              <Text>No Photos Detected</Text>
+              <Text allowFontScaling={false}>No Photos Detected</Text>
             ))}
 
           <Divider title={'Calendar Events'} />
@@ -314,7 +314,7 @@ export default SettingsView = ({route, navigation}) => {
             style={{color: 'red', fontWeight: 600}}>
             Events Data: {loadingEvents === true && 'Loading...'}
           </Text>
-          <Text>
+          <Text allowFontScaling={false}>
             Start: {new Date(startPhotosDate).toLocaleString()} End:
             {new Date(endPhotosDate).toLocaleString()}
           </Text>
@@ -347,7 +347,7 @@ export default SettingsView = ({route, navigation}) => {
                 }
               })
             ) : (
-              <Text>No Events Detected</Text>
+              <Text allowFontScaling={false}>No Events Detected</Text>
             ))}
 
           <Divider title={'Locations'} />
@@ -392,7 +392,7 @@ export default SettingsView = ({route, navigation}) => {
             style={{color: 'red', fontWeight: 600}}>
             Locations Data: {loadingLocations === true && 'Loading...'}
           </Text>
-          <Text>
+          <Text allowFontScaling={false}>
             Start: {new Date(startPhotosDate).toLocaleString()} End:
             {new Date(endPhotosDate).toLocaleString()}
           </Text>
@@ -428,7 +428,7 @@ export default SettingsView = ({route, navigation}) => {
               <Text>No Locations Detected</Text>
             ))}
         </>
-      )}
+      )} */}
       {modalState.type === MODAL_TYPES.LANGUAGE && (
         <LanguageModal isVisible={modalState.isVisible} onClose={closeModal} />
       )}

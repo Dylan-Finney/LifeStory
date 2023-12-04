@@ -79,10 +79,10 @@ const useDatabaseHooks = () => {
           `INSERT INTO Visits (start, lat, lon, description) VALUES (?, ?, ?, ?)`,
           [start, lat, lon, description],
           (_, result) => {
-            console.log('Visit inserted successfully', result);
+            console.log('Visit without end time inserted successfully', result);
           },
           (_, error) => {
-            console.log('Error inserting Visit:', error);
+            console.log('Error inserting Visit (without end time):', error);
           },
         );
       } else {
@@ -90,10 +90,10 @@ const useDatabaseHooks = () => {
           `INSERT INTO Visits (start, end, lat, lon, description) VALUES (?, ?, ?, ?, ?)`,
           [start, end, lat, lon, description],
           (_, result) => {
-            console.log('Visit inserted successfully', result);
+            console.log('Visit with end time inserted successfully', result);
           },
           (_, error) => {
-            console.log('Error inserting Visit:', error);
+            console.log('Error inserting Visit (with end time):', error);
           },
         );
       }
@@ -393,12 +393,52 @@ const useDatabaseHooks = () => {
     });
   };
 
+  // const retrieveSpecificRoutePointsData = (startDate, endDate, callback) => {
+  //   db.transaction(tx => {
+  //     tx.executeSql(
+  //       `SELECT * FROM RoutePoints WHERE RoutePoints.date BETWEEN ? AND ?`,
+  //       [startDate, endDate, startDate, endDate],
+  //       (tx, results) => {
+  //         let data = [];
+  //         for (let i = 0; i < results.rows.length; i++) {
+  //           data.push(results.rows.item(i));
+  //         }
+  //         callback(data);
+  //       },
+  //     );
+  //   });
+  // };
+
   const retrievePreviousVisitWithDeparture = id => {
     return new Promise((resolve, reject) => {
       db.transaction(
         tx => {
           tx.executeSql(
             `SELECT * FROM Visits WHERE id = (SELECT MAX(id) FROM Visits WHERE id < ? AND (Visits.end IS NOT NULL))`,
+            [id],
+            (tx, results) => {
+              console.log({results});
+              let data = [];
+              for (let i = 0; i < results.rows.length; i++) {
+                data.push(results.rows.item(i));
+              }
+              resolve(data);
+            },
+          );
+        },
+        error => {
+          reject(error);
+        },
+      );
+    });
+  };
+
+  const retrievePreviousVisitWithoutDeparture = id => {
+    return new Promise((resolve, reject) => {
+      db.transaction(
+        tx => {
+          tx.executeSql(
+            `SELECT * FROM Visits WHERE id = (SELECT MAX(id) FROM Visits WHERE id < ? AND (Visits.end IS NULL))`,
             [id],
             (tx, results) => {
               console.log({results});
@@ -486,6 +526,7 @@ const useDatabaseHooks = () => {
     retrieveData,
     retrieveSpecificRecord,
     retrievePreviousVisitWithDeparture,
+    retrievePreviousVisitWithoutDeparture,
     createEntryTable,
     createMemoriesTable,
     saveMemoryData,

@@ -754,18 +754,19 @@ const MainNavigator = () => {
       CounterEvents.removeAllListeners('locationChange');
       CounterEvents.addListener('locationChange', res => {
         console.log('locationChange event', res);
+        console.log('Type', res.type);
         if (res.type === 'visit') {
           createVisitsTable();
           insertData(
             Math.floor(parseInt(res.arrivalTime)) * 1000 || Date.now(),
-            Math.floor(parseInt(res.departureTime)) * 1000,
+            Math.floor(parseInt(res.departureTime)) * 1000 || 0,
             res.lat,
             res.lon,
             res.description,
           );
-          retrieveData('Visits', steps => {
-            console.log({steps});
-          });
+          // retrieveData('Visits', steps => {
+          //   console.log({steps});
+          // });
         } else {
           createRoutePointsTable();
           insertRoutePointsData(
@@ -775,9 +776,9 @@ const MainNavigator = () => {
             res.lon,
             res.description,
           );
-          retrieveData('RoutePoints', steps => {
-            console.log({steps});
-          });
+          // retrieveData('RoutePoints', steps => {
+          //   console.log({steps});
+          // });
         }
       });
     })

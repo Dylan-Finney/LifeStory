@@ -33,7 +33,8 @@ const OtherModal = ({visible, onClose}) => {
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
 
-  const [locations, setLocations] = useState([]);
+  const [visits, setVisits] = useState([]);
+  const [routePoints, setRoutePoints] = useState([]);
   const [loadingLocations, setLoadingLocations] = useState(false);
 
   const {setOnBoarding, devMode, setDevMode} = useContext(AppContext);
@@ -67,6 +68,8 @@ const OtherModal = ({visible, onClose}) => {
     createVisitsTable,
     resetTable,
     retrieveSpecificData,
+    retrieveRoutePointsForVisitData,
+    retrieveData,
   } = useDatabaseHooks();
 
   const {setEntries} = useContext(AppContext);
@@ -229,7 +232,9 @@ const OtherModal = ({visible, onClose}) => {
               style={{color: 'red', fontWeight: 600}}>
               Photos Data: {loadingPhotos === true && 'Loading...'}
             </Text>
-            <Text allowFontScaling={false}>
+            <Text
+              allowFontScaling={false}
+              style={{color: 'red', fontWeight: 600}}>
               Start: {new Date(startPhotosDate).toLocaleString()} End:
               {new Date(endPhotosDate).toLocaleString()}
             </Text>
@@ -310,7 +315,9 @@ const OtherModal = ({visible, onClose}) => {
               style={{color: 'red', fontWeight: 600}}>
               Events Data: {loadingEvents === true && 'Loading...'}
             </Text>
-            <Text allowFontScaling={false}>
+            <Text
+              allowFontScaling={false}
+              style={{color: 'red', fontWeight: 600}}>
               Start: {new Date(startPhotosDate).toLocaleString()} End:
               {new Date(endPhotosDate).toLocaleString()}
             </Text>
@@ -353,7 +360,7 @@ const OtherModal = ({visible, onClose}) => {
               allowFontScaling={false}
               style={{color: 'red', fontWeight: 600}}
               onPress={async () => {
-                console.log('TEST GET PHOTOS');
+                console.log('TEST GET LOCATIONS');
                 var endOfUnixTime = new Date(Date.now());
                 var startOfUnixTime = new Date(Date.now());
                 // endOfUnixTime.setTime(endOfUnixTime.getTime() - 2000);
@@ -364,22 +371,36 @@ const OtherModal = ({visible, onClose}) => {
                 startOfUnixTime = Math.floor(startOfUnixTime.getTime());
                 try {
                   setLoadingLocations(true);
-                  var locations = [];
+                  var visits = [];
+                  var routePoints = [];
                   retrieveSpecificData(startOfUnixTime, endOfUnixTime, res => {
-                    (locations = res.map(obj => {
+                    (visits = res.map(obj => {
                       return {
                         description: obj.description.split(',')[0],
-                        time: obj.date,
+                        id: obj.id,
+                        start: obj.start,
+                        end: obj.end,
                         lat: obj.lat,
                         long: obj.lon,
                       };
                     })),
-                      console.log(locations);
-                    setLocations(locations);
-                    setLoadingLocations(false);
+                      console.log(visits);
+                    setVisits(visits);
                   });
+                  routePoints = await retrieveRoutePointsForVisitData(
+                    startOfUnixTime,
+                    endOfUnixTime,
+                  );
+                  setRoutePoints(routePoints);
+                  console.log(await retrieveData('RoutePoints'));
+                  console.log({routePoints});
+                  console.log(Date.now());
+                  // console.log({routePoints});
+                  setLoadingLocations(false);
                 } catch (e) {
-                  setLocations([{error: 'Try/catch error'}]);
+                  console.error('Try/Catch Location Error', e);
+                  setVisits([{error: 'Try/catch error'}]);
+                  setRoutePoints([{error: 'Try/catch error'}]);
                   setLoadingLocations(false);
                 }
               }}>
@@ -390,43 +411,106 @@ const OtherModal = ({visible, onClose}) => {
               style={{color: 'red', fontWeight: 600}}>
               Locations Data: {loadingLocations === true && 'Loading...'}
             </Text>
-            <Text allowFontScaling={false}>
+            <Text
+              allowFontScaling={false}
+              style={{color: 'red', fontWeight: 600}}>
               Start: {new Date(startPhotosDate).toLocaleString()} End:
               {new Date(endPhotosDate).toLocaleString()}
             </Text>
-            {loadingLocations === false &&
-              (locations.length > 0 ? (
-                locations.map((location, index) => {
-                  if (location.error !== undefined) {
-                    return (
-                      <View key={index}>
-                        <Text allowFontScaling={false} style={{color: 'red'}}>
-                          {location.error}
-                        </Text>
-                      </View>
-                    );
-                  } else {
-                    return (
-                      <View key={index}>
-                        <Text allowFontScaling={false}>
-                          {new Date(location.time).toLocaleString()}
-                        </Text>
-                        <Text allowFontScaling={false}>
-                          {location.description}
-                        </Text>
-                        <Text allowFontScaling={false}>
-                          Lat: {location.lat}
-                        </Text>
-                        <Text allowFontScaling={false}>
-                          Long: {location.long}
-                        </Text>
-                      </View>
-                    );
-                  }
-                })
-              ) : (
-                <Text allowFontScaling={false}>No Locations Detected</Text>
-              ))}
+            {loadingLocations === false && (
+              <View style={{gap: 5}}>
+                <View>
+                  <Text style={{fontWeight: 600}}>Visits:</Text>
+                  <View style={{gap: 10}}>
+                    {visits.length > 0 ? (
+                      visits.map((visit, index) => {
+                        if (visit.error !== undefined) {
+                          return (
+                            <View key={index}>
+                              <Text
+                                allowFontScaling={false}
+                                style={{color: 'red'}}>
+                                {visit.error}
+                              </Text>
+                            </View>
+                          );
+                        } else {
+                          return (
+                            <View key={index}>
+                              <Text>internal_id: {visit.id}</Text>
+                              <Text allowFontScaling={false}>
+                                Start: {new Date(visit.start).toLocaleString()}
+                              </Text>
+                              <Text allowFontScaling={false}>
+                                End: {new Date(visit.end).toLocaleString()}
+                              </Text>
+                              <Text allowFontScaling={false}>
+                                {visit.description}
+                              </Text>
+                              <Text allowFontScaling={false}>
+                                Lat: {visit.lat}
+                              </Text>
+                              <Text allowFontScaling={false}>
+                                Long: {visit.long}
+                              </Text>
+                            </View>
+                          );
+                        }
+                      })
+                    ) : (
+                      <Text allowFontScaling={false}>No Visits Detected</Text>
+                    )}
+                  </View>
+                </View>
+                <View>
+                  <Text style={{fontWeight: 600}}>Route Points:</Text>
+                  <View style={{gap: 10}}>
+                    {routePoints.length > 0 ? (
+                      routePoints.map((routePoint, index) => {
+                        if (routePoint.error !== undefined) {
+                          return (
+                            <View key={index}>
+                              <Text
+                                allowFontScaling={false}
+                                style={{color: 'red'}}>
+                                {routePoint.error}
+                              </Text>
+                            </View>
+                          );
+                        } else {
+                          return (
+                            <View key={index}>
+                              <Text allowFontScaling={false}>
+                                internal_id: {routePoint.id}
+                              </Text>
+                              <Text allowFontScaling={false}>
+                                {new Date(routePoint.date).toLocaleString()}
+                              </Text>
+                              <Text allowFontScaling={false}>
+                                {routePoint.description}
+                              </Text>
+                              <Text allowFontScaling={false}>
+                                Speed: {routePoint.speed} m/s
+                              </Text>
+                              <Text allowFontScaling={false}>
+                                Lat: {routePoint.lat}
+                              </Text>
+                              <Text allowFontScaling={false}>
+                                Long: {routePoint.lon}
+                              </Text>
+                            </View>
+                          );
+                        }
+                      })
+                    ) : (
+                      <Text allowFontScaling={false}>
+                        No Route Points Detected
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              </View>
+            )}
           </>
         )}
       </ScrollView>
