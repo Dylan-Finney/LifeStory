@@ -360,7 +360,7 @@ const OtherModal = ({visible, onClose}) => {
               allowFontScaling={false}
               style={{color: 'red', fontWeight: 600}}
               onPress={async () => {
-                console.log('TEST GET LOCATIONS');
+                console.log('TEST GET LOCATIONS FROM PAST DAY');
                 var endOfUnixTime = new Date(Date.now());
                 var startOfUnixTime = new Date(Date.now());
                 // endOfUnixTime.setTime(endOfUnixTime.getTime() - 2000);
@@ -408,6 +408,43 @@ const OtherModal = ({visible, onClose}) => {
             </Text>
             <Text
               allowFontScaling={false}
+              style={{color: 'red', fontWeight: 600}}
+              onPress={async () => {
+                console.log('TEST GET ALL LOCATIONS');
+                try {
+                  setLoadingLocations(true);
+                  var visits = [];
+                  var routePoints = [];
+                  visits = await retrieveData('Visits');
+                  visits = visits.map(obj => {
+                    return {
+                      description: obj.description.split(',')[0],
+                      id: obj.id,
+                      start: obj.start,
+                      end: obj.end,
+                      lat: obj.lat,
+                      long: obj.lon,
+                    };
+                  });
+                  console.log(visits);
+                  setVisits(visits);
+                  routePoints = await retrieveData('RoutePoints');
+                  setRoutePoints(routePoints);
+                  console.log({routePoints});
+                  console.log(Date.now());
+                  // console.log({routePoints});
+                  setLoadingLocations(false);
+                } catch (e) {
+                  console.error('Try/Catch Location Error', e);
+                  setVisits([{error: 'Try/catch error'}]);
+                  setRoutePoints([{error: 'Try/catch error'}]);
+                  setLoadingLocations(false);
+                }
+              }}>
+              Get All Locations
+            </Text>
+            <Text
+              allowFontScaling={false}
               style={{color: 'red', fontWeight: 600}}>
               Locations Data: {loadingLocations === true && 'Loading...'}
             </Text>
@@ -420,7 +457,9 @@ const OtherModal = ({visible, onClose}) => {
             {loadingLocations === false && (
               <View style={{gap: 5}}>
                 <View>
-                  <Text style={{fontWeight: 600}}>Visits:</Text>
+                  <Text allowFontScaling={false} style={{fontWeight: 600}}>
+                    Visits:
+                  </Text>
                   <View style={{gap: 10}}>
                     {visits.length > 0 ? (
                       visits.map((visit, index) => {
@@ -437,7 +476,9 @@ const OtherModal = ({visible, onClose}) => {
                         } else {
                           return (
                             <View key={index}>
-                              <Text>internal_id: {visit.id}</Text>
+                              <Text allowFontScaling={false}>
+                                internal_id: {visit.id}
+                              </Text>
                               <Text allowFontScaling={false}>
                                 Start: {new Date(visit.start).toLocaleString()}
                               </Text>

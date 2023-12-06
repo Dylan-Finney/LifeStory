@@ -175,7 +175,9 @@ I walked to Central Park from Manhattan, which took 2.5 hours in the afternoon.
           content: `{
           "routeDetails": {
           "avgSpeed": ${getAverage(
-            data.points.map(point => point.speed),
+            data.points.map(point => {
+              return point.speed > 0 ? point.speed : 0;
+            }),
           )}, //m/s
           "start": {
           "locationTag": "${getBestLocationTag(

@@ -659,7 +659,7 @@ const MainNavigator = () => {
       console.error({e});
     }
     if (storyLoadingMessage === 'Finished' || storyLoadingMessage === 'Busy') {
-      await checkIfStoryReadyToGenerate();
+      // await checkIfStoryReadyToGenerate();
     }
   };
 

@@ -263,6 +263,7 @@ for localIdentifier in calendarIdentifiers {
     locationManager.desiredAccuracy = kCLLocationAccuracyBest
     locationManager.distanceFilter = 50
     locationManager.allowsBackgroundLocationUpdates = true
+    locationManager.pausesLocationUpdatesAutomatically = false
       locationManager.startMonitoringVisits() //Make Sure this is active for release
    locationManager.startUpdatingLocation() //Simulator Debug as Visits doesn't work
     resolve(true)
@@ -276,7 +277,8 @@ for localIdentifier in calendarIdentifiers {
       
       
 //      if locations.last!.speed > stationarySpeedThreshold {
-        geoCoder.reverseGeocodeLocation(locations.last!) { placemarks, _ in
+      for location in locations {
+        geoCoder.reverseGeocodeLocation(location) { placemarks, _ in
           if let place = placemarks?.first {
                     
                     let description = "\(place)"
@@ -284,7 +286,9 @@ for localIdentifier in calendarIdentifiers {
 
           }
         }
-//      }
+
+      }
+        //      }
 
 
 
@@ -300,7 +304,7 @@ for localIdentifier in calendarIdentifiers {
     geoCoder.reverseGeocodeLocation(clLocation) { placemarks, _ in
       if let place = placemarks?.first {
         let description = "\(place)"
-        self.sendEvent(withName: "locationChange", body: ["lat": visit.coordinate.latitude as Any, "lon": visit.coordinate.longitude as Any, "description": description, "arrivalTime": String(visit.arrivalDate.timeIntervalSince1970 ?? 0), "departureTime" : String(visit.departureDate.timeIntervalSince1970 ?? 0), "type": "visit"] as [String : Any])
+        self.sendEvent(withName: "locationChange", body: ["lat": visit.coordinate.latitude as Any, "lon": visit.coordinate.longitude as Any, "description": description, "arrivalTime": String(visit.arrivalDate.timeIntervalSince1970 ), "departureTime" : String(visit.departureDate.timeIntervalSince1970 ), "type": "visit"] as [String : Any])
 
       }
     }
