@@ -374,17 +374,7 @@ const OtherModal = ({visible, onClose}) => {
                   var visits = [];
                   var routePoints = [];
                   retrieveSpecificData(startOfUnixTime, endOfUnixTime, res => {
-                    (visits = res.map(obj => {
-                      return {
-                        description: obj.description.split(',')[0],
-                        id: obj.id,
-                        start: obj.start,
-                        end: obj.end,
-                        lat: obj.lat,
-                        long: obj.lon,
-                      };
-                    })),
-                      console.log(visits);
+                    (visits = res), console.log(visits);
                     setVisits(visits);
                   });
                   routePoints = await retrieveRoutePointsForVisitData(
@@ -416,16 +406,16 @@ const OtherModal = ({visible, onClose}) => {
                   var visits = [];
                   var routePoints = [];
                   visits = await retrieveData('Visits');
-                  visits = visits.map(obj => {
-                    return {
-                      description: obj.description.split(',')[0],
-                      id: obj.id,
-                      start: obj.start,
-                      end: obj.end,
-                      lat: obj.lat,
-                      long: obj.lon,
-                    };
-                  });
+                  // visits = visits.map(obj => {
+                  //   return {
+                  //     description: obj.description.split(',')[0],
+                  //     id: obj.id,
+                  //     start: obj.start,
+                  //     end: obj.end,
+                  //     lat: obj.lat,
+                  //     long: obj.lon,
+                  //   };
+                  // });
                   console.log(visits);
                   setVisits(visits);
                   routePoints = await retrieveData('RoutePoints');
@@ -492,7 +482,10 @@ const OtherModal = ({visible, onClose}) => {
                                 Lat: {visit.lat}
                               </Text>
                               <Text allowFontScaling={false}>
-                                Long: {visit.long}
+                                Long: {visit.lon}
+                              </Text>
+                              <Text allowFontScaling={false}>
+                                {JSON.stringify(visit)}
                               </Text>
                             </View>
                           );
@@ -538,6 +531,9 @@ const OtherModal = ({visible, onClose}) => {
                               </Text>
                               <Text allowFontScaling={false}>
                                 Long: {routePoint.lon}
+                              </Text>
+                              <Text allowFontScaling={false}>
+                                {JSON.stringify(routePoint)}
                               </Text>
                             </View>
                           );

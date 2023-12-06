@@ -181,13 +181,17 @@ I walked to Central Park from Manhattan, which took 2.5 hours in the afternoon.
           )}, //m/s
           "start": {
           "locationTag": "${getBestLocationTag(
-            data.start.description?.split('@')[0] || undefined,
+            data.start.description?.split('@')[2] ||
+              data.start.description?.split('@')[0] ||
+              undefined,
           )}",
           "time": "${new Date(data.start.end).toLocaleString()}",
           },
           "end": {
           "locationTag": "${getBestLocationTag(
-            data.end.description?.split('@')[0] || undefined,
+            data.end.description?.split('@')[2] ||
+              data.start.description?.split('@')[0] ||
+              undefined,
           )}",
           "time": "${new Date(data.end.start).toLocaleString()}",
           }
@@ -262,7 +266,9 @@ I got to Central Park in the morning's early hours
             content: `{
   "geoLocationStay": {
     "locationTag": "${getBestLocationTag(
-      data.description?.split('@')[0] || undefined,
+      data.description?.split('@')[2] ||
+        data.description?.split('@')[0] ||
+        undefined,
     )}",
     "location":
       "latitude": "${data.latitude}",
