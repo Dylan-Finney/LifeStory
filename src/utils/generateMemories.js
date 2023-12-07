@@ -127,6 +127,16 @@ const generateGenericMemory = async ({data, type, time}) => {
 
   switch (type) {
     case EventTypes.LOCATION_ROUTE:
+      data.start.description = getBestLocationTag(
+        data.start.description?.split(',')[2] ||
+          data.start.description?.split(',')[0] ||
+          '',
+      );
+      data.end.description = getBestLocationTag(
+        data.end.description?.split(',')[2] ||
+          data.end.description?.split(',')[0] ||
+          '',
+      );
       messages = [
         {
           role: 'system',
@@ -174,25 +184,21 @@ I walked to Central Park from Manhattan, which took 2.5 hours in the afternoon.
           role: 'user',
           content: `{
           "routeDetails": {
-          "avgSpeed": ${getAverage(
-            data.points.map(point => {
-              return point.speed > 0 ? point.speed : 0;
-            }),
-          )}, //m/s
+          "avgSpeed": ${
+            data.points.length > 0
+              ? getAverage(
+                  data.points.map(point => {
+                    return point.speed > 0 ? point.speed : 0;
+                  }),
+                )
+              : undefined
+          }, //m/s
           "start": {
-          "locationTag": "${getBestLocationTag(
-            data.start.description?.split('@')[2] ||
-              data.start.description?.split('@')[0] ||
-              undefined,
-          )}",
+          "locationTag": "${data.start.description}",
           "time": "${new Date(data.start.end).toLocaleString()}",
           },
           "end": {
-          "locationTag": "${getBestLocationTag(
-            data.end.description?.split('@')[2] ||
-              data.start.description?.split('@')[0] ||
-              undefined,
-          )}",
+          "locationTag": "${data.end.description}",
           "time": "${new Date(data.end.start).toLocaleString()}",
           }
 
@@ -216,6 +222,11 @@ I walked to Central Park from Manhattan, which took 2.5 hours in the afternoon.
       ];
       break;
     case EventTypes.LOCATION:
+      data.description = getBestLocationTag(
+        data.description?.split(',')[2] ||
+          data.description?.split(',')[0] ||
+          '',
+      );
       if (data.end === null) {
         messages = [
           {
@@ -265,11 +276,7 @@ I got to Central Park in the morning's early hours
             role: 'user',
             content: `{
   "geoLocationStay": {
-    "locationTag": "${getBestLocationTag(
-      data.description?.split('@')[2] ||
-        data.description?.split('@')[0] ||
-        undefined,
-    )}",
+    "locationTag": "${data.description}",
     "location":
       "latitude": "${data.latitude}",
       "longitude": "${data.longitude}"
@@ -358,7 +365,9 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
       "longitude": "${data.longitude}"
     },
     "time": {
-      "start": "${new Date(data.start).toLocaleString()}",
+      "start": "${
+        data.start >= 0 ? new Date(data.start).toLocaleString() : undefined
+      } ",
       "end": "${new Date(data.end).toLocaleString()}",
     }
   }
@@ -716,22 +725,22 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
   const response = completion.data.choices[0].message?.content;
   // const response = `This morning I took a photo of a red bird outside.`;
   console.log(response);
-  createMemoriesTable();
-  saveMemoryData({
-    tags: JSON.stringify({
-      roles: [],
-      body: [],
-      other: [],
-    }),
-    type,
-    body: response,
-    bodyModifiedAt: time,
-    bodyModifiedSource: 'auto',
-    emotion: 0,
-    eventsData: JSON.stringify(data),
-    time: time,
-    vote: 0,
-  });
+  // createMemoriesTable();
+  // saveMemoryData({
+  //   tags: JSON.stringify({
+  //     roles: [],
+  //     body: [],
+  //     other: [],
+  //   }),
+  //   type,
+  //   body: response,
+  //   bodyModifiedAt: time,
+  //   bodyModifiedSource: 'auto',
+  //   emotion: 0,
+  //   eventsData: JSON.stringify(data),
+  //   time: time,
+  //   vote: 0,
+  // });
   return {
     tags: [],
     type,
@@ -743,6 +752,21 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
     time: time,
     vote: 0,
   };
+};
+
+const saveMemories = newMemories => {
+  createMemoriesTable();
+  newMemories.map(newMemory => {
+    saveMemoryData({
+      ...newMemory,
+      tags: JSON.stringify({
+        roles: [],
+        body: [],
+        other: [],
+      }),
+      eventsData: JSON.stringify(newMemory.eventsData),
+    });
+  });
 };
 
 const generateMemories = async ({data, date}) => {
@@ -824,7 +848,7 @@ const generateMemories = async ({data, date}) => {
             var newRouteMemory = await generateGenericMemory({
               data: route,
               type: EventTypes.LOCATION_ROUTE,
-              time: route.end.start,
+              time: route.end.start >= 0 ? route.end.start : route.start.end,
             });
             console.log('TEST LOCATION > 1 NO END newRouteMemory', {
               location,
@@ -838,7 +862,10 @@ const generateMemories = async ({data, date}) => {
             console.error(e);
           }
         } else {
-          console.log('TEST LOCATION WITH END', {location});
+          console.log('TEST LOCATION WITH END', {
+            location,
+            length: test2.length,
+          });
           //Check if route has been generated before
           //Generate route if not
           //Generate Location
@@ -857,7 +884,7 @@ const generateMemories = async ({data, date}) => {
               var newRouteMemory = await generateGenericMemory({
                 data: route,
                 type: EventTypes.LOCATION_ROUTE,
-                time: route.end.start,
+                time: route.end.start >= 0 ? route.end.start : route.start.end,
               });
               newMemories.push(newRouteMemory);
               var newLocationMemory = await generateGenericMemory({
@@ -877,25 +904,34 @@ const generateMemories = async ({data, date}) => {
               end: location,
               points: routePoints,
             };
-            var newRouteMemory = await generateGenericMemory({
-              data: route,
-              type: EventTypes.LOCATION_ROUTE,
-              time: route.end.start,
-            });
-            newMemories.push(newRouteMemory);
+            try {
+              var newRouteMemory = await generateGenericMemory({
+                data: route,
+                type: EventTypes.LOCATION_ROUTE,
+                time: route.end.start >= 0 ? route.end.start : route.start.end,
+              });
+              newMemories.push(newRouteMemory);
+            } catch (e) {
+              console.error('RoutePoints', {e, location, route});
+            }
+
+            // var newLocationMemory = await generateGenericMemory({
+            //   data: location,
+            //   type: EventTypes.LOCATION,
+            //   time: location.end,
+            // });
+            // newMemories.push(newLocationMemory);
+          }
+          try {
             var newLocationMemory = await generateGenericMemory({
               data: location,
               type: EventTypes.LOCATION,
               time: location.end,
             });
             newMemories.push(newLocationMemory);
+          } catch (e) {
+            console.error('New Location Memory', {e, location});
           }
-          var newLocationMemory = await generateGenericMemory({
-            data: location,
-            type: EventTypes.LOCATION,
-            time: location.end,
-          });
-          newMemories.push(newLocationMemory);
         }
       } else {
         if (location.end !== null && location.start !== null) {
@@ -981,7 +1017,9 @@ const generateMemories = async ({data, date}) => {
               console.error(e);
             }
           }),
-        );
+        ).then(() => {
+          saveMemories(newMemories);
+        });
       } catch (e) {
         console.error('photosGroups error', e);
       } finally {

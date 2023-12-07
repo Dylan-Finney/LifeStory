@@ -59,7 +59,7 @@ const useDatabaseHooks = () => {
   const createVisitsTable = () => {
     db.transaction(tx => {
       tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS Visits (id INTEGER PRIMARY KEY AUTOINCREMENT, start DATE, end DATE, lat DECIMAL, lon DEMICAL, description TEXT);`,
+        `CREATE TABLE IF NOT EXISTS Visits (id INTEGER PRIMARY KEY AUTOINCREMENT, start DATE, end DATE, recorded DATE, lat DECIMAL, lon DEMICAL, description TEXT);`,
       );
     });
   };
@@ -72,12 +72,12 @@ const useDatabaseHooks = () => {
     });
   };
 
-  const insertData = (start, end, lat, lon, description) => {
+  const insertData = (start, end, recorded, lat, lon, description) => {
     db.transaction(tx => {
       if (end === 0) {
         tx.executeSql(
-          `INSERT INTO Visits (start, lat, lon, description) VALUES (?, ?, ?, ?)`,
-          [start, lat, lon, description],
+          `INSERT INTO Visits (start, recorded, lat, lon, description) VALUES (?, ?, ?, ?, ?)`,
+          [start, recorded, lat, lon, description],
           (_, result) => {
             console.log('Visit without end time inserted successfully', result);
           },
@@ -87,8 +87,8 @@ const useDatabaseHooks = () => {
         );
       } else {
         tx.executeSql(
-          `INSERT INTO Visits (start, end, lat, lon, description) VALUES (?, ?, ?, ?, ?)`,
-          [start, end, lat, lon, description],
+          `INSERT INTO Visits (start, end, recorded, lat, lon, description) VALUES (?, ?, ?, ?, ?, ?)`,
+          [start, end, recorded, lat, lon, description],
           (_, result) => {
             console.log('Visit with end time inserted successfully', result);
           },

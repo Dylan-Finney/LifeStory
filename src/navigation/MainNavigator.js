@@ -265,7 +265,7 @@ const MainNavigator = () => {
         res => {
           (locations = res.map(obj => {
             return {
-              description: obj.description.split(',')[0],
+              description: obj.description,
               start: obj.start,
               end: obj.end,
               latitude: obj.lat,
@@ -760,6 +760,7 @@ const MainNavigator = () => {
           insertData(
             Math.floor(parseInt(res.arrivalTime)) * 1000 || Date.now(),
             Math.floor(parseInt(res.departureTime)) * 1000 || 0,
+            Date.now(),
             res.lat,
             res.lon,
             res.description,

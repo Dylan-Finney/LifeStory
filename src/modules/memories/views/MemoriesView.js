@@ -825,6 +825,9 @@ export default MemoriesView = ({}) => {
                 var end = new Date(Date.now());
                 start.setHours(0);
                 start.setMinutes(0);
+                end.setDate(end.getDate() + 1);
+                end.setHours(0);
+                end.setMinutes(0);
                 await readyToGenerateMemory({
                   start,
                   end,

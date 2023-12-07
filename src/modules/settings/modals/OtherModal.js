@@ -485,6 +485,10 @@ const OtherModal = ({visible, onClose}) => {
                                 Long: {visit.lon}
                               </Text>
                               <Text allowFontScaling={false}>
+                                Recorded:{' '}
+                                {new Date(visit.recorded).toLocaleString()}
+                              </Text>
+                              <Text allowFontScaling={false}>
                                 {JSON.stringify(visit)}
                               </Text>
                             </View>

@@ -282,7 +282,7 @@ for localIdentifier in calendarIdentifiers {
           if let place = placemarks?.first {
                     
                     let description = "\(place)"
-            self.sendEvent(withName: "locationChange", body: ["lat": locations.last?.coordinate.latitude as Any, "lon": locations.last?.coordinate.longitude as Any, "description": description, "arrivalTime": String(locations.last?.timestamp.timeIntervalSince1970 ?? 0), "departureTime" : "", "type": "route", "speed": String(locations.last?.speed ?? 0)] as [String : Any])
+            self.sendEvent(withName: "locationChange", body: ["lat": locations.last?.coordinate.latitude as Any, "lon": locations.last?.coordinate.longitude as Any, "description": description, "arrivalTime": locations.last?.timestamp.timeIntervalSince1970 ?? 0, "departureTime" : "", "type": "route", "speed": String(locations.last?.speed ?? 0)] as [String : Any])
 
           }
         }
@@ -304,8 +304,20 @@ for localIdentifier in calendarIdentifiers {
     geoCoder.reverseGeocodeLocation(clLocation) { placemarks, _ in
       if let place = placemarks?.first {
         let description = "\(place)"
-        self.sendEvent(withName: "locationChange", body: ["lat": visit.coordinate.latitude as Any, "lon": visit.coordinate.longitude as Any, "description": description, "arrivalTime": String(visit.arrivalDate.timeIntervalSince1970 ), "departureTime" : String(visit.departureDate.timeIntervalSince1970 ), "type": "visit"] as [String : Any])
+        if visit.arrivalDate == .distantPast {
+          self.sendEvent(withName: "locationChange", body: ["lat": visit.coordinate.latitude as Any, "lon": visit.coordinate.longitude as Any, "description": description, "arrivalTime": 0, "departureTime" : visit.departureDate.timeIntervalSince1970, "type": "visit"] as [String : Any])
 
+          
+        } else if visit.departureDate == .distantFuture{
+          self.sendEvent(withName: "locationChange", body: ["lat": visit.coordinate.latitude as Any, "lon": visit.coordinate.longitude as Any, "description": description, "arrivalTime": visit.arrivalDate.timeIntervalSince1970, "departureTime" : 0, "type": "visit"] as [String : Any])
+
+          
+        } else {
+          self.sendEvent(withName: "locationChange", body: ["lat": visit.coordinate.latitude as Any, "lon": visit.coordinate.longitude as Any, "description": description, "arrivalTime": visit.arrivalDate.timeIntervalSince1970, "departureTime" : visit.departureDate.timeIntervalSince1970, "type": "visit"] as [String : Any])
+
+          
+        }
+        
       }
     }
   
