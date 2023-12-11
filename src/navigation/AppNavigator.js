@@ -17,6 +17,7 @@ import StoriesIcon from '../assets/icons/StoriesIcon';
 import SettingsNavigator from '../modules/settings/SettingsNavigator';
 import MemoriesView from '../modules/memories/views/MemoriesView';
 import StoriesView from '../modules/stories/views/StoriesView';
+import InsightsView from '../modules/insights/views/InsightsView';
 
 const Tab = createBottomTabNavigator();
 
@@ -31,15 +32,11 @@ const AppNavigator = ({routes}) => {
           borderTopLeftRadius: 20,
         },
       }}>
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Stories"
         options={{
           tabBarIcon: ({focused}) => (
-            <>
-              {/* <TouchableOpacity style={{padding: 20}}> */}
-              {focused ? <StoriesIcon fill="#118ED1CC" /> : <StoriesIcon />}
-              {/* </TouchableOpacity> */}
-            </>
+            <>{focused ? <StoriesIcon fill="#118ED1CC" /> : <StoriesIcon />}</>
           ),
         }}
         children={params => (
@@ -47,7 +44,20 @@ const AppNavigator = ({routes}) => {
             <StoriesView {...params} />
           </GestureHandlerRootView>
         )}
-      />
+      /> */}
+      {/* <Tab.Screen
+        name="Insights"
+        options={{
+          tabBarIcon: ({focused}) => (
+            <>{focused ? <StoriesIcon fill="#118ED1CC" /> : <StoriesIcon />}</>
+          ),
+        }}
+        children={params => (
+          <GestureHandlerRootView style={{flex: 1}}>
+            <InsightsView {...params} />
+          </GestureHandlerRootView>
+        )}
+      /> */}
       <Tab.Screen
         name="Entry"
         children={params => (
@@ -77,7 +87,11 @@ const AppNavigator = ({routes}) => {
             </>
           ),
         }}
-        children={params => <SettingsNavigator {...params} />}
+        children={params => (
+          <GestureHandlerRootView style={{flex: 1}}>
+            <SettingsNavigator {...params} />
+          </GestureHandlerRootView>
+        )}
       />
     </Tab.Navigator>
   );

@@ -48,6 +48,14 @@ const useDatabaseHooks = () => {
     });
   };
 
+  const createGlossaryTable = () => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS Glossary (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, alias TEXT, data TEXT);`,
+      );
+    });
+  };
+
   const createSettingsTable = () => {
     db.transaction(tx => {
       tx.executeSql(
@@ -110,6 +118,65 @@ const useDatabaseHooks = () => {
         },
         (_, error) => {
           console.log('Error inserting RoutePoint:', error);
+        },
+      );
+    });
+  };
+
+  const insertGlossaryItem = ({type, alias, data}) => {
+    return new Promise((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql(
+          `INSERT INTO Glossary (type, alias, data) VALUES (?, ?, ?)`,
+          [type, alias, data],
+          (_, result) => {
+            console.log('Glossary Item inserted successfully', result);
+            resolve(result);
+          },
+          (_, error) => {
+            console.log('Error inserting Glossary Item:', error);
+            reject(error);
+          },
+        );
+      });
+    });
+  };
+
+  const updateGlossaryItem = ({type, alias, data, id}) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `UPDATE Glossary SET type = ?, alias = ?, data = ? WHERE id = ?`,
+        // `UPDATE Entries SET title = ? WHERE id = ?`,
+        [type, alias, data, id],
+        (_, result) => {
+          console.log('Glossary Item updated successfully', result);
+        },
+        (_, error) => {
+          console.log('Error updating Glossary Item:', error);
+        },
+      );
+    });
+  };
+
+  const getGlossaryItemsOfType = ({type}) => {
+    return new Promise((resolve, reject) => {
+      db.transaction(
+        tx => {
+          tx.executeSql(
+            `SELECT * FROM Glossary WHERE type = ?`,
+            [type],
+            (tx, results) => {
+              console.log({results});
+              let data = [];
+              for (let i = 0; i < results.rows.length; i++) {
+                data.push(results.rows.item(i));
+              }
+              resolve(data);
+            },
+          );
+        },
+        error => {
+          reject(error);
         },
       );
     });
@@ -319,9 +386,29 @@ const useDatabaseHooks = () => {
           console.log('Memory deleted successfully', result);
         },
         (_, error) => {
-          console.log('Error updating data:', error);
+          console.log('Error deleting data:', error);
         },
       );
+    });
+  };
+
+  const deleteGlossaryItem = ({id}) => {
+    return new Promise((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql(
+          `DELETE FROM Glossary WHERE id = ?`,
+          // `UPDATE Entries SET title = ? WHERE id = ?`,
+          [id],
+          (_, result) => {
+            console.log('Glossary Item deleted successfully', result);
+            resolve(result);
+          },
+          (_, error) => {
+            console.log('Error deleting Glossary Item:', error);
+            reject(error);
+          },
+        );
+      });
     });
   };
 
@@ -538,6 +625,11 @@ const useDatabaseHooks = () => {
     deleteMemoryData,
     updateMemoryData,
     retrieveLastVisit,
+    createGlossaryTable,
+    insertGlossaryItem,
+    updateGlossaryItem,
+    deleteGlossaryItem,
+    getGlossaryItemsOfType,
   };
 };
 

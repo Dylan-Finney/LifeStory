@@ -1,11 +1,13 @@
 import useSettingsHooks from './hooks/useSettingsHooks';
-const getAddressName = address => {
-  var locationAliasesArray = JSON.parse(
-    useSettingsHooks.getString('settings.locationAliases'),
-  );
+import useDatabaseHooks from './hooks/useDatabaseHooks';
+
+const {getGlossaryItemsOfType} = useDatabaseHooks();
+const getAddressName = async address => {
+  var locationAliasesArray = await getGlossaryItemsOfType({type: 'Location'});
   var aliasObj = locationAliasesArray.find(
-    locationAliasObj => locationAliasObj.address === address,
+    locationAliasObj => locationAliasObj.data === address,
   );
+  console.log({locationAliasesArray, aliasObj});
   if (aliasObj !== undefined) {
     return aliasObj.alias;
   } else {
@@ -13,14 +15,15 @@ const getAddressName = address => {
   }
 };
 
-const getBestLocationTag = description => {
+const getBestLocationTag = async description => {
   if (description === undefined) {
     return '';
   }
 
   var addressArray = description?.split(',');
   var index = 0;
-  var alias = getAddressName(addressArray[0].trim());
+  var alias = await getAddressName(addressArray[0].trim());
+  console.log({alias});
   if (alias === '') {
     for (var i = 0; i < addressArray.length; i++) {
       if (!/^\d$/.test(addressArray[i].trim().charAt(0))) {

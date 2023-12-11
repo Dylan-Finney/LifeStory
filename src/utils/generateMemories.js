@@ -127,12 +127,12 @@ const generateGenericMemory = async ({data, type, time}) => {
 
   switch (type) {
     case EventTypes.LOCATION_ROUTE:
-      data.start.description = getBestLocationTag(
+      data.start.description = await getBestLocationTag(
         data.start.description?.split(',')[2] ||
           data.start.description?.split(',')[0] ||
           '',
       );
-      data.end.description = getBestLocationTag(
+      data.end.description = await getBestLocationTag(
         data.end.description?.split(',')[2] ||
           data.end.description?.split(',')[0] ||
           '',
@@ -222,7 +222,7 @@ I walked to Central Park from Manhattan, which took 2.5 hours in the afternoon.
       ];
       break;
     case EventTypes.LOCATION:
-      data.description = getBestLocationTag(
+      data.description = await getBestLocationTag(
         data.description?.split(',')[2] ||
           data.description?.split(',')[0] ||
           '',
@@ -357,7 +357,7 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
             role: 'user',
             content: `{
   "geoLocationStay": {
-    "locationTag": "${getBestLocationTag(
+    "locationTag": "${await getBestLocationTag(
       data.description?.split('@')[0] || undefined,
     )}",
     "location":
@@ -464,7 +464,7 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
         };
       }
 
-      var alias = getBestLocationTag(
+      var alias = await getBestLocationTag(
         data.description?.split('@')[0] || undefined,
       );
       // userPrompt = `Photo Taken: ${
@@ -593,6 +593,7 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
         data.slice(0, MAX_PHOTO_GROUP_LENGTH),
       );
       console.log({photoGroup});
+
       messages = [
         {
           role: 'system',
@@ -651,11 +652,12 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
         {
           role: 'user',
           content: `[
-            ${photoGroup.map(
-              photo => `{
+            ${await Promise.all(
+              photoGroup.map(
+                async photo => `{
   "photo": {
     "fileName": "${photo.name}",
-    "locationTag": "${getBestLocationTag(
+    "locationTag": "${await getBestLocationTag(
       photo.description?.split('@')[0] || undefined,
     )}",
     "coordinates": {
@@ -678,9 +680,11 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
   }
 },
 `,
+              ),
             )} ${
-            data.length > MAX_PHOTO_GROUP_LENGTH &&
-            `...${data.length - MAX_PHOTO_GROUP_LENGTH} more`
+            data.length > MAX_PHOTO_GROUP_LENGTH
+              ? `...${data.length - MAX_PHOTO_GROUP_LENGTH} more`
+              : ''
           }
           ]`,
         },
@@ -715,6 +719,7 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
       ];
       break;
   }
+
   const completion = await openai.createChatCompletion({
     // model: 'gpt-4',
     model: 'gpt-3.5-turbo-1106',
