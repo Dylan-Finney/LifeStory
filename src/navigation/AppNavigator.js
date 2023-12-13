@@ -18,6 +18,7 @@ import SettingsNavigator from '../modules/settings/SettingsNavigator';
 import MemoriesView from '../modules/memories/views/MemoriesView';
 import StoriesView from '../modules/stories/views/StoriesView';
 import InsightsView from '../modules/insights/views/InsightsView';
+import ProfileIcon from '../assets/icons/ProfileIcon';
 
 const Tab = createBottomTabNavigator();
 
@@ -74,6 +75,8 @@ const AppNavigator = ({routes}) => {
             </>
           ),
           tabBarLabel: 'Memories',
+          tabBarActiveTintColor: '#118ED1CC',
+          tabBarInactiveTintColor: 'rgba(11, 11, 11, 0.6)',
         }}
       />
       <Tab.Screen
@@ -82,10 +85,14 @@ const AppNavigator = ({routes}) => {
           tabBarIcon: ({focused}) => (
             <>
               {/* <TouchableOpacity> */}
-              {focused ? <SettingsIcon fill="#118ED1CC" /> : <SettingsIcon />}
+              {/* {focused ? <SettingsIcon fill="#118ED1CC" /> : <SettingsIcon />} */}
+              {focused ? <ProfileIcon fill="#118ED1CC" /> : <ProfileIcon />}
               {/* </TouchableOpacity> */}
             </>
           ),
+          tabBarActiveTintColor: '#118ED1CC',
+          tabBarInactiveTintColor: 'rgba(11, 11, 11, 0.6)',
+          tabBarLabel: 'Profile',
         }}
         children={params => (
           <GestureHandlerRootView style={{flex: 1}}>
