@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
@@ -19,10 +19,12 @@ import MemoriesView from '../modules/memories/views/MemoriesView';
 import StoriesView from '../modules/stories/views/StoriesView';
 import InsightsView from '../modules/insights/views/InsightsView';
 import ProfileIcon from '../assets/icons/ProfileIcon';
+import AppContext from '../contexts/AppContext';
 
 const Tab = createBottomTabNavigator();
 
 const AppNavigator = ({routes}) => {
+  const {labsMode} = useContext(AppContext);
   return (
     <Tab.Navigator
       initialRouteName="Entry"
@@ -46,19 +48,24 @@ const AppNavigator = ({routes}) => {
           </GestureHandlerRootView>
         )}
       /> */}
-      <Tab.Screen
-        name="Insights"
-        options={{
-          tabBarIcon: ({focused}) => (
-            <>{focused ? <StoriesIcon fill="#118ED1CC" /> : <StoriesIcon />}</>
-          ),
-        }}
-        children={params => (
-          <GestureHandlerRootView style={{flex: 1}}>
-            <InsightsView {...params} />
-          </GestureHandlerRootView>
-        )}
-      />
+      {labsMode === true && (
+        <Tab.Screen
+          name="Insights"
+          options={{
+            tabBarIcon: ({focused}) => (
+              <>
+                {focused ? <StoriesIcon fill="#118ED1CC" /> : <StoriesIcon />}
+              </>
+            ),
+          }}
+          children={params => (
+            <GestureHandlerRootView style={{flex: 1}}>
+              <InsightsView {...params} />
+            </GestureHandlerRootView>
+          )}
+        />
+      )}
+
       <Tab.Screen
         name="Entry"
         children={params => (

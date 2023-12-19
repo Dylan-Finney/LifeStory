@@ -66,6 +66,8 @@ const MainNavigator = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [devMode, setDevMode] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
+  const [labsMode, setLabsMode] = useState(false);
 
   //// future authentication implementation here
   const isAuthenticated = true;
@@ -105,6 +107,278 @@ const MainNavigator = () => {
     }
   };
 
+  const refreshMemories = async () => {
+    try {
+      console.log('LOADING MEMORIES DATA');
+      if (demoMode === true) {
+        const updatedMemories = [
+          {
+            body: 'This is a test Calendar Event',
+            type: 2,
+            vote: 0,
+            tags: {roles: [], modes: [], other: []},
+            time: 1702908000000,
+            id: 0,
+            emotion: 0,
+            eventsData: {
+              end: '1702908000.0',
+              start: '1702904400.0',
+              title: 'Work Meeting',
+              isAllDay: 'false',
+              calendarColor: '#1BADF8',
+              calendar: 'Calendar',
+            },
+            bodyModifiedSource: 'auto',
+            bodyModifiedAt: 1702908000000,
+            formattedTime: getFormatedTimeString(1702904400000, 1702908000000),
+          },
+          {
+            body: 'This is a test Photo Event',
+            type: 0,
+            vote: 0,
+            tags: {roles: [], modes: [], other: []},
+            time: 1702908000000,
+            id: 1,
+            emotion: 0,
+            eventsData: {
+              creation: 1702908000000,
+              lat: 53.680542,
+              description: '17 Maple Street',
+              lon: -2.7091994,
+              name: 'IMG_0005.JPG',
+              localIdentifier: '',
+              data: '',
+              labels: [
+                {
+                  Name: 'Nature',
+                  Confidence: 99.99983215332031,
+                },
+              ],
+              text: [],
+            },
+            bodyModifiedSource: 'auto',
+            bodyModifiedAt: 1702908000000,
+            formattedTime: getFormatedTimeString(1702908000000),
+          },
+          {
+            body: 'This is a test Photo Group Event',
+            type: 3,
+            vote: 0,
+            tags: {roles: [], modes: [], other: []},
+            time: 1702908000000,
+            id: 2,
+            emotion: 0,
+            eventsData: [
+              {
+                creation: 1702908000000,
+                lat: 53.680542,
+                description: '17 Maple Street',
+                lon: -2.7091994,
+                name: 'IMG_0005.JPG',
+                localIdentifier: '',
+                data: '',
+                labels: [
+                  {
+                    Name: 'Nature',
+                    Confidence: 99.99983215332031,
+                  },
+                ],
+                text: [],
+              },
+              {
+                creation: 1702908000000,
+                lat: 53.680542,
+                description: '17 Maple Street',
+                lon: -2.7091994,
+                name: 'IMG_0005.JPG',
+                localIdentifier: '',
+                data: '',
+                labels: [
+                  {
+                    Name: 'Nature',
+                    Confidence: 99.99983215332031,
+                  },
+                ],
+                text: [],
+              },
+            ],
+            bodyModifiedSource: 'auto',
+            bodyModifiedAt: 1702908000000,
+            formattedTime: getFormatedTimeString(1702908000000, 1702908000000),
+          },
+          {
+            body: 'This is a test Location Visit Event',
+            type: 1,
+            vote: 0,
+            tags: {roles: [], modes: [], other: []},
+            time: 1702908000000,
+            id: 3,
+            emotion: 0,
+            eventsData: {
+              description: 'The British Museum',
+              start: 1702904400000,
+              end: 1702908000000,
+              latitude: 51.519419510713334,
+              longitude: -0.12670811167563512,
+              id: 1,
+              city: 'London',
+            },
+            bodyModifiedSource: 'auto',
+            bodyModifiedAt: 1702908000000,
+            formattedTime: getFormatedTimeString(1702904400000, 1702908000000),
+          },
+          {
+            body: 'This is a test Location Route (Complete) Event',
+            type: 5,
+            vote: 0,
+            tags: {roles: [], modes: [], other: []},
+            time: 1702908000000,
+            id: 4,
+            emotion: 0,
+            eventsData: {
+              start: {
+                start: 1702904400000,
+                recorded: 1702908000000,
+                end: 1702908000000,
+                lat: 51.519419510713334,
+                lon: -0.12670811167563512,
+                description: 'The British Museum',
+                city: 'London',
+              },
+              end: {
+                start: 1702909000000,
+                recorded: 1702908000000,
+                end: 1702920000000,
+                latitude: 51.51302331971673,
+                longitude: -0.12221597740899726,
+                description: 'Royal Opera House',
+                city: 'London',
+              },
+              points: [
+                {
+                  id: 1,
+                  date: 1702908000001,
+                  speed: 5,
+                  lat: 51.51875421822659,
+                  lon: -0.12859834267513925,
+                  description: '',
+                },
+                {
+                  id: 2,
+                  date: 1702908000002,
+                  speed: 5,
+                  lat: 51.51691848526262,
+                  lon: -0.12687240514161996,
+                  description: '',
+                },
+                {
+                  id: 3,
+                  date: 1702908000003,
+                  speed: 5,
+                  lat: 51.515719102275334,
+                  lon: -0.12665531840313538,
+                  description: '',
+                },
+                {
+                  id: 4,
+                  date: 1702908000004,
+                  speed: 5,
+                  lat: 51.51508813063645,
+                  lon: -0.1254880231494556,
+                  description: '',
+                },
+
+                {
+                  id: 5,
+                  date: 1702908000005,
+                  speed: 5,
+                  lat: 51.51416767427219,
+                  lon: -0.12405074487807598,
+                  description: '',
+                },
+
+                {
+                  id: 6,
+                  date: 1702908000006,
+                  speed: 5,
+                  lat: 51.51394726197556,
+                  lon: -0.12373624503076297,
+                  description: '',
+                },
+
+                {
+                  id: 7,
+                  date: 1702908000007,
+                  speed: 5,
+                  lat: 51.513633873839346,
+                  lon: -0.12277061647872774,
+                  description: '',
+                },
+                {
+                  id: 8,
+                  date: 1702908000008,
+                  speed: 5,
+                  lat: 51.51330094676101,
+                  lon: -0.1219978846845509,
+                  description: '',
+                },
+              ],
+            },
+            bodyModifiedSource: 'auto',
+            bodyModifiedAt: 1702908000000,
+            formattedTime: getFormatedTimeString(1702908000000, 1702909000000),
+          },
+          {
+            body: 'This is a test Location Route (Incomplete) Event',
+            type: 5,
+            vote: 0,
+            tags: {roles: [], modes: [], other: []},
+            time: 1702908000000,
+            id: 5,
+            emotion: 0,
+            eventsData: {
+              start: {
+                start: 1702904400000,
+                recorded: 1702908000000,
+                end: 1702908000000,
+                lat: 51.519419510713334,
+                lon: -0.12670811167563512,
+                description: 'The British Museum',
+                city: 'London',
+              },
+              end: {
+                start: 1702909000000,
+                recorded: 1702908000000,
+                end: 1702920000000,
+                latitude: 51.51302331971673,
+                longitude: -0.12221597740899726,
+                description: 'Royal Opera House',
+                city: 'London',
+              },
+              points: [],
+            },
+            bodyModifiedSource: 'auto',
+            bodyModifiedAt: 1702908000000,
+            formattedTime: getFormatedTimeString(1702908000000, 1702909000000),
+          },
+        ];
+        // if (updatedMemories === undefined)
+        console.log({updatedMemories});
+        setMemories(updatedMemories);
+        // setEntries(updatedEntries);
+        // setLoadingEntries(false);
+      } else {
+        const updatedMemories = await getMemories();
+        // if (updatedMemories === undefined)
+        console.log({updatedMemories});
+        setMemories(updatedMemories);
+        // setEntries(updatedEntries);
+        // setLoadingEntries(false);
+      }
+    } catch (e) {
+      console.error('initial memory load', e);
+    }
+  };
   useEffect(() => {
     const getEntries = async () => {
       try {
@@ -148,19 +422,7 @@ const MainNavigator = () => {
         console.error(e);
       }
     };
-    const refreshMemories = async () => {
-      try {
-        console.log('LOADING MEMORIES DATA');
-        const updatedMemories = await getMemories();
-        // if (updatedMemories === undefined)
-        console.log({updatedMemories});
-        setMemories(updatedMemories);
-        // setEntries(updatedEntries);
-        // setLoadingEntries(false);
-      } catch (e) {
-        console.error('initial memory load', e);
-      }
-    };
+
     if (onBoarding === false) {
       setLoadingEntries(true);
       getEntries();
@@ -179,6 +441,10 @@ const MainNavigator = () => {
       setLoadingEntries(false);
     }
   }, []);
+
+  useEffect(() => {
+    refreshMemories();
+  }, [demoMode]);
 
   const [loadingMessage, setLoadingMessage] = useState('');
   const [memoryLoadingMessage, setMemoryLoadingMessage] =
@@ -804,6 +1070,10 @@ const MainNavigator = () => {
     setOnBoarding,
     devMode,
     setDevMode,
+    demoMode,
+    setDemoMode,
+    labsMode,
+    setLabsMode,
     firstEntryGenerated,
     setFirstEntryGenerated,
     storyLoadingMessage,

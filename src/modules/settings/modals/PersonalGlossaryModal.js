@@ -74,7 +74,7 @@ const PersonalGlossaryModal = ({visible, onClose}) => {
   const [deleteMode, setDeleteMode] = useState(true);
   const [add, setAdd] = useState(false);
   // const {locationAliases, setLocationAliases} = useSettingsHooks();
-  const ScrollViewRef = useRef(null);
+  const scrollViewRef = useRef(null);
   // useEffect(() => {
   //   console.log(useSettingsHooks.getString('settings.locationAliases'));
   //   setDataArr(
@@ -83,9 +83,9 @@ const PersonalGlossaryModal = ({visible, onClose}) => {
   // }, [useSettingsHooks.getString('settings.locationAliases')]);
   useEffect(() => {
     if (add === true) {
-      //   console.log(ScrollViewRef.current);
-      //   ScrollViewRef.current?.scrollToEnd({animated: true});
-      //   ScrollViewRef.current?.scrollToIndex({index: dataArr.length - 1});
+      //   console.log(scrollViewRef.current);
+      //   scrollViewRef.current?.scrollToEnd({animated: true});
+      //   scrollViewRef.current?.scrollToIndex({index: dataArr.length - 1});
       //   setAdd(false);
     }
   }, [dataArr.length]);
@@ -126,6 +126,15 @@ const PersonalGlossaryModal = ({visible, onClose}) => {
   );
 
   const [currentSelectItem, setCurrentSelectItem] = useState(undefined);
+
+  useEffect(() => {
+    if (scrollViewRef.current && add == true) {
+      setTimeout(() => {
+        scrollViewRef.current.scrollToEnd();
+        setAdd(false);
+      }, 100);
+    }
+  }, [data]);
 
   return (
     <CustomModalWrapper
@@ -275,6 +284,7 @@ const PersonalGlossaryModal = ({visible, onClose}) => {
               if (currentItemData.alias !== '' && currentItemData.data !== '') {
                 if (currentSelectItem === undefined) {
                   //create
+                  setAdd(true);
                   const result = await insertGlossaryItem({
                     type: currentItemData.type,
                     alias: currentItemData.alias,
@@ -324,6 +334,7 @@ const PersonalGlossaryModal = ({visible, onClose}) => {
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={{
           paddingHorizontal: horizontalScale(16),
           paddingVertical: verticalScale(16),

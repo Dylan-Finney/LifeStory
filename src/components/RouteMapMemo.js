@@ -42,7 +42,9 @@ const RouteMap = ({coordinates, start, end}) => {
     {latitude: end.latitude, longitude: end.longitude},
   );
 
-  const numberOfPredictedPoints = Math.floor((distance / 50) * 0.6);
+  const numberOfPredictedPoints = Math.floor((distance / 50) * 0.5);
+
+  console.log({numberOfPredictedPoints});
 
   return (
     <MapView

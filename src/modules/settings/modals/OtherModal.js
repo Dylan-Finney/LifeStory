@@ -38,7 +38,15 @@ const OtherModal = ({visible, onClose}) => {
   const [routePoints, setRoutePoints] = useState([]);
   const [loadingLocations, setLoadingLocations] = useState(false);
 
-  const {setOnBoarding, devMode, setDevMode} = useContext(AppContext);
+  const {
+    setOnBoarding,
+    devMode,
+    setDevMode,
+    demoMode,
+    setDemoMode,
+    labsMode,
+    setLabsMode,
+  } = useContext(AppContext);
 
   const Divider = ({title}) => {
     return (
@@ -100,6 +108,20 @@ const OtherModal = ({visible, onClose}) => {
             setDevMode(!devMode);
           }}
           value={devMode}
+        />
+        <LabeledSwitch
+          label="Demo Mode"
+          onValueChange={() => {
+            setDemoMode(!demoMode);
+          }}
+          value={demoMode}
+        />
+        <LabeledSwitch
+          label="Labs Mode"
+          onValueChange={() => {
+            setLabsMode(!labsMode);
+          }}
+          value={labsMode}
         />
         <LabeledButton
           label="Delete Location History"

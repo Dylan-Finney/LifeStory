@@ -29,7 +29,7 @@ export default EmptyStoriesView = () => {
         Make sure that all permissions are granted for desired integration.
       </Text>
       <Text allowFontScaling={false} style={{textAlign: 'center'}}>
-        Tune in at {getNextMemoryTime()}:00 to create new memories...
+        Tune in at {getNextMemoryTime()} to create new memories...
       </Text>
     </Box>
   );

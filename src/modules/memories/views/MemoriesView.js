@@ -84,6 +84,7 @@ export default MemoriesView = ({}) => {
     memories,
     setMemories,
     devMode,
+    demoMode,
     checkIfReadyToGenerate,
     readyToGenerateMemory,
     memoryLoadingMessage,
@@ -582,18 +583,20 @@ export default MemoriesView = ({}) => {
                         memory.emotion = memory.emotion === val ? 0 : val;
                         updatedMemories[highlightedMemory.index] = memory;
                         setMemories(updatedMemories);
-                        updateMemoryData({
-                          tags: JSON.stringify(memory.tags),
-                          type: memory.type,
-                          body: memory.body,
-                          bodyModifiedAt: memory.bodyModifiedAt,
-                          bodyModifiedSource: memory.bodyModifiedSource,
-                          emotion: memory.emotion,
-                          eventsData: JSON.stringify(memory.eventsData),
-                          time: memory.time,
-                          vote: memory.vote,
-                          id: highlightedMemory.id,
-                        });
+                        if (demoMode === false) {
+                          updateMemoryData({
+                            tags: JSON.stringify(memory.tags),
+                            type: memory.type,
+                            body: memory.body,
+                            bodyModifiedAt: memory.bodyModifiedAt,
+                            bodyModifiedSource: memory.bodyModifiedSource,
+                            emotion: memory.emotion,
+                            eventsData: JSON.stringify(memory.eventsData),
+                            time: memory.time,
+                            vote: memory.vote,
+                            id: highlightedMemory.id,
+                          });
+                        }
                       }}
                     />
                   );
@@ -615,18 +618,20 @@ export default MemoriesView = ({}) => {
                   memory.vote += 1;
                   updatedMemories[highlightedMemory.index] = memory;
                   setMemories(updatedMemories);
-                  updateMemoryData({
-                    tags: JSON.stringify(memory.tags),
-                    type: memory.type,
-                    body: memory.body,
-                    bodyModifiedAt: memory.bodyModifiedAt,
-                    bodyModifiedSource: memory.bodyModifiedSource,
-                    emotion: memory.emotion,
-                    eventsData: JSON.stringify(memory.eventsData),
-                    time: memory.time,
-                    vote: memory.vote,
-                    id: highlightedMemory.id,
-                  });
+                  if (demoMode === false) {
+                    updateMemoryData({
+                      tags: JSON.stringify(memory.tags),
+                      type: memory.type,
+                      body: memory.body,
+                      bodyModifiedAt: memory.bodyModifiedAt,
+                      bodyModifiedSource: memory.bodyModifiedSource,
+                      emotion: memory.emotion,
+                      eventsData: JSON.stringify(memory.eventsData),
+                      time: memory.time,
+                      vote: memory.vote,
+                      id: highlightedMemory.id,
+                    });
+                  }
                 }}
                 num={
                   memories[highlightedMemory.index]?.vote > 0
@@ -644,18 +649,20 @@ export default MemoriesView = ({}) => {
                   memory.vote -= 1;
                   updatedMemories[highlightedMemory.index] = memory;
                   setMemories(updatedMemories);
-                  updateMemoryData({
-                    tags: JSON.stringify(memory.tags),
-                    type: memory.type,
-                    body: memory.body,
-                    bodyModifiedAt: memory.bodyModifiedAt,
-                    bodyModifiedSource: memory.bodyModifiedSource,
-                    emotion: memory.emotion,
-                    eventsData: JSON.stringify(memory.eventsData),
-                    time: memory.time,
-                    vote: memory.vote,
-                    id: highlightedMemory.id,
-                  });
+                  if (demoMode === false) {
+                    updateMemoryData({
+                      tags: JSON.stringify(memory.tags),
+                      type: memory.type,
+                      body: memory.body,
+                      bodyModifiedAt: memory.bodyModifiedAt,
+                      bodyModifiedSource: memory.bodyModifiedSource,
+                      emotion: memory.emotion,
+                      eventsData: JSON.stringify(memory.eventsData),
+                      time: memory.time,
+                      vote: memory.vote,
+                      id: highlightedMemory.id,
+                    });
+                  }
                 }}
                 num={
                   memories[highlightedMemory.index]?.vote < 0
@@ -697,9 +704,11 @@ export default MemoriesView = ({}) => {
                   var updatedMemories = [...memories];
                   updatedMemories.splice(highlightedMemory.index, 1);
                   setMemories(updatedMemories);
-                  deleteMemoryData({
-                    id: highlightedMemory.id,
-                  });
+                  if (demoMode === false) {
+                    deleteMemoryData({
+                      id: highlightedMemory.id,
+                    });
+                  }
                   // var newItemHeights = itemHeights2;
                   // console.log({newItemHeights});
                   for (
@@ -726,18 +735,20 @@ export default MemoriesView = ({}) => {
                 memory.tags = labels;
                 updatedMemories[highlightedMemory.index] = memory;
                 setMemories(updatedMemories);
-                updateMemoryData({
-                  tags: JSON.stringify(memory.tags),
-                  type: memory.type,
-                  body: memory.body,
-                  bodyModifiedAt: memory.bodyModifiedAt,
-                  bodyModifiedSource: memory.bodyModifiedSource,
-                  emotion: memory.emotion,
-                  eventsData: JSON.stringify(memory.eventsData),
-                  time: memory.time,
-                  vote: memory.vote,
-                  id: highlightedMemory.id,
-                });
+                if (demoMode === false) {
+                  updateMemoryData({
+                    tags: JSON.stringify(memory.tags),
+                    type: memory.type,
+                    body: memory.body,
+                    bodyModifiedAt: memory.bodyModifiedAt,
+                    bodyModifiedSource: memory.bodyModifiedSource,
+                    emotion: memory.emotion,
+                    eventsData: JSON.stringify(memory.eventsData),
+                    time: memory.time,
+                    vote: memory.vote,
+                    id: highlightedMemory.id,
+                  });
+                }
               }}
             />
           )}
@@ -752,18 +763,20 @@ export default MemoriesView = ({}) => {
                 memory.bodyModifiedAt = Date.now();
                 updatedMemories[highlightedMemory.index] = memory;
                 setMemories(updatedMemories);
-                updateMemoryData({
-                  tags: JSON.stringify(memory.tags),
-                  type: memory.type,
-                  body: memory.body,
-                  bodyModifiedAt: memory.bodyModifiedAt,
-                  bodyModifiedSource: memory.bodyModifiedSource,
-                  emotion: memory.emotion,
-                  eventsData: JSON.stringify(memory.eventsData),
-                  time: memory.time,
-                  vote: memory.vote,
-                  id: highlightedMemory.id,
-                });
+                if (demoMode === false) {
+                  updateMemoryData({
+                    tags: JSON.stringify(memory.tags),
+                    type: memory.type,
+                    body: memory.body,
+                    bodyModifiedAt: memory.bodyModifiedAt,
+                    bodyModifiedSource: memory.bodyModifiedSource,
+                    emotion: memory.emotion,
+                    eventsData: JSON.stringify(memory.eventsData),
+                    time: memory.time,
+                    vote: memory.vote,
+                    id: highlightedMemory.id,
+                  });
+                }
                 closeActionSheet();
               }}
               cancel={() => {
@@ -794,17 +807,19 @@ export default MemoriesView = ({}) => {
                   time: Date.now(),
                   vote: 0,
                 };
-                try {
-                  createMemoriesTable();
-                  const saveResult = await saveMemoryData({
-                    ...newMemory,
-                    tags: JSON.stringify(newMemory.tags),
-                    eventsData: JSON.stringify(newMemory.eventsData),
-                  });
-                  newMemory.id = saveResult.insertId;
-                } catch (e) {
-                  console.error({e});
-                  newMemory.saved = false;
+                if (demoMode === false) {
+                  try {
+                    createMemoriesTable();
+                    const saveResult = await saveMemoryData({
+                      ...newMemory,
+                      tags: JSON.stringify(newMemory.tags),
+                      eventsData: JSON.stringify(newMemory.eventsData),
+                    });
+                    newMemory.id = saveResult.insertId;
+                  } catch (e) {
+                    console.error({e});
+                    newMemory.saved = false;
+                  }
                 }
                 var updatedMemories = [newMemory, ...memories];
                 setMemories(updatedMemories);

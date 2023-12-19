@@ -364,7 +364,7 @@ export default InsightsView = ({}) => {
           .map(memory => memory.eventsData.length)
           .reduce((total, num) => {
             return total + num;
-          }) +
+          }, 0) +
           memories.filter(memory => memory.type === EventTypes.PHOTO).length}
       </Text>
       <Text allowFontScaling={false}>
@@ -376,7 +376,7 @@ export default InsightsView = ({}) => {
           .map(memory => memory.eventsData.length)
           .reduce((total, num) => {
             return total + num;
-          }) /
+          }, 0) /
           memories.filter(memory => memory.type === EventTypes.PHOTO_GROUP)
             .length}
       </Text>
