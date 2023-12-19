@@ -1,5 +1,6 @@
 import React from 'react';
 import MapView, {Marker, Polyline} from 'react-native-maps';
+import {getDistance} from 'geolib';
 
 const RouteMap = ({coordinates, start, end}) => {
   console.log({coordinates, start, end});
@@ -35,6 +36,14 @@ const RouteMap = ({coordinates, start, end}) => {
 
   const deltaLat = rangeLat + 2 * bufferLat;
   const deltaLon = rangeLon + 2 * bufferLon;
+
+  const distance = getDistance(
+    {latitude: start.lat, longitude: start.lon},
+    {latitude: end.latitude, longitude: end.longitude},
+  );
+
+  const numberOfPredictedPoints = Math.floor((distance / 50) * 0.6);
+
   return (
     <MapView
       cacheEnabled={true}
@@ -70,12 +79,21 @@ const RouteMap = ({coordinates, start, end}) => {
           longitude: start.lon,
         }}
       />
-      <Polyline
-        coordinates={allCoords}
-        strokeColor="#000"
-        strokeColors={['#7F0000']}
-        strokeWidth={2}
-      />
+      {coordinates.length <= numberOfPredictedPoints ? (
+        <Polyline
+          coordinates={allCoords}
+          strokeWidth={2}
+          lineDashPattern={[5, 10]}
+          lineCap={'butt'}
+          strokeColor={'black'}
+        />
+      ) : (
+        <Polyline
+          coordinates={allCoords}
+          strokeWidth={2}
+          strokeColor={'#7F0000'}
+        />
+      )}
     </MapView>
   );
 };

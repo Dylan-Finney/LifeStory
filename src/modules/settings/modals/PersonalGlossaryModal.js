@@ -25,11 +25,9 @@ import CustomModalWrapper from '../../../components/modals/CustomModalWrapper';
 import {useTheme} from '../../../theme/ThemeContext';
 import PenIcon from '../../../assets/Pen.svg';
 import BinIcon from '../../../assets/Bin.svg';
-import LocationIcon from '../../../assets/glossary/location.svg';
-import WorkIcon from '../../../assets/glossary/work.svg';
-import PetIcon from '../../../assets/glossary/pet.svg';
+
 import PersonalGlossaryIcon from '../../../assets/glossary/icon.svg';
-import OtherIcon from '../../../assets/glossary/other.svg';
+
 import {
   Actionsheet,
   ChevronDownIcon,
@@ -47,6 +45,12 @@ import {SelectContent} from '@gluestack-ui/themed';
 import {SelectIcon} from '@gluestack-ui/themed';
 import {Pressable} from '@gluestack-ui/themed';
 import {Swipeable} from 'react-native-gesture-handler';
+
+import {
+  types,
+  getGlossaryTypeIcon,
+  getPlaceHolder,
+} from '../../../utils/glossaryUtils';
 
 //needs cleanup
 
@@ -86,8 +90,6 @@ const PersonalGlossaryModal = ({visible, onClose}) => {
     }
   }, [dataArr.length]);
 
-  const types = ['Location', 'Work', 'Pet', 'Place'];
-
   const [isSelectVisible, setIsSelectVisible] = useState(false);
 
   const [data, setData] = useState([]);
@@ -108,40 +110,6 @@ const PersonalGlossaryModal = ({visible, onClose}) => {
     };
     test();
   }, []);
-
-  const getGlossaryTypeIcon = type => {
-    switch (type) {
-      case 'Location':
-        return <Icon as={LocationIcon} />;
-      case 'Work':
-        return <Icon as={WorkIcon} />;
-
-      case 'Pet':
-        return <Icon as={PetIcon} />;
-      case 'Place':
-        return <Icon as={OtherIcon} />;
-
-      default:
-        return <Icon as={OtherIcon} />;
-    }
-  };
-
-  const getPlaceHolder = type => {
-    switch (type) {
-      case 'Location':
-        return {alias: 'Home', data: '123 Maple Street, Springfield'};
-      case 'Work':
-        return {alias: 'Primary Work', data: 'Prifina'};
-
-      case 'Pet':
-        return {alias: 'My Cat', data: 'Edgar'};
-      case 'Place':
-        return {alias: 'Yoga Studio', data: 'Zen Harmony Yoga'};
-
-      default:
-        return {alias: 'Home', data: '123 Maple Street, Springfield'};
-    }
-  };
 
   const closeSelectBox = () => {
     setIsSelectVisible(false);
@@ -206,6 +174,7 @@ const PersonalGlossaryModal = ({visible, onClose}) => {
               {types.map((txt, index) => {
                 return (
                   <Pressable
+                    key={index}
                     onPress={() => {
                       setCurrentItemData({
                         ...currentItemData,
@@ -359,9 +328,10 @@ const PersonalGlossaryModal = ({visible, onClose}) => {
           paddingHorizontal: horizontalScale(16),
           paddingVertical: verticalScale(16),
         }}>
-        {data.map(record => {
+        {data.map((record, index) => {
           return (
             <Swipeable
+              key={index}
               ref={ref => {
                 if (ref && !rowRefs.get(record.id)) {
                   rowRefs.set(record.id, ref);

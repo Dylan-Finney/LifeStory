@@ -67,7 +67,7 @@ const useDatabaseHooks = () => {
   const createVisitsTable = () => {
     db.transaction(tx => {
       tx.executeSql(
-        `CREATE TABLE IF NOT EXISTS Visits (id INTEGER PRIMARY KEY AUTOINCREMENT, start DATE, end DATE, recorded DATE, lat DECIMAL, lon DEMICAL, description TEXT);`,
+        `CREATE TABLE IF NOT EXISTS Visits (id INTEGER PRIMARY KEY AUTOINCREMENT, start DATE, end DATE, recorded DATE, lat DECIMAL, lon DEMICAL, description TEXT, city TEXT);`,
       );
     });
   };
@@ -80,12 +80,12 @@ const useDatabaseHooks = () => {
     });
   };
 
-  const insertData = (start, end, recorded, lat, lon, description) => {
+  const insertData = (start, end, recorded, lat, lon, description, city) => {
     db.transaction(tx => {
       if (end === 0) {
         tx.executeSql(
-          `INSERT INTO Visits (start, recorded, lat, lon, description) VALUES (?, ?, ?, ?, ?)`,
-          [start, recorded, lat, lon, description],
+          `INSERT INTO Visits (start, recorded, lat, lon, description, city) VALUES (?, ?, ?, ?, ?, ?)`,
+          [start, recorded, lat, lon, description, city],
           (_, result) => {
             console.log('Visit without end time inserted successfully', result);
           },
@@ -95,8 +95,8 @@ const useDatabaseHooks = () => {
         );
       } else {
         tx.executeSql(
-          `INSERT INTO Visits (start, end, recorded, lat, lon, description) VALUES (?, ?, ?, ?, ?, ?)`,
-          [start, end, recorded, lat, lon, description],
+          `INSERT INTO Visits (start, end, recorded, lat, lon, description, city) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [start, end, recorded, lat, lon, description, city],
           (_, result) => {
             console.log('Visit with end time inserted successfully', result);
           },
@@ -467,8 +467,8 @@ const useDatabaseHooks = () => {
   const retrieveSpecificData = (startDate, endDate, callback) => {
     db.transaction(tx => {
       tx.executeSql(
-        `SELECT * FROM Visits WHERE (Visits.end IS NULL AND Visits.start BETWEEN ? AND ?) OR (Visits.end IS NOT NULL AND Visits.end BETWEEN ? AND ?)`,
-        [startDate, endDate, startDate, endDate],
+        `SELECT * FROM Visits WHERE Visits.recorded BETWEEN ? AND ?`,
+        [startDate, endDate],
         (tx, results) => {
           let data = [];
           for (let i = 0; i < results.rows.length; i++) {

@@ -2,6 +2,8 @@ import 'react-native-url-polyfill/auto';
 
 import React from 'react';
 
+import {Text, View} from 'react-native';
+
 import MainNavigator from './src/navigation/MainNavigator';
 
 import {GluestackUIProvider} from '@gluestack-ui/themed';

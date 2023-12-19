@@ -266,6 +266,7 @@ const MainNavigator = () => {
           (locations = res.map(obj => {
             return {
               description: obj.description,
+              city: obj.city || undefined,
               start: obj.start,
               end: obj.end,
               latitude: obj.lat,

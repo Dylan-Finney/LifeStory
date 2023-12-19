@@ -15,7 +15,7 @@ const getAddressName = async address => {
   }
 };
 
-const getBestLocationTag = async description => {
+const getBestLocationTag = async (description, bestFallback) => {
   if (description === undefined) {
     return '';
   }
@@ -24,14 +24,14 @@ const getBestLocationTag = async description => {
   var index = 0;
   var alias = await getAddressName(addressArray[0].trim());
   console.log({alias});
-  if (alias === '') {
-    for (var i = 0; i < addressArray.length; i++) {
-      if (!/^\d$/.test(addressArray[i].trim().charAt(0))) {
-        index = i;
-        break;
-      }
-    }
-    return addressArray[index].trim();
+  if (alias === '' || addressArray[0].trim() === '') {
+    // for (var i = 0; i < addressArray.length; i++) {
+    //   if (!/^\d$/.test(addressArray[i].trim().charAt(0))) {
+    //     index = i;
+    //     break;
+    //   }
+    // }
+    return bestFallback;
   } else {
     return alias;
   }

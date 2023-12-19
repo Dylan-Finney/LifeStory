@@ -20,6 +20,7 @@ import CustomModalWrapper from '../../../components/modals/CustomModalWrapper';
 import LabeledSwitch from '../../../components/LabeledSwitch';
 import {useTheme} from '../../../theme/ThemeContext';
 import LabeledButton from '../../../components/LabeledButton';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 const OtherModal = ({visible, onClose}) => {
   const {theme} = useTheme();
@@ -443,6 +444,22 @@ const OtherModal = ({visible, onClose}) => {
               style={{color: 'red', fontWeight: 600}}>
               Start: {new Date(startPhotosDate).toLocaleString()} End:
               {new Date(endPhotosDate).toLocaleString()}
+            </Text>
+            <Text
+              allowFontScaling={false}
+              onPress={() => {
+                Clipboard.setString(JSON.stringify(visits));
+              }}
+              style={{color: 'red', fontWeight: 600}}>
+              Copy Visits to Clipboard
+            </Text>
+            <Text
+              allowFontScaling={false}
+              onPress={() => {
+                Clipboard.setString(JSON.stringify(routePoints));
+              }}
+              style={{color: 'red', fontWeight: 600}}>
+              Copy RoutePoints to Clipboard
             </Text>
             {loadingLocations === false && (
               <View style={{gap: 5}}>

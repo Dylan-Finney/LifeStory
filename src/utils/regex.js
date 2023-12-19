@@ -14,3 +14,6 @@ export const META_TAGS_REGEX =
 export const TAGS_CONTENT_REGEX = /content="(.*?)"/;
 
 export const TITLE_TAG_REGEX = /<title>(.*?)<\/title>/gi;
+
+export const LINK_DOMAIN_REGEX =
+  /^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/?\n]+)/gim;

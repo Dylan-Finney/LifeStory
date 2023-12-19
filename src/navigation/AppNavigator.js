@@ -46,7 +46,7 @@ const AppNavigator = ({routes}) => {
           </GestureHandlerRootView>
         )}
       /> */}
-      {/* <Tab.Screen
+      <Tab.Screen
         name="Insights"
         options={{
           tabBarIcon: ({focused}) => (
@@ -58,7 +58,7 @@ const AppNavigator = ({routes}) => {
             <InsightsView {...params} />
           </GestureHandlerRootView>
         )}
-      /> */}
+      />
       <Tab.Screen
         name="Entry"
         children={params => (

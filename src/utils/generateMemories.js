@@ -36,13 +36,13 @@ const {
 
 const getAverage = arr => {
   let reducer = (total, currentValue) => total + currentValue;
-  let sum = arr.reduce(reducer);
+  let sum = arr.reduce(reducer, 0);
   return sum / arr.length;
 };
 
 const analyzePhoto = async photo => {
   return new Promise(async (resolve, reject) => {
-    console.log(photo);
+    console.log({...photo, data: ''});
     const image = decode(photo.data);
     const length = image.length;
     const imageBytes = new ArrayBuffer(length);
@@ -123,20 +123,30 @@ const generateGenericMemory = async ({data, type, time}) => {
   var photoAnalysis =
     useSettingsHooks.getBoolean('settings.photoAnalysis') || false;
 
-  console.log('photoAnalysis', {photoAnalysis});
-
   switch (type) {
     case EventTypes.LOCATION_ROUTE:
-      data.start.description = await getBestLocationTag(
-        data.start.description?.split(',')[2] ||
-          data.start.description?.split(',')[0] ||
-          '',
-      );
-      data.end.description = await getBestLocationTag(
-        data.end.description?.split(',')[2] ||
-          data.end.description?.split(',')[0] ||
-          '',
-      );
+      if (data.start.city === data.end.city) {
+        data.start.description = await getBestLocationTag(
+          data.start.description?.split(',')[0] || '',
+          data.start.description?.split(',')[0],
+        );
+
+        data.end.description = await getBestLocationTag(
+          data.end.description?.split(',')[0] || '',
+          data.end.description?.split(',')[0],
+        );
+      } else {
+        data.start.description = await getBestLocationTag(
+          data.start.description?.split(',')[0] || '',
+          data.start.city,
+        );
+
+        data.end.description = await getBestLocationTag(
+          data.end.description?.split(',')[0] || '',
+          data.end.city,
+        );
+      }
+
       messages = [
         {
           role: 'system',
@@ -448,15 +458,24 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
     case EventTypes.PHOTO:
       // data.data = '';
       // var photo = data;
+      console.log('photoAnalysis', {photoAnalysis});
       if (photoAnalysis === true) {
-        const {labelsWithTitle, textDetections} = await analyzePhoto(data);
-        console.log({labelsWithTitle});
-        data = {
-          ...data,
-          data: '',
-          labels: labelsWithTitle,
-          text: textDetections,
-        };
+        try {
+          const {labelsWithTitle, textDetections} = await analyzePhoto(data);
+          console.log({labelsWithTitle});
+          data = {
+            ...data,
+            data: '',
+            labels: labelsWithTitle,
+            text: textDetections,
+          };
+        } catch (e) {
+          console.error(e);
+          data = {
+            ...data,
+            data: '',
+          };
+        }
       } else {
         data = {
           ...data,
@@ -564,22 +583,31 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
       console.log('photo message', JSON.stringify(messages));
       break;
     case EventTypes.PHOTO_GROUP:
+      console.log('photoAnalysis', {photoAnalysis});
       const MAX_PHOTO_GROUP_LENGTH = 10;
       const processGroup = async data => {
         if (photoAnalysis === true) {
-          return await Promise.all(
-            data.map(async photo => {
+          var newData = [];
+          for (const photo of data) {
+            try {
               const {labelsWithTitle, textDetections} = await analyzePhoto(
                 photo,
               );
-              return {
+              newData.push({
                 ...photo,
                 data: '',
                 labels: labelsWithTitle,
                 text: textDetections,
-              };
-            }),
-          );
+              });
+            } catch (e) {
+              console.error(e);
+              newData.push({
+                ...photo,
+                data: '',
+              });
+            }
+          }
+          return newData;
         } else {
           return data.map(photo => {
             return {
@@ -592,7 +620,11 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
       const photoGroup = await processGroup(
         data.slice(0, MAX_PHOTO_GROUP_LENGTH),
       );
-      console.log({photoGroup});
+      console.log({
+        photoGroup: photoGroup.map(photo => {
+          return {...photo, data: ''};
+        }),
+      });
 
       messages = [
         {
@@ -766,12 +798,182 @@ const saveMemories = newMemories => {
       ...newMemory,
       tags: JSON.stringify({
         roles: [],
-        body: [],
+        modes: [],
         other: [],
       }),
       eventsData: JSON.stringify(newMemory.eventsData),
     });
   });
+};
+
+const processVisits = async uniqueLocations => {
+  const newMemories = [];
+  for (const location of uniqueLocations) {
+    const test = await retrievePreviousVisitWithDeparture(location.id);
+    const test2 = await retrievePreviousVisitWithoutDeparture(location.id);
+
+    console.log('TEST LOCATION', {location, test, test2});
+
+    if (test.length > 0) {
+      const previousLocationWithDeparture = test[0];
+      console.log('TEST LOCATION > 1', {
+        location,
+        previousLocationWithDeparture,
+        test2,
+      });
+      if (location.end === null) {
+        // Generate Route
+        console.log('TEST LOCATION WITHOUT END', {location});
+        const routePoints = await retrieveRoutePointsForVisitData(
+          previousLocationWithDeparture.end,
+          location.start,
+        );
+        const route = {
+          start: previousLocationWithDeparture,
+          end: location,
+          points: routePoints,
+        };
+        console.log('TEST LOCATION > 1 NO END route', {route});
+        try {
+          var newRouteMemory = await generateGenericMemory({
+            data: route,
+            type: EventTypes.LOCATION_ROUTE,
+            time: route.end.start >= 0 ? route.end.start : route.start.end,
+          });
+          console.log('TEST LOCATION > 1 NO END newRouteMemory', {
+            location,
+            previousLocationWithDeparture,
+            test2,
+            route,
+            newRouteMemory,
+          });
+          newMemories.push(newRouteMemory);
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        console.log('TEST LOCATION WITH END', {
+          location,
+          length: test2.length,
+        });
+        //Check if route has been generated before
+        //Generate route if not
+        //Generate Location
+        if (test2.length > 0) {
+          const previousLocationWithoutDeparture = test2[0];
+          if (previousLocationWithoutDeparture.id !== location.id - 1) {
+            const routePoints = await retrieveRoutePointsForVisitData(
+              previousLocationWithDeparture.end,
+              location.start,
+            );
+            const route = {
+              start: previousLocationWithDeparture,
+              end: location,
+              points: routePoints,
+            };
+            var newRouteMemory = await generateGenericMemory({
+              data: route,
+              type: EventTypes.LOCATION_ROUTE,
+              time: route.end.start >= 0 ? route.end.start : route.start.end,
+            });
+            newMemories.push(newRouteMemory);
+            var newLocationMemory = await generateGenericMemory({
+              data: location,
+              type: EventTypes.LOCATION,
+              time: location.end,
+            });
+            newMemories.push(newLocationMemory);
+          }
+        } else {
+          const routePoints = await retrieveRoutePointsForVisitData(
+            previousLocationWithDeparture.end,
+            location.start,
+          );
+          const route = {
+            start: previousLocationWithDeparture,
+            end: location,
+            points: routePoints,
+          };
+          try {
+            var newRouteMemory = await generateGenericMemory({
+              data: route,
+              type: EventTypes.LOCATION_ROUTE,
+              time: route.end.start >= 0 ? route.end.start : route.start.end,
+            });
+            newMemories.push(newRouteMemory);
+          } catch (e) {
+            console.error('RoutePoints', {e, location, route});
+          }
+
+          // var newLocationMemory = await generateGenericMemory({
+          //   data: location,
+          //   type: EventTypes.LOCATION,
+          //   time: location.end,
+          // });
+          // newMemories.push(newLocationMemory);
+        }
+        try {
+          var newLocationMemory = await generateGenericMemory({
+            data: location,
+            type: EventTypes.LOCATION,
+            time: location.end,
+          });
+          newMemories.push(newLocationMemory);
+        } catch (e) {
+          console.error('New Location Memory', {e, location});
+        }
+      }
+    } else {
+      if (location.end !== null && location.start !== null) {
+        var newLocationMemory = await generateGenericMemory({
+          data: location,
+          type: EventTypes.LOCATION,
+          time: location.end,
+        });
+        newMemories.push(newLocationMemory);
+      }
+    }
+  }
+  return newMemories;
+};
+
+const processEvents = async events => {
+  const newMemories = [];
+  for (const event of events) {
+    var newCalendarMemory = await generateGenericMemory({
+      data: event,
+      type: EventTypes.CALENDAR_EVENT,
+      time: parseInt(event.end) * 1000,
+    });
+    newMemories.push(newCalendarMemory);
+  }
+  return newMemories;
+};
+
+const processPhotos = async photosGroups => {
+  const newMemories = [];
+  for (const photoGroup of photosGroups) {
+    try {
+      if (photoGroup.length > 1) {
+        var newPhotoGroupMemory = await generateGenericMemory({
+          data: photoGroup,
+          type: EventTypes.PHOTO_GROUP,
+          time: photoGroup[0].creation,
+        });
+        newMemories.push(newPhotoGroupMemory);
+      } else {
+        var newPhotoMemory = await generateGenericMemory({
+          data: photoGroup[0],
+          type: EventTypes.PHOTO,
+          time: photoGroup[0].creation,
+        });
+        newMemories.push(newPhotoMemory);
+      }
+    } catch (e) {
+      console.error('', e);
+    }
+  }
+  return newMemories;
 };
 
 const generateMemories = async ({data, date}) => {
@@ -816,222 +1018,28 @@ const generateMemories = async ({data, date}) => {
   const uniqueLocationDepartures = uniqueLocations.filter(
     uniqueLocation => uniqueLocation.end === null,
   );
-  await Promise.allSettled(
-    //The reduce functions acts as a way to only use location events that have a unique address to prevent several similar memories being generated
 
-    uniqueLocations.map(async (location, index) => {
-      // setLoadingMessage(
-      //   `Creating Location Events - ${index + 1}/${locations.length}`,
-      // );
-
-      const test = await retrievePreviousVisitWithDeparture(location.id);
-      const test2 = await retrievePreviousVisitWithoutDeparture(location.id);
-
-      console.log('TEST LOCATION', {location, test, test2});
-
-      if (test.length > 0) {
-        const previousLocationWithDeparture = test[0];
-        console.log('TEST LOCATION > 1', {
-          location,
-          previousLocationWithDeparture,
-          test2,
-        });
-        if (location.end === null) {
-          // Generate Route
-          console.log('TEST LOCATION WITHOUT END', {location});
-          const routePoints = await retrieveRoutePointsForVisitData(
-            previousLocationWithDeparture.end,
-            location.start,
-          );
-          const route = {
-            start: previousLocationWithDeparture,
-            end: location,
-            points: routePoints,
-          };
-          console.log('TEST LOCATION > 1 NO END route', {route});
-          try {
-            var newRouteMemory = await generateGenericMemory({
-              data: route,
-              type: EventTypes.LOCATION_ROUTE,
-              time: route.end.start >= 0 ? route.end.start : route.start.end,
-            });
-            console.log('TEST LOCATION > 1 NO END newRouteMemory', {
-              location,
-              previousLocationWithDeparture,
-              test2,
-              route,
-              newRouteMemory,
-            });
-            newMemories.push(newRouteMemory);
-          } catch (e) {
-            console.error(e);
-          }
-        } else {
-          console.log('TEST LOCATION WITH END', {
-            location,
-            length: test2.length,
-          });
-          //Check if route has been generated before
-          //Generate route if not
-          //Generate Location
-          if (test2.length > 0) {
-            const previousLocationWithoutDeparture = test2[0];
-            if (previousLocationWithoutDeparture.id !== location.id - 1) {
-              const routePoints = await retrieveRoutePointsForVisitData(
-                previousLocationWithDeparture.end,
-                location.start,
-              );
-              const route = {
-                start: previousLocationWithDeparture,
-                end: location,
-                points: routePoints,
-              };
-              var newRouteMemory = await generateGenericMemory({
-                data: route,
-                type: EventTypes.LOCATION_ROUTE,
-                time: route.end.start >= 0 ? route.end.start : route.start.end,
-              });
-              newMemories.push(newRouteMemory);
-              var newLocationMemory = await generateGenericMemory({
-                data: location,
-                type: EventTypes.LOCATION,
-                time: location.end,
-              });
-              newMemories.push(newLocationMemory);
-            }
-          } else {
-            const routePoints = await retrieveRoutePointsForVisitData(
-              previousLocationWithDeparture.end,
-              location.start,
-            );
-            const route = {
-              start: previousLocationWithDeparture,
-              end: location,
-              points: routePoints,
-            };
-            try {
-              var newRouteMemory = await generateGenericMemory({
-                data: route,
-                type: EventTypes.LOCATION_ROUTE,
-                time: route.end.start >= 0 ? route.end.start : route.start.end,
-              });
-              newMemories.push(newRouteMemory);
-            } catch (e) {
-              console.error('RoutePoints', {e, location, route});
-            }
-
-            // var newLocationMemory = await generateGenericMemory({
-            //   data: location,
-            //   type: EventTypes.LOCATION,
-            //   time: location.end,
-            // });
-            // newMemories.push(newLocationMemory);
-          }
-          try {
-            var newLocationMemory = await generateGenericMemory({
-              data: location,
-              type: EventTypes.LOCATION,
-              time: location.end,
-            });
-            newMemories.push(newLocationMemory);
-          } catch (e) {
-            console.error('New Location Memory', {e, location});
-          }
-        }
-      } else {
-        if (location.end !== null && location.start !== null) {
-          var newLocationMemory = await generateGenericMemory({
-            data: location,
-            type: EventTypes.LOCATION,
-            time: location.end,
-          });
-          newMemories.push(newLocationMemory);
-        }
-      }
-
-      // if (location.end === null) {
-      // console.log('NO END', {location});
-      // const test = await retrievePreviousVisitWithDeparture(location.id);
-      // if (test.length > 0) {
-      //   const previousLocation = test[0];
-      //   const routePoints = await retrieveRoutePointsForVisitData(
-      //     previousLocation.end,
-      //     location.start,
-      //   );
-      //   console.log('NO END', {location, test, routePoints});
-      //   const route = {
-      //     start: previousLocation,
-      //     end: location,
-      //     points: routePoints,
-      //   };
-      //   console.log('I HAVE A ROUTE', {route});
-      //   var newRouteMemory = await generateGenericMemory({
-      //     data: route,
-      //     type: EventTypes.LOCATION_ROUTE,
-      //     time: route.end.start,
-      //   });
-      //   newMemories.push(newRouteMemory);
-      // }
-      // var newLocationMemory = await generateGenericMemory({
-      //   data: location,
-      //   type: EventTypes.LOCATION,
-      //   time: location.end,
-      // });
-      // newMemories.push(newLocationMemory);
-      // } else {
-      // }
-    }),
-  ).then(async () => {
-    console.log('location finished');
-    console.log({events});
-    await Promise.allSettled(
-      events.map(async (event, index) => {
-        // setLoadingMessage(
-        //   `Creating Calendar Event Memories - ${index + 1}/${events.length}`,
-        // );
-        var newCalendarMemory = await generateGenericMemory({
-          data: event,
-          type: EventTypes.CALENDAR_EVENT,
-          time: parseInt(event.end) * 1000,
-        });
-        newMemories.push(newCalendarMemory);
-      }),
-    ).then(async () => {
-      console.log('event finished');
-      console.log({photosGroups});
-      try {
-        await Promise.allSettled(
-          photosGroups.map(async (photoGroup, index) => {
-            try {
-              if (photoGroup.length > 1) {
-                var newPhotoGroupMemory = await generateGenericMemory({
-                  data: photoGroup,
-                  type: EventTypes.PHOTO_GROUP,
-                  time: photoGroup[0].creation,
-                });
-                newMemories.push(newPhotoGroupMemory);
-              } else {
-                var newPhotoMemory = await generateGenericMemory({
-                  data: photoGroup[0],
-                  type: EventTypes.PHOTO,
-                  time: photoGroup[0].creation,
-                });
-                newMemories.push(newPhotoMemory);
-              }
-            } catch (e) {
-              console.error(e);
-            }
-          }),
-        ).then(() => {
-          saveMemories(newMemories);
-        });
-      } catch (e) {
-        console.error('photosGroups error', e);
-      } finally {
-        console.log('photosGroups finished');
-      }
-    });
+  console.log({uniqueLocations});
+  const visitMemories = await processVisits(uniqueLocations);
+  visitMemories.forEach(memory => {
+    newMemories.push(memory);
   });
+  console.log('location finished');
+
+  console.log({events});
+  const eventMemories = await processEvents(events);
+  eventMemories.forEach(memory => {
+    newMemories.push(memory);
+  });
+  console.log('event finished');
+
+  console.log({photosGroups});
+  const photoMemories = await processPhotos(photosGroups);
+  photoMemories.forEach(memory => {
+    newMemories.push(memory);
+  });
+  console.log('photos finished');
+  saveMemories(newMemories);
 
   // console.log('promise check', a);
 
