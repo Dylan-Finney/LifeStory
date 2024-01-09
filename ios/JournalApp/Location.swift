@@ -281,15 +281,20 @@ for localIdentifier in calendarIdentifiers {
         geoCoder.reverseGeocodeLocation(location) { placemarks, _ in
           var description = ""
           var city = ""
+          var arrivalTime = 0
+
 
           if let place = placemarks?.first {
             description = "\(place)"
-            city = place.locality ?? "" 
+            city = "\(place.locality ?? "")"
+            arrivalTime = Int(location.timestamp.timeIntervalSince1970)
+            self.sendEvent(withName: "locationChange", body: ["lat": locations.last?.coordinate.latitude as Any, "lon": locations.last?.coordinate.longitude as Any, "description": description, "arrivalTime": arrivalTime, "departureTime" : "", "type": "route", "speed": String(locations.last?.speed ?? 0), "city": city as Any] as [String : Any])
+          }
+
+
           }
           
-          self.sendEvent(withName: "locationChange", body: ["lat": locations.last?.coordinate.latitude as Any, "lon": locations.last?.coordinate.longitude as Any, "description": description, "arrivalTime": locations.last?.timestamp.timeIntervalSince1970 ?? 0, "departureTime" : "", "type": "route", "speed": String(locations.last?.speed ?? 0), "city": city as Any] as [String : Any])
-        }
-
+          
       }
         //      }
 
@@ -305,28 +310,31 @@ for localIdentifier in calendarIdentifiers {
 
     let clLocation = CLLocation(latitude: visit.coordinate.latitude, longitude: visit.coordinate.longitude)
     geoCoder.reverseGeocodeLocation(clLocation) { placemarks, _ in
-      var description = ""
-      var city = ""
-      var arrivalTime = 0
-      var departureTime = 0
-      
       if let place = placemarks?.first {
+        var description = ""
+        var city = ""
+        var arrivalTime = 0
+        var departureTime = 0
+
         description = "\(place)"
         city = place.locality ?? ""
+        
+        if visit.arrivalDate == .distantPast {
+          departureTime = Int(visit.departureDate.timeIntervalSince1970)
+        } else if visit.departureDate == .distantFuture{
+          arrivalTime = Int(visit.arrivalDate.timeIntervalSince1970)
+        } else {
+          arrivalTime = Int(visit.arrivalDate.timeIntervalSince1970)
+          departureTime = Int(visit.departureDate.timeIntervalSince1970)
+        }
+        
+
+        
+        self.sendEvent(withName: "locationChange", body: ["lat": visit.coordinate.latitude as Any, "lon": visit.coordinate.longitude as Any, "description": description, "arrivalTime": arrivalTime as Any, "departureTime" : departureTime as Any, "type": "visit", "city": city as Any] as [String : Any])
 
       }
-      if visit.arrivalDate == .distantPast {
-        departureTime = Int(visit.departureDate.timeIntervalSince1970)
-      } else if visit.departureDate == .distantFuture{
-        arrivalTime = Int(visit.arrivalDate.timeIntervalSince1970)
-      } else {
-        arrivalTime = Int(visit.arrivalDate.timeIntervalSince1970)
-        departureTime = Int(visit.departureDate.timeIntervalSince1970)
-      }
-      
 
       
-      self.sendEvent(withName: "locationChange", body: ["lat": visit.coordinate.latitude as Any, "lon": visit.coordinate.longitude as Any, "description": description, "arrivalTime": arrivalTime as Any, "departureTime" : departureTime as Any, "type": "visit", "city": city as Any] as [String : Any])
 
         
       

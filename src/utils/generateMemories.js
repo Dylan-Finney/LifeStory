@@ -122,29 +122,27 @@ const generateGenericMemory = async ({data, type, time}) => {
   var userPrompt = '';
   var photoAnalysis =
     useSettingsHooks.getBoolean('settings.photoAnalysis') || false;
-
+  console.log('GENERATE MEMORY', {data, type, time});
   switch (type) {
     case EventTypes.LOCATION_ROUTE:
       if (data.start.city === data.end.city) {
-        data.start.description = await getBestLocationTag(
-          data.start.description?.split(',')[0] || '',
-          data.start.description?.split(',')[0],
-        );
+        data.start.description = await getBestLocationTag({
+          description: data.start.description,
+        });
 
-        data.end.description = await getBestLocationTag(
-          data.end.description?.split(',')[0] || '',
-          data.end.description?.split(',')[0],
-        );
+        data.end.description = await getBestLocationTag({
+          description: data.end.description,
+        });
       } else {
-        data.start.description = await getBestLocationTag(
-          data.start.description?.split(',')[0] || '',
-          data.start.city,
-        );
+        data.start.description = await getBestLocationTag({
+          description: data.start.description,
+          city: data.start.city,
+        });
 
-        data.end.description = await getBestLocationTag(
-          data.end.description?.split(',')[0] || '',
-          data.end.city,
-        );
+        data.end.description = await getBestLocationTag({
+          description: data.end.description,
+          city: data.end.city,
+        });
       }
 
       messages = [
@@ -232,11 +230,11 @@ I walked to Central Park from Manhattan, which took 2.5 hours in the afternoon.
       ];
       break;
     case EventTypes.LOCATION:
-      data.description = await getBestLocationTag(
-        data.description?.split(',')[2] ||
-          data.description?.split(',')[0] ||
-          '',
-      );
+      const splitDescription = data.description?.split(',');
+      data.description = await getBestLocationTag({
+        description: data.description,
+        city: data.city,
+      });
       if (data.end === null) {
         messages = [
           {
@@ -367,9 +365,7 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
             role: 'user',
             content: `{
   "geoLocationStay": {
-    "locationTag": "${await getBestLocationTag(
-      data.description?.split('@')[0] || undefined,
-    )}",
+    "locationTag": "${data.description}",
     "location":
       "latitude": "${data.latitude}",
       "longitude": "${data.longitude}"
@@ -483,9 +479,7 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
         };
       }
 
-      var alias = await getBestLocationTag(
-        data.description?.split('@')[0] || undefined,
-      );
+      var alias = await getBestLocationTag({description: data.description});
       // userPrompt = `Photo Taken: ${
       //   data.labels !== undefined
       //     ? `Labels: ${data.labels.map(label => label.title).toString()}`
@@ -689,9 +683,9 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
                 async photo => `{
   "photo": {
     "fileName": "${photo.name}",
-    "locationTag": "${await getBestLocationTag(
-      photo.description?.split('@')[0] || undefined,
-    )}",
+    "locationTag": "${await getBestLocationTag({
+      description: photo.description,
+    })}",
     "coordinates": {
       "latitude": "${photo.lat}",
       "longitude": "${photo.lon}"

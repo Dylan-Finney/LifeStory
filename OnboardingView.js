@@ -97,12 +97,11 @@ const openai = new OpenAIApi(configuration);
 const {
   retrieveSpecificData,
   saveEntryData,
-  updateEntryData,
   createEntryTable,
   createMemoriesTable,
-  saveMemoryData,
-  updateMemoryData,
-  deleteMemoryData,
+  createGlossaryTable,
+  createRoutePointsTable,
+  createVisitsTable,
 } = useDatabaseHooks();
 export default OnboardingView = ({route, navigation}) => {
   // const {
@@ -1022,6 +1021,11 @@ export default OnboardingView = ({route, navigation}) => {
       <Onboarding
         endOnboarding={() => {
           setOnBoarding(false);
+          createEntryTable();
+          createMemoriesTable();
+          createGlossaryTable();
+          createRoutePointsTable();
+          createVisitsTable();
           useSettingsHooks.set('onboarding', false);
           console.log('END ONBOARDING');
           try {

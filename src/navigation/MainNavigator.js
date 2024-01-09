@@ -1031,6 +1031,7 @@ const MainNavigator = () => {
             res.lat,
             res.lon,
             res.description,
+            res.city || '',
           );
           // retrieveData('Visits', steps => {
           //   console.log({steps});
