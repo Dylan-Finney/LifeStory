@@ -1045,6 +1045,25 @@ const MainNavigator = () => {
             res.lon,
             res.description,
           );
+          // createVisitsTable();
+          // insertData(
+          //   Math.floor(parseInt(res.arrivalTime)) * 1000 || Date.now(),
+          //   Math.floor(parseInt(res.arrivalTime + 2549)) * 1000 || Date.now(),
+          //   Date.now(),
+          //   res.lat,
+          //   res.lon,
+          //   res.description,
+          //   undefined,
+          // );
+          // insertData(
+          //   Math.floor(parseInt(res.arrivalTime) + 2591) * 1000 || Date.now(),
+          //   0,
+          //   Date.now(),
+          //   res.lat,
+          //   res.lon,
+          //   res.description,
+          //   undefined,
+          // );
           // retrieveData('RoutePoints', steps => {
           //   console.log({steps});
           // });

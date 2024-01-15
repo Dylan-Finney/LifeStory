@@ -6,33 +6,6 @@ import {EventTypes} from './Enums';
 import getBestLocationTag from './getBestLocationTag';
 import {decode, encode} from 'base-64';
 // import Config from 'react-native-config';
-const AWS = require('aws-sdk');
-
-AWS.config.update({
-  accessKeyId: Config.AWS_ACCESS_KEY,
-  secretAccessKey: Config.AWS_SECRET_KEY,
-  region: Config.AWS_REGION,
-});
-
-const Rekognition = new AWS.Rekognition();
-
-const {Configuration, OpenAIApi} = require('openai');
-const configuration = new Configuration({
-  apiKey: Config.OPENAI_KEY,
-});
-const openai = new OpenAIApi(configuration);
-
-const {
-  retrieveSpecificData,
-  saveEntryData,
-  updateEntryData,
-  createEntryTable,
-  createMemoriesTable,
-  saveMemoryData,
-  retrieveRoutePointsForVisitData,
-  retrievePreviousVisitWithDeparture,
-  retrievePreviousVisitWithoutDeparture,
-} = useDatabaseHooks();
 
 const getAverage = arr => {
   let reducer = (total, currentValue) => total + currentValue;
@@ -41,6 +14,15 @@ const getAverage = arr => {
 };
 
 const analyzePhoto = async photo => {
+  const AWS = require('aws-sdk');
+
+  AWS.config.update({
+    accessKeyId: Config.AWS_ACCESS_KEY,
+    secretAccessKey: Config.AWS_SECRET_KEY,
+    region: Config.AWS_REGION,
+  });
+
+  const Rekognition = new AWS.Rekognition();
   return new Promise(async (resolve, reject) => {
     console.log({...photo, data: ''});
     const image = decode(photo.data);
@@ -112,6 +94,11 @@ const analyzePhoto = async photo => {
 };
 
 const generateGenericMemory = async ({data, type, time}) => {
+  const {Configuration, OpenAIApi} = require('openai');
+  const configuration = new Configuration({
+    apiKey: Config.OPENAI_KEY,
+  });
+  const openai = new OpenAIApi(configuration);
   var messages = [];
   var systemPrompt = `You are my assistant. I will give you an event that happened today (location visit, photo taken, route, etc) and I want you to write a brief concise natural description as if it were apart of a diary. Assume that other entries could exist before and after. Write in the ${useSettingsHooks.getString(
     'language',
@@ -772,6 +759,18 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
   //   time: time,
   //   vote: 0,
   // });
+  console.log('new memory', {
+    tags: [],
+    type,
+    body: response,
+    bodyModifiedAt: time,
+    bodyModifiedSource: 'auto',
+    emotion: 0,
+    eventsData: data,
+    time: time,
+    vote: 0,
+  });
+
   return {
     tags: [],
     type,
@@ -786,6 +785,7 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
 };
 
 const saveMemories = newMemories => {
+  const {createMemoriesTable, saveMemoryData} = useDatabaseHooks();
   createMemoriesTable();
   newMemories.map(newMemory => {
     saveMemoryData({
@@ -801,6 +801,11 @@ const saveMemories = newMemories => {
 };
 
 const processVisits = async uniqueLocations => {
+  const {
+    retrieveRoutePointsForVisitData,
+    retrievePreviousVisitWithDeparture,
+    retrievePreviousVisitWithoutDeparture,
+  } = useDatabaseHooks();
   const newMemories = [];
   for (const location of uniqueLocations) {
     const test = await retrievePreviousVisitWithDeparture(location.id);

@@ -1,7 +1,6 @@
 import useDatabaseHooks from './hooks/useDatabaseHooks';
 import {EventTypes} from './Enums';
 import getFormatedTimeString from './getFormattedTimeString';
-const {createVisitsTable, insertData, retrieveData} = useDatabaseHooks();
 
 const formatTime = ({localMemory}) => {
   switch (parseInt(localMemory.type)) {
@@ -42,6 +41,7 @@ const formatTime = ({localMemory}) => {
 
 const getMemories = async () => {
   try {
+    const {retrieveData} = useDatabaseHooks();
     console.log('LOADING MEMORIES DATA');
     const localMemories = await retrieveData('Memories');
     console.log({localMemories});

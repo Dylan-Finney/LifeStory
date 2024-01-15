@@ -1,8 +1,9 @@
 import useSettingsHooks from './hooks/useSettingsHooks';
 import useDatabaseHooks from './hooks/useDatabaseHooks';
+// console.log({useDatabaseHooks});
 
-const {getGlossaryItemsOfType} = useDatabaseHooks();
 const getAddressName = async address => {
+  const {getGlossaryItemsOfType} = useDatabaseHooks();
   var locationAliasesArray = await getGlossaryItemsOfType({type: 'Location'});
   var aliasObj = locationAliasesArray.find(
     locationAliasObj => locationAliasObj.data === address,
@@ -28,7 +29,7 @@ const getBestLocationTag = async ({
   var index = 0;
   var firstLine = addressArray[0].trim();
   var alias = await getAddressName(addressArray[0].trim());
-  console.log({alias});
+  console.log({alias, firstLine});
   const isNotResidental = () => isNaN(firstLine.charAt(0));
 
   /*
@@ -45,8 +46,8 @@ const getBestLocationTag = async ({
     //   }
     // }
     if (isNotResidental()) return firstLine;
-    if (city !== undefined) return city.trim();
-    if (description !== undefined) return firstLine;
+    if (city !== undefined && city !== null) return city.trim();
+    if (description !== undefined && description !== null) return firstLine;
     return bestFallback;
     // return bestFallback;
   } else {

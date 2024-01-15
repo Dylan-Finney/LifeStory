@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "start": "react-native start",
     "build": "npx react-native run-ios --mode Release",
-    "test": "jest"
+    "test": "TZ=UTC jest",
+    "detox-test": "detox test --configuration ios.sim.debug"
   },
   "dependencies": {
     "@babel/plugin-transform-export-namespace-from": "^7.22.11",

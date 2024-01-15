@@ -3,7 +3,10 @@ import {View, TouchableOpacity, StyleSheet} from 'react-native';
 
 const FloatingActionButton = ({onPress, children}) => {
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <TouchableOpacity
+      testID="CreateManualEntryButton"
+      style={styles.container}
+      onPress={onPress}>
       {children}
     </TouchableOpacity>
   );
