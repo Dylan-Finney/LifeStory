@@ -592,6 +592,57 @@ const useDatabaseHooks = () => {
     });
   };
 
+  const deleteOldRoutePointsData = () => {
+    return new Promise((resolve, reject) => {
+      const now = new Date(Date.now());
+      now.setDate(now.getDate() - 7);
+      db.transaction(
+        tx => {
+          tx.executeSql(
+            `DELETE FROM RoutePoints WHERE RoutePoints.date <= ?`,
+            [now.getTime()],
+            (tx, results) => {
+              console.log({results});
+              let data = [];
+              for (let i = 0; i < results.rows.length; i++) {
+                data.push(results.rows.item(i));
+              }
+              resolve(data);
+            },
+          );
+        },
+        error => {
+          reject(error);
+        },
+      );
+    });
+  };
+
+  const deleteOldVisitsData = () => {
+    return new Promise((resolve, reject) => {
+      const now = new Date(Date.now());
+      now.setDate(now.getDate() - 7);
+      db.transaction(
+        tx => {
+          tx.executeSql(
+            `DELETE FROM Visits WHERE Visits.end <= ?`,
+            [now.getTime()],
+            (tx, results) => {
+              console.log({results});
+              let data = [];
+              for (let i = 0; i < results.rows.length; i++) {
+                data.push(results.rows.item(i));
+              }
+              resolve(data);
+            },
+          );
+        },
+        error => {
+          reject(error);
+        },
+      );
+    });
+  };
   const retrieveEntriesData = (startDate, endDate, callback) => {
     db.transaction(tx => {
       tx.executeSql(`SELECT * FROM Entries`, [], (tx, results) => {
@@ -630,6 +681,8 @@ const useDatabaseHooks = () => {
     updateGlossaryItem,
     deleteGlossaryItem,
     getGlossaryItemsOfType,
+    deleteOldRoutePointsData,
+    deleteOldVisitsData,
   };
 };
 

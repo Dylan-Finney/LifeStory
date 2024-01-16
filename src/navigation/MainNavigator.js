@@ -60,6 +60,8 @@ const MainNavigator = () => {
     retrieveSpecificData,
     createRoutePointsTable,
     insertRoutePointsData,
+    deleteOldRoutePointsData,
+    deleteOldVisitsData,
   } = useDatabaseHooks();
   // const {calendars} = useSettingsHooks();
 
@@ -423,10 +425,16 @@ const MainNavigator = () => {
       }
     };
 
+    const deleteOldLocations = async () => {
+      await deleteOldRoutePointsData();
+      await deleteOldVisitsData();
+    };
+
     if (onBoarding === false) {
       setLoadingEntries(true);
       getEntries();
       refreshMemories();
+      deleteOldLocations();
       console.log({
         calendars: useSettingsHooks.getString('settings.calendars'),
       });
