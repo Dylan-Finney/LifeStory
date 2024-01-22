@@ -35,6 +35,7 @@ import {decode, encode} from 'base-64';
 
 import {ThemeProvider} from '../theme/ThemeContext';
 import {ModalProvider} from '../contexts/ModalContext';
+import {wasPhotoTaken} from '../utils/wasPhotoTaken';
 
 const RootStack = createNativeStackNavigator();
 const {Configuration, OpenAIApi} = require('openai');
@@ -525,58 +526,65 @@ const MainNavigator = () => {
       if (e.message === 'DENIED') {
         console.error('GIVE PERMISSION TO APP FOR CALENDAR USAGE');
       } else {
-        console.error(e);
+        console.error('Calendar Event Processing Error', {e});
       }
     }
-    console.log('locations');
-    setLoadingMessage('Getting Location Events');
 
     // GET LOCATIONS
-    if (onboarding === false) {
-      retrieveSpecificData(
-        startOfUnixTime * 1000,
-        endOfUnixTime * 1000,
-        res => {
-          (locations = res.map(obj => {
-            return {
-              description: obj.description,
-              city: obj.city || undefined,
-              start: obj.start,
-              end: obj.end,
-              latitude: obj.lat,
-              longitude: obj.lon,
-              id: obj.id,
-            };
-          })),
-            console.log(locations);
-        },
-      );
+    try {
+      console.log('locations');
+      setLoadingMessage('Getting Location Events');
+      if (onboarding === false) {
+        retrieveSpecificData(
+          startOfUnixTime * 1000,
+          endOfUnixTime * 1000,
+          res => {
+            (locations = res.map(obj => {
+              return {
+                description: obj.description,
+                city: obj.city || undefined,
+                start: obj.start,
+                end: obj.end,
+                latitude: obj.lat,
+                longitude: obj.lon,
+                id: obj.id,
+              };
+            })),
+              console.log(locations);
+          },
+        );
+      }
+    } catch (e) {
+      console.error('Location Processing Error', {e});
     }
 
     //GET PHOTOS
-    console.log('photos');
-    setLoadingMessage('Getting Photo Events');
-    var photoLength = 0;
-    var photoIndex = 0;
-
-    CounterEvents.removeAllListeners('photoCount');
-    CounterEvents.addListener('photoCount', res => {
-      console.log(`photoCount ${new Date().toISOString()}`, res);
-      photoLength = res;
-    });
-    CounterEvents.removeAllListeners('photoChange');
-    CounterEvents.addListener('photoChange', res => {
-      console.log(`photoChange ${new Date().toISOString()}`, res);
-      photoIndex = res;
-      setLoadingMessage(`Getting Photo Events - ${photoIndex}/${photoLength}`);
-    });
-
-    var includeDownloadedPhotosCheck =
-      useSettingsHooks.getBoolean('settings.includeDownloadedPhotos') || false;
-    var photoAnalysis =
-      useSettingsHooks.getBoolean('settings.photoAnalysis') || false;
-
     try {
+      console.log('photos');
+      setLoadingMessage('Getting Photo Events');
+      var photoLength = 0;
+      var photoIndex = 0;
+
+      CounterEvents.removeAllListeners('photoCount');
+      CounterEvents.addListener('photoCount', res => {
+        console.log(`photoCount ${new Date().toISOString()}`, res);
+        photoLength = res;
+      });
+      CounterEvents.removeAllListeners('photoChange');
+      CounterEvents.addListener('photoChange', res => {
+        console.log(`photoChange ${new Date().toISOString()}`, res);
+        photoIndex = res;
+        setLoadingMessage(
+          `Getting Photo Events - ${photoIndex}/${photoLength}`,
+        );
+      });
+
+      var includeDownloadedPhotosCheck =
+        useSettingsHooks.getBoolean('settings.includeDownloadedPhotos') ||
+        false;
+      var photoAnalysis =
+        useSettingsHooks.getBoolean('settings.photoAnalysis') || false;
+
       if (onboarding === false) {
         photos = await Location.getPhotosFromNative(
           !includeDownloadedPhotosCheck,
@@ -604,23 +612,46 @@ const MainNavigator = () => {
           };
         });
         var res2 = photos.sort((a, b) => a.creation - b.creation);
+        var photosTaken = res2.filter(photo => wasPhotoTaken(photo));
+        var photosDownloaded = res2.filter(photo => !wasPhotoTaken(photo));
+        console.log({
+          photosTaken: photosTaken.length,
+          photosDownloaded: photosDownloaded.length,
+        });
         console.log('no photo analysis', {res2});
-        var grouping = [];
 
-        for (var i = 0; i < res2.length; i++) {
-          if (
-            grouping.length > 0 &&
-            res2[i].creation - grouping[grouping.length - 1].creation > 180000
-          ) {
-            photosGroups.push(grouping);
-            grouping = [];
+        const groupPhotos = photosFiltered => {
+          const THREE_MINUTES = 180000;
+          var grouping = [];
+          for (var i = 0; i < photosFiltered.length; i++) {
+            if (
+              grouping.length > 0 &&
+              photosFiltered[i].creation -
+                grouping[grouping.length - 1].creation >
+                THREE_MINUTES
+            ) {
+              photosGroups.push(grouping);
+              grouping = [];
+            }
+            grouping.push(photosFiltered[i]);
+            if (i === photosFiltered.length - 1 && grouping.length > 0) {
+              photosGroups.push(grouping);
+            }
           }
-          grouping.push(res2[i]);
-          if (i === res2.length - 1 && grouping.length > 0) {
-            photosGroups.push(grouping);
-          }
-        }
-        console.log('photosGroups', JSON.stringify(photosGroups));
+        };
+        groupPhotos(photosTaken);
+        groupPhotos(photosDownloaded);
+
+        console.log(
+          'photosGroups',
+          JSON.stringify(
+            photosGroups.map(photoGroup =>
+              photoGroup.map(photo => {
+                return {...photo, data: ''};
+              }),
+            ),
+          ),
+        );
       } else {
         Location.getPhotosAccess();
         await new Promise((resolve, reject) => {
@@ -687,16 +718,22 @@ const MainNavigator = () => {
         //   );
         // });
       }
+
+      CounterEvents.removeAllListeners('photoChange');
+      CounterEvents.removeAllListeners('photoCount');
     } catch (e) {
-      console.error({e});
+      console.error('Photo Processing Error', {e});
     }
 
     // console.log({photos});
 
     // NOTIFICATIONS
-    await notifee.requestPermission();
-    CounterEvents.removeAllListeners('photoChange');
-    CounterEvents.removeAllListeners('photoCount');
+    try {
+      await notifee.requestPermission();
+    } catch (e) {
+      console.error('Notification Error', {e});
+    }
+
     //RETURNS
     return {
       photosGroups,

@@ -5,6 +5,8 @@ import moment from 'moment';
 import {EventTypes} from './Enums';
 import getBestLocationTag from './getBestLocationTag';
 import {decode, encode} from 'base-64';
+import {wasPhotoTaken} from './wasPhotoTaken';
+import {getDistance} from 'geolib';
 // import Config from 'react-native-config';
 
 const getAverage = arr => {
@@ -132,6 +134,40 @@ const generateGenericMemory = async ({data, type, time}) => {
         });
       }
 
+      const distance = getDistance(
+        {latitude: data.start.lat, longitude: data.start.lon},
+        {latitude: data.end.latitude, longitude: data.end.longitude},
+      );
+
+      const timeDifference = Math.floor(
+        (data.end.start - data.start.end) / 1000,
+      );
+
+      const predictedSpeed = (distance / timeDifference).toFixed(3);
+
+      const predictedTrainSpeedCutOff = 120;
+
+      const predictedCarSpeedCutOff = 40;
+
+      const predictedRunSpeedCutOff = 8;
+
+      const predictedWalkSpeedCutOff = 5;
+
+      var predictedMode = '';
+
+      if (predictedSpeed < predictedWalkSpeedCutOff) {
+        predictedMode = 'Walk';
+      } else if (predictedSpeed < predictedRunSpeedCutOff) {
+        predictedMode = 'Run';
+      } else if (predictedSpeed < predictedCarSpeedCutOff) {
+        predictedMode = 'Car';
+      } else if (predictedSpeed < predictedTrainSpeedCutOff) {
+        predictedMode = 'Train';
+      } else {
+        predictedMode = 'Plane';
+      }
+      data.predictedMode = predictedMode;
+
       messages = [
         {
           role: 'system',
@@ -158,7 +194,8 @@ I walked to Central Park from Manhattan, which took 2.5 hours in the afternoon.
           role: 'user',
           content: `{
  "routeDetails": {
-"avgSpeed": 17.8816, //m/s
+"avgSpeed": 2.67, //m/s
+"believedModeOfTransport": "Walk", 
  "start": {
  "locationTag": "Central Park",
  "time": "2023-10-30T14:00:00--4:00"
@@ -188,6 +225,7 @@ I walked to Central Park from Manhattan, which took 2.5 hours in the afternoon.
                 )
               : undefined
           }, //m/s
+          "believedModeOfTransport": ${predictedMode}, 
           "start": {
           "locationTag": "${data.start.description}",
           "time": "${new Date(data.start.end).toLocaleString()}",
@@ -467,6 +505,7 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
       }
 
       var alias = await getBestLocationTag({description: data.description});
+      var downloadedOrReceived = !wasPhotoTaken(data);
       // userPrompt = `Photo Taken: ${
       //   data.labels !== undefined
       //     ? `Labels: ${data.labels.map(label => label.title).toString()}`
@@ -481,7 +520,9 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
       messages = [
         {
           role: 'system',
-          content: `Your role is to write text entry without titles for a photo that is shown in context of your text, based on the data provided and following these instructions:
+          content: `Your role is to write text entry without titles for a ${
+            downloadedOrReceived ? 'downloaded or received ' : ''
+          }photo that is shown in context of your text, based on the data provided and following these instructions:
 
 1. Write in first person
 2. Don’t write about anything that is not described by data provided
@@ -501,7 +542,7 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
 16. Dont mention camera settings
 17. Dont mention image recognition labels
 18. If the object has no image recognition labels don't write about what the image shows
-
+${downloadedOrReceived ? '19. Mention that the photo was received or got ' : ''}
 -----`,
         },
         {
@@ -532,7 +573,9 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
         },
         {
           role: 'assistant',
-          content: `I spent the late afternoon at Griffith Observatory, Los Angeles. The architecture and observatory dome are prominent in the photos. People in casual clothing enjoyed the outdoor surroundings, with some wearing T-shirts and shorts. The observatory's peak and planetarium are visible. Later, I explored a lush area with slopes, vegetation, and a bicycle.`,
+          content: downloadedOrReceived
+            ? `In the late afternoon, I received a photo of Griffith Observatory, Los Angeles. The architecture and observatory dome are prominent in the photos. People in casual clothing enjoyed the outdoor surroundings, with some wearing T-shirts and shorts. The observatory's peak and planetarium are visible.`
+            : `I spent the late afternoon at Griffith Observatory, Los Angeles. The architecture and observatory dome are prominent in the photos. People in casual clothing enjoyed the outdoor surroundings, with some wearing T-shirts and shorts. The observatory's peak and planetarium are visible. Later, I explored a lush area with slopes, vegetation, and a bicycle.`,
         },
         {
           role: 'user',
@@ -606,6 +649,8 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
           return {...photo, data: ''};
         }),
       });
+      var downloadedOrReceived = !wasPhotoTaken(photoGroup[0]);
+      // console.log({downloadedOrReceived, zero: photoGroup[0]});
 
       messages = [
         {
@@ -630,6 +675,9 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
 16. Don't mention camera settings
 17. Don't mention image recognition labels
 18. Don't add reference labels
+${
+  downloadedOrReceived ? '19. Mention that the photos were received or got' : ''
+}
 -----`,
         },
         {
@@ -660,7 +708,9 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
         },
         {
           role: 'assistant',
-          content: `I spent the late afternoon at Griffith Observatory, Los Angeles. The architecture and observatory dome are prominent in the photos. People in casual clothing enjoyed the outdoor surroundings, with some wearing T-shirts and shorts. The observatory's peak and planetarium are visible. Later, I explored a lush area with slopes, vegetation, and a bicycle.`,
+          content: downloadedOrReceived
+            ? `In the late afternoon, I received a picture of Griffith Observatory, Los Angeles. The architecture and observatory dome are prominent in the photos. People in casual clothing enjoyed the outdoor surroundings, with some wearing T-shirts and shorts. The observatory's peak and planetarium are visible. Later, I received another photo with a lush area with slopes, vegetation, and a bicycle.`
+            : `I spent the late afternoon at Griffith Observatory, Los Angeles. The architecture and observatory dome are prominent in the photos. People in casual clothing enjoyed the outdoor surroundings, with some wearing T-shirts and shorts. The observatory's peak and planetarium are visible. Later, I explored a lush area with slopes, vegetation, and a bicycle.`,
         },
         {
           role: 'user',
