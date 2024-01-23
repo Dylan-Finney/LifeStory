@@ -1,5 +1,5 @@
 import AppContext from '../../../contexts/AppContext';
-import {useContext, useEffect, useState, useRef} from 'react';
+import {useContext, useEffect, useState, useRef, useCallback} from 'react';
 import {EventTypes} from '../../../utils/Enums';
 import {
   CUSTOM_HYPERLINK_REGEX,
@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Dimensions,
   Animated,
+  AppState,
 } from 'react-native';
 import {ImageAsset} from '../../../utils/native-modules/NativeImage';
 import ProfileIcon from '../../../assets/icons/ProfileIcon';
@@ -21,6 +22,7 @@ import EventsIcon from '../../../assets/insights/EventsIcon';
 import LocationsIcon from '../../../assets/insights/LocationsIcon';
 import LinksIcon from '../../../assets/insights/LinksIcon';
 import {getLinkDataForMemory} from '../../../utils/getLinkDataForMemory';
+import {useFocusEffect} from '@react-navigation/native';
 // import AppContext from '../../../contexts/AppContext';
 
 // import {
@@ -83,17 +85,78 @@ const Slideshow = ({
       setCurrentIndex(index);
     }
   };
-
-  useEffect(() => {
-    const timer =
+  var frameCount = 0;
+  var fps, fpsInterval, startTime, now, then, elapsed;
+  fps = 0.5;
+  const appState = useRef(AppState.currentState);
+  var timer = null;
+  const createTimer = () => {
+    timer =
       slides.length > 0 &&
       setInterval(() => {
         const newIndex = (currentIndex + 1) % slides.length;
         console.log({newIndex, currentIndex, length: slides.length});
         handlePagination(newIndex);
       }, interval);
+  };
 
-    return () => clearInterval(timer);
+  const clearTimer = () => {
+    clearInterval(timer);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      createTimer();
+      const appStateSubscription = AppState.addEventListener(
+        'change',
+        nextAppState => {
+          if (
+            appState.current.match(/inactive|background|/) &&
+            nextAppState === 'active'
+          ) {
+            console.log('App reopened, recreating timer');
+            createTimer();
+          } else if (
+            nextAppState === 'background' ||
+            nextAppState === 'inactive'
+          ) {
+            console.log('App closed, clearing timer');
+            clearTimer();
+          }
+          appState.current = nextAppState;
+        },
+      );
+      return () => {
+        console.log('Screen change, removing intervals & subscriptions');
+        clearTimer();
+        appStateSubscription.remove();
+      };
+    }, [currentIndex, slides, interval]),
+  );
+
+  useEffect(() => {
+    // const timer =
+    //   slides.length > 0 &&
+    //   setInterval(() => {
+    //     const newIndex = (currentIndex + 1) % slides.length;
+    //     console.log({newIndex, currentIndex, length: slides.length});
+    //     handlePagination(newIndex);
+    //   }, interval);
+    // return () => clearInterval(timer);
+    // function repeat() {
+    //   requestAnimationFrame(repeat);
+    //   console.log('test', Date.now());
+    //   now = Date.now();
+    //   elapsed = now - then;
+    //   if (elapsed > fpsInterval) {
+    //     then = now - (elapsed % fpsInterval);
+    //     console.log('test', Date.now());
+    //   }
+    // }
+    // fpsInterval = 1000 / fps;
+    // then = Date.now();
+    // startTime = then;
+    // requestAnimationFrame(repeat);
   }, [currentIndex, slides, interval]);
 
   return (
