@@ -85,9 +85,7 @@ const Slideshow = ({
       setCurrentIndex(index);
     }
   };
-  var frameCount = 0;
-  var fps, fpsInterval, startTime, now, then, elapsed;
-  fps = 0.5;
+
   const appState = useRef(AppState.currentState);
   var timer = null;
   const createTimer = () => {
@@ -127,37 +125,12 @@ const Slideshow = ({
         },
       );
       return () => {
-        console.log('Screen change, removing intervals & subscriptions');
+        // console.log('Screen change, removing intervals & subscriptions');
         clearTimer();
         appStateSubscription.remove();
       };
     }, [currentIndex, slides, interval]),
   );
-
-  useEffect(() => {
-    // const timer =
-    //   slides.length > 0 &&
-    //   setInterval(() => {
-    //     const newIndex = (currentIndex + 1) % slides.length;
-    //     console.log({newIndex, currentIndex, length: slides.length});
-    //     handlePagination(newIndex);
-    //   }, interval);
-    // return () => clearInterval(timer);
-    // function repeat() {
-    //   requestAnimationFrame(repeat);
-    //   console.log('test', Date.now());
-    //   now = Date.now();
-    //   elapsed = now - then;
-    //   if (elapsed > fpsInterval) {
-    //     then = now - (elapsed % fpsInterval);
-    //     console.log('test', Date.now());
-    //   }
-    // }
-    // fpsInterval = 1000 / fps;
-    // then = Date.now();
-    // startTime = then;
-    // requestAnimationFrame(repeat);
-  }, [currentIndex, slides, interval]);
 
   return (
     <View

@@ -7,6 +7,8 @@ import getBestLocationTag from './getBestLocationTag';
 import {decode, encode} from 'base-64';
 import {wasPhotoTaken} from './wasPhotoTaken';
 import {getDistance} from 'geolib';
+import AppContext from '../contexts/AppContext';
+import {useContext} from 'react';
 // import Config from 'react-native-config';
 
 const getAverage = arr => {
@@ -1025,9 +1027,15 @@ const processPhotos = async photosGroups => {
   return newMemories;
 };
 
-const generateMemories = async ({data, date}) => {
+const generateMemories = async ({
+  data,
+  date,
+  updateLoadingMessage,
+  errorLogSetter,
+}) => {
   console.log('Generate Memories');
   var {locations, events, photosGroups} = data;
+  var errors = [];
 
   var newMemories = [];
 
@@ -1068,26 +1076,82 @@ const generateMemories = async ({data, date}) => {
     uniqueLocation => uniqueLocation.end === null,
   );
 
+  const changeLoadingMessage = message => {
+    if (updateLoadingMessage) {
+      updateLoadingMessage(message);
+    }
+  };
+
+  const updateErrorLog = () => {
+    errorLogSetter(errors);
+  };
+
   console.log({uniqueLocations});
-  const visitMemories = await processVisits(uniqueLocations);
-  visitMemories.forEach(memory => {
-    newMemories.push(memory);
-  });
-  console.log('location finished');
-
+  try {
+    changeLoadingMessage('Generating Location Memories');
+    const visitMemories = await processVisits(uniqueLocations);
+    visitMemories.forEach(memory => {
+      newMemories.push(memory);
+    });
+    console.log('location finished');
+    changeLoadingMessage('Generating Location Memories - SUCCESS');
+  } catch (e) {
+    console.error(e);
+    errors = [
+      ...errors,
+      {
+        message: e.toString(),
+        context: 'Memory Location Event Generating',
+        time: Date.now(),
+      },
+    ];
+    changeLoadingMessage('Generating Location Memories - FAILED');
+  }
   console.log({events});
-  const eventMemories = await processEvents(events);
-  eventMemories.forEach(memory => {
-    newMemories.push(memory);
-  });
-  console.log('event finished');
 
+  try {
+    changeLoadingMessage('Generating Calendar Memories');
+    const eventMemories = await processEvents(events);
+    eventMemories.forEach(memory => {
+      newMemories.push(memory);
+    });
+    console.log('event finished');
+    changeLoadingMessage('Generating Calendar Memories - SUCCESS');
+  } catch (e) {
+    console.error(e);
+    errors = [
+      ...errors,
+      {
+        message: e.toString(),
+        context: 'Memory Calendar Event Generating',
+        time: Date.now(),
+      },
+    ];
+    changeLoadingMessage('Generating Calendar Memories - FAILED');
+  }
   console.log({photosGroups});
-  const photoMemories = await processPhotos(photosGroups);
-  photoMemories.forEach(memory => {
-    newMemories.push(memory);
-  });
-  console.log('photos finished');
+  try {
+    changeLoadingMessage('Generating Photos Memories');
+    const photoMemories = await processPhotos(photosGroups);
+    photoMemories.forEach(memory => {
+      newMemories.push(memory);
+    });
+
+    console.log('photos finished');
+    changeLoadingMessage('Generating Photos Memories - SUCCESS');
+  } catch (e) {
+    console.error(e);
+    errors = [
+      ...errors,
+      {
+        message: e.toString(),
+        context: 'Memory Photos Event Generating',
+        time: Date.now(),
+      },
+    ];
+    changeLoadingMessage('Generating Photos Memories - FAILED');
+  }
+  updateErrorLog(errors);
   saveMemories(newMemories);
 
   // console.log('promise check', a);

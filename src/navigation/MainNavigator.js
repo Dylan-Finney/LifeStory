@@ -69,6 +69,7 @@ const MainNavigator = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [devMode, setDevMode] = useState(false);
+  const [errorLog, setErrorLog] = useState([]);
   const [demoMode, setDemoMode] = useState(false);
   const [labsMode, setLabsMode] = useState(false);
 
@@ -501,6 +502,7 @@ const MainNavigator = () => {
     endOfUnixTime = Math.floor(endOfUnixTime.getTime() / 1000);
     startOfUnixTime = Math.floor(startOfUnixTime.getTime() / 1000);
 
+    setMemoryLoadingMessage('Gathering Calendar Events');
     Location.setDateRange(startOfUnixTime, endOfUnixTime);
     try {
       console.log('events', {startOfUnixTime, endOfUnixTime});
@@ -527,10 +529,20 @@ const MainNavigator = () => {
         console.error('GIVE PERMISSION TO APP FOR CALENDAR USAGE');
       } else {
         console.error('Calendar Event Processing Error', {e});
+        setErrorLog([
+          ...errorLog,
+          {
+            message: e.toString(),
+            context: 'Calendar Event Gathering',
+            time: Date.now(),
+          },
+        ]);
+        setMemoryLoadingMessage('Gathering Photos Events - FAILED');
       }
     }
 
     // GET LOCATIONS
+    setMemoryLoadingMessage('Gathering Location');
     try {
       console.log('locations');
       setLoadingMessage('Getting Location Events');
@@ -556,9 +568,19 @@ const MainNavigator = () => {
       }
     } catch (e) {
       console.error('Location Processing Error', {e});
+      setErrorLog([
+        ...errorLog,
+        {
+          message: e.toString(),
+          context: 'Location Gathering',
+          time: Date.now(),
+        },
+      ]);
+      setMemoryLoadingMessage('Gathering Photos Events - FAILED');
     }
 
     //GET PHOTOS
+    setMemoryLoadingMessage('Gathering Photos');
     try {
       console.log('photos');
       setLoadingMessage('Getting Photo Events');
@@ -723,6 +745,11 @@ const MainNavigator = () => {
       CounterEvents.removeAllListeners('photoCount');
     } catch (e) {
       console.error('Photo Processing Error', {e});
+      setErrorLog([
+        ...errorLog,
+        {message: e.toString(), context: 'Photo Gathering', time: Date.now()},
+      ]);
+      setMemoryLoadingMessage('Gathering Photos Events - FAILED');
     }
 
     // console.log({photos});
@@ -743,12 +770,19 @@ const MainNavigator = () => {
   };
 
   const readyToGenerateMemory = async ({start, end}) => {
-    setMemoryLoadingMessage('Generating');
+    setMemoryLoadingMessage('Gathering');
     setMemoryLoadingState(true);
     const eventData = await getPermissionsAndData({start, end});
     console.log('Event Data For Memory Generation', eventData);
+    setMemoryLoadingMessage('Generating');
     const newMemories = await generateMemories({
       data: eventData,
+      updateLoadingMessage: message => {
+        setMemoryLoadingMessage(message);
+      },
+      errorLogSetter: errors => {
+        setErrorLog([...errorLog, ...errors]);
+      },
       // date: date.getTime(),
     });
     const updatedMemories = await getMemories();
@@ -933,6 +967,10 @@ const MainNavigator = () => {
     setStoryLoadingMessage('Finished');
   };
 
+  useEffect(() => {
+    console.log({errorLog});
+  }, [errorLog]);
+
   const checkIfReadyToGenerate = async () => {
     // const date = new Date(Date.now());
     // const lastMemoryCheckTime = new Date(
@@ -1078,9 +1116,6 @@ const MainNavigator = () => {
             res.description,
             res.city || '',
           );
-          // retrieveData('Visits', steps => {
-          //   console.log({steps});
-          // });
         } else {
           createRoutePointsTable();
           insertRoutePointsData(
@@ -1090,28 +1125,6 @@ const MainNavigator = () => {
             res.lon,
             res.description,
           );
-          // createVisitsTable();
-          // insertData(
-          //   Math.floor(parseInt(res.arrivalTime)) * 1000 || Date.now(),
-          //   Math.floor(parseInt(res.arrivalTime + 2549)) * 1000 || Date.now(),
-          //   Date.now(),
-          //   res.lat,
-          //   res.lon,
-          //   res.description,
-          //   undefined,
-          // );
-          // insertData(
-          //   Math.floor(parseInt(res.arrivalTime) + 2591) * 1000 || Date.now(),
-          //   0,
-          //   Date.now(),
-          //   res.lat,
-          //   res.lon,
-          //   res.description,
-          //   undefined,
-          // );
-          // retrieveData('RoutePoints', steps => {
-          //   console.log({steps});
-          // });
         }
       });
     })
@@ -1139,6 +1152,8 @@ const MainNavigator = () => {
     setDemoMode,
     labsMode,
     setLabsMode,
+    errorLog,
+    setErrorLog,
     firstEntryGenerated,
     setFirstEntryGenerated,
     storyLoadingMessage,

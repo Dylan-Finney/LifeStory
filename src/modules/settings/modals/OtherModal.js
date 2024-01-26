@@ -1,5 +1,12 @@
 import React, {useState, useContext} from 'react';
-import {Text, View, Alert, NativeModules, ScrollView} from 'react-native';
+import {
+  Text,
+  View,
+  Alert,
+  NativeModules,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 
 import {useNavigation} from '@react-navigation/native';
 
@@ -46,6 +53,8 @@ const OtherModal = ({visible, onClose}) => {
     setDemoMode,
     labsMode,
     setLabsMode,
+    errorLog,
+    setErrorLog,
   } = useContext(AppContext);
 
   const Divider = ({title}) => {
@@ -206,6 +215,37 @@ const OtherModal = ({visible, onClose}) => {
         {devMode === true && (
           <>
             <Divider title={'Dev Mode'} />
+
+            <Divider title={'Error Log'} />
+            <TouchableOpacity
+              style={{
+                backgroundColor: 'gray',
+                color: 'white',
+                alignSelf: 'flex-start',
+                padding: 5,
+              }}
+              onPress={() => {
+                setErrorLog([]);
+              }}>
+              <Text allowFontScaling={false} style={{color: 'white'}}>
+                Clear
+              </Text>
+            </TouchableOpacity>
+            <View style={{gap: 5}}>
+              {errorLog
+                .sort((a, b) => b.time - a.time)
+                .map((error, index) => {
+                  return (
+                    <View key={index}>
+                      <Text allowFontScaling={false}>{error.message}</Text>
+                      <Text allowFontScaling={false}>{error.context}</Text>
+                      <Text allowFontScaling={false}>
+                        {new Date(error.time).toLocaleString()}
+                      </Text>
+                    </View>
+                  );
+                })}
+            </View>
 
             <Divider title={'Photos'} />
             <Text
