@@ -231,7 +231,7 @@ const rewriteRequest = async ({attr, action, tempVal, tone, emotion}) => {
       break;
   }
   const completion = await openai.createChatCompletion({
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4o-mini',
     messages,
   });
   console.log({

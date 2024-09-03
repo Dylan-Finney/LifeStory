@@ -136,7 +136,7 @@ export default generateEntry = async ({
   // if (ids.length > 0) {
   try {
     const completionBody = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo-1106',
+      model: 'gpt-4o-mini',
       max_tokens: 1000,
       temperature: 0.5,
       messages: [
@@ -171,7 +171,7 @@ THESE INSTRUCTIONS ARE RELEVANT IN ALL CASES.`,
 
   try {
     const completionTitle = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo-16k',
+      model: 'gpt-4o-mini',
       max_tokens: 100,
       temperature: 1,
       messages: [

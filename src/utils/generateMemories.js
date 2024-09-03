@@ -479,18 +479,167 @@ I spent about half an hour in the afternoon at a place near St. James's area, cl
       ];
       break;
     case EventTypes.PHOTO:
+      //       // data.data = '';
+      //       // var photo = data;
+      //       console.log('photoAnalysis', {photoAnalysis});
+      //       if (photoAnalysis === true) {
+      //         try {
+      //           const {labelsWithTitle, textDetections} = await analyzePhoto(data);
+      //           console.log({labelsWithTitle});
+      //           data = {
+      //             ...data,
+      //             data: '',
+      //             labels: labelsWithTitle,
+      //             text: textDetections,
+      //           };
+      //         } catch (e) {
+      //           console.error(e);
+      //           data = {
+      //             ...data,
+      //             data: '',
+      //           };
+      //         }
+      //       } else {
+      //         data = {
+      //           ...data,
+      //           data: '',
+      //         };
+      //       }
+
+      //       var alias = await getBestLocationTag({description: data.description});
+      //       var downloadedOrReceived = !wasPhotoTaken(data);
+      //       // userPrompt = `Photo Taken: ${
+      //       //   data.labels !== undefined
+      //       //     ? `Labels: ${data.labels.map(label => label.title).toString()}`
+      //       //     : ''
+      //       // } ${
+      //       //   data.description !== ''
+      //       //     ? `${data.description}`
+      //       //     : `${data.lat !== 'null' ? `Lat: ${data.lat}` : ''} ${
+      //       //         data.long !== 'null' ? `Long: ${data.long}` : ''
+      //       //       }`
+      //       // } @${moment(Math.floor(parseFloat(data.creation) * 1000)).format('LT')}`;
+      //       messages = [
+      //         {
+      //           role: 'system',
+      //           content: `Your role is to write text entry without titles for a ${
+      //             downloadedOrReceived ? 'downloaded or received ' : ''
+      //           }photo that is shown in context of your text, based on the data provided and following these instructions:
+
+      // 1. Write in first person
+      // 2. Don’t write about anything that is not described by data provided
+      // 3. Write in neutral but informative tone
+      // 4. Use up to 500 characters
+      // 5. Don't mention exact times, but refer time as ‘early morning’, ‘around noon’, like we would in a typical conversation
+      // 6. Don’t write about ending times, rather refer to approximate duration
+      // 7. Don’t use exact addresses, but refer to location and/or popular landmarks names. Ie. as we would refer places in a typical conversation
+      // 8. Write in today's past tent
+      // 9. Don't mention timezones
+      // 10. Don't mention latitude or longitude coordinates
+      // 11. Don't mention dates
+      // 12. Don't mention method moved unless known
+      // 13. Dont mention weather if not provided
+      // 14. Don’t write contact data if available (emails, phone numbers, etc), but you can use indicative information if available/relevant ie. persons name
+      // 15. Focus on what image is about and where its taken
+      // 16. Dont mention camera settings
+      // 17. Dont mention image recognition labels
+      // 18. If the object has no image recognition labels don't write about what the image shows
+      // ${downloadedOrReceived ? '19. Mention that the photo was received or got ' : ''}
+      // -----`,
+      //         },
+      //         {
+      //           role: 'user',
+      //           content: `{
+      //   "photo": {
+      //     "fileName": "IMG_20230415_1720.jpg",
+      //     "locationTag": "Griffith Observatory, Los Angeles",
+      //     "coordinates": {
+      //       "latitude": "34.1184° N",
+      //       "longitude": "118.3004° W"
+      //     },
+      //     "timeTaken": "2023-04-15T17:20:00-07:00",
+      //     "cameraSettings": {
+      //       "aperture": "f/4.0",
+      //       "shutterSpeed": "1/500 sec",
+      //       "ISO": "200",
+      //       "focalLength": "28mm"
+      //     },
+      //     "imageRecognitionLabels": [
+      //       { "label": "Architecture", "confidence": 100 },
+      //       { "label": "Building", "confidence": 100 },
+      //       { "label": "Multiple People", "confidence": 98 }
+      //     ],
+      //     "timezone": "PDT"
+      //   }
+      // }`,
+      //         },
+      //         {
+      //           role: 'assistant',
+      //           content: downloadedOrReceived
+      //             ? `In the late afternoon, I received a photo of Griffith Observatory, Los Angeles. The architecture and observatory dome are prominent in the photos. People in casual clothing enjoyed the outdoor surroundings, with some wearing T-shirts and shorts. The observatory's peak and planetarium are visible.`
+      //             : `I spent the late afternoon at Griffith Observatory, Los Angeles. The architecture and observatory dome are prominent in the photos. People in casual clothing enjoyed the outdoor surroundings, with some wearing T-shirts and shorts. The observatory's peak and planetarium are visible. Later, I explored a lush area with slopes, vegetation, and a bicycle.`,
+      //         },
+      //         {
+      //           role: 'user',
+      //           content: `{
+      //   "photo": {
+      //     "fileName": "${data.name}",
+      //     "locationTag": "${alias}",
+      //     "coordinates": {
+      //       "latitude": "${data.lat}",
+      //       "longitude": "${data.lon}"
+      //     },
+      //     "timeTaken": "${new Date(data.creation).toLocaleString()}",
+      //     "imageRecognitionLabels": [
+      //       ${data.labels?.map(label => {
+      //         return `{ "label": "${label.title}", "confidence": ${label.Confidence} },
+      // `;
+      //       })}
+      //     ],
+      //     "textRecognitionLabels": [
+      //       ${data.text?.map(label => {
+      //         return `{ "line": "${label.Text}", "confidence": ${label.Confidence} },
+      // `;
+      //       })}
+      //     ],
+      //   }
+      // }`,
+      //         },
+      //       ];
+      //       console.log('photo message', JSON.stringify(messages));
       // data.data = '';
-      // var photo = data;
+      var photo = data;
       console.log('photoAnalysis', {photoAnalysis});
       if (photoAnalysis === true) {
         try {
-          const {labelsWithTitle, textDetections} = await analyzePhoto(data);
-          console.log({labelsWithTitle});
+          const completion = await openai.createChatCompletion({
+            // model: 'gpt-4',
+            model: 'gpt-4o-mini',
+            temperature: 0.5,
+            // max_tokens: 1053,
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'Create a detailed caption for the image that objectively describes the scene completely.',
+              },
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'image_url',
+                    image_url: {
+                      url: `data:image/jpeg;base64,${data.data}`,
+                    },
+                  },
+                ],
+              },
+            ],
+          });
           data = {
             ...data,
             data: '',
-            labels: labelsWithTitle,
-            text: textDetections,
+            caption: completion.data.choices[0].message?.content,
           };
         } catch (e) {
           console.error(e);
@@ -564,11 +713,7 @@ ${downloadedOrReceived ? '19. Mention that the photo was received or got ' : ''}
       "ISO": "200",
       "focalLength": "28mm"
     },
-    "imageRecognitionLabels": [
-      { "label": "Architecture", "confidence": 100 },
-      { "label": "Building", "confidence": 100 },
-      { "label": "Multiple People", "confidence": 98 }
-    ],
+    "caption" : "A picture of an observatory with several people walking around."
     "timezone": "PDT"
   }
 }`,
@@ -590,18 +735,7 @@ ${downloadedOrReceived ? '19. Mention that the photo was received or got ' : ''}
       "longitude": "${data.lon}"
     },
     "timeTaken": "${new Date(data.creation).toLocaleString()}",
-    "imageRecognitionLabels": [
-      ${data.labels?.map(label => {
-        return `{ "label": "${label.title}", "confidence": ${label.Confidence} },
-`;
-      })}
-    ],
-    "textRecognitionLabels": [
-      ${data.text?.map(label => {
-        return `{ "line": "${label.Text}", "confidence": ${label.Confidence} },
-`;
-      })}
-    ],
+    "caption": "${data.caption}",
   }
 }`,
         },
@@ -614,26 +748,72 @@ ${downloadedOrReceived ? '19. Mention that the photo was received or got ' : ''}
       const processGroup = async data => {
         if (photoAnalysis === true) {
           var newData = [];
-          for (const photo of data) {
-            try {
-              const {labelsWithTitle, textDetections} = await analyzePhoto(
-                photo,
-              );
-              newData.push({
-                ...photo,
-                data: '',
-                labels: labelsWithTitle,
-                text: textDetections,
-              });
-            } catch (e) {
-              console.error(e);
-              newData.push({
-                ...photo,
-                data: '',
-              });
-            }
-          }
-          return newData;
+          // for (const photo of data) {
+          //   try {
+          //     const {labelsWithTitle, textDetections} = await analyzePhoto(
+          //       photo,
+          //     );
+          //     newData.push({
+          //       ...photo,
+          //       data: '',
+          //       labels: labelsWithTitle,
+          //       text: textDetections,
+          //     });
+          //   } catch (e) {
+          //     console.error(e);
+          //     newData.push({
+          //       ...photo,
+          //       data: '',
+          //     });
+          //   }
+          // }
+          // return newData;
+
+          console.log(
+            data.map(photo => {
+              return {
+                type: 'image_url',
+                image_url: {
+                  url: `data:image/jpeg;base64,${photo.data.charAt(0)}`,
+                },
+              };
+            }),
+          );
+
+          const completion = await openai.createChatCompletion({
+            // model: 'gpt-4',
+            model: 'gpt-4o-mini',
+            temperature: 0.5,
+            // max_tokens: 1053,
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'Create a detailed caption for each of the images that objectively describes the scene completely. Return the captions as an array where the index corresponds to the image. E.g. ["Caption One", "Caption Two"]',
+              },
+              {
+                role: 'user',
+                content: data.map(photo => {
+                  return {
+                    type: 'image_url',
+                    image_url: {
+                      url: `data:image/jpeg;base64,${photo.data}`,
+                    },
+                  };
+                }),
+              },
+            ],
+          });
+          const parsedArray = JSON.parse(
+            completion.data.choices[0].message?.content,
+          );
+          return data.map((photo, i) => {
+            return {
+              ...photo,
+              data: '',
+              caption: parsedArray[i],
+            };
+          });
         } else {
           return data.map(photo => {
             return {
@@ -699,11 +879,7 @@ ${
       "ISO": "200",
       "focalLength": "28mm"
     },
-    "imageRecognitionLabels": [
-      { "label": "Architecture", "confidence": 100 },
-      { "label": "Building", "confidence": 100 },
-      { "label": "Multiple People", "confidence": 98 }
-    ],
+     "caption" : "A picture of an observatory with several people walking around."
     "timezone": "PDT"
   }
 }`,
@@ -730,18 +906,7 @@ ${
       "longitude": "${photo.lon}"
     },
     "timeTaken": "${new Date(photo.creation).toLocaleString()}",
-    "imageRecognitionLabels": [
-      ${photo.labels?.map(label => {
-        return `{ "label": "${label.title}", "confidence": ${label.Confidence} },
-`;
-      })}
-    ],
-    "textRecognitionLabels": [
-      ${photo.text?.map(label => {
-        return `{ "line": "${label.Text}", "confidence": ${label.Confidence} },
-`;
-      })}
-    ],
+    "caption" : "${photo.caption}"
   }
 },
 `,
@@ -787,7 +952,7 @@ ${
 
   const completion = await openai.createChatCompletion({
     // model: 'gpt-4',
-    model: 'gpt-3.5-turbo-1106',
+    model: 'gpt-4o-mini',
     temperature: 0.5,
     max_tokens: 1053,
     messages,
