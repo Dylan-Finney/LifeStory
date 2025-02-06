@@ -43,6 +43,7 @@ import {ImageAsset} from '../../../utils/native-modules/NativeImage';
 import Config from 'react-native-config';
 import {theme} from '../../../theme/styling';
 import {textChangeHelperFuncs} from '../../../utils/utils';
+
 import {
   horizontalScale,
   moderateScale,

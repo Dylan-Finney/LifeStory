@@ -62,7 +62,6 @@ import {
   moderateScale,
   verticalScale,
 } from './src/utils/metrics';
-
 import DatePicker from 'react-native-date-picker';
 
 import {decode, encode} from 'base-64';
