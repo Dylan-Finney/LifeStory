@@ -7,4 +7,5 @@ brew install yarn
 
 # Install dependencies
 yarn
+cd ios/
 pod install
