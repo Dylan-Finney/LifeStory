@@ -27,7 +27,6 @@ import getMemories from '../utils/getMemories';
 import AnimatedLaunchScreen from '../modules/onboarding/views/AnimatedLaunchScreen';
 import AppContext from '../contexts/AppContext';
 import OnboardingView from '../../OnboardingView';
-import onCreateTriggerReminder from '../utils/createOpenReminder';
 import onCreateTriggerNotification from '../utils/createNotification';
 import Location from '../../src/utils/native-modules/NativeFuncs.js';
 import generateMemories from '../utils/generateMemories';
